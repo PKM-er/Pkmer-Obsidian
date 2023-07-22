@@ -46,6 +46,7 @@ module.exports = {
         //数组中间不要空两格，一格就够了
         "array-bracket-spacing": ["error", "never"],
         "@typescript-eslint/array-type": ["error", { default: "array" }],
-        "@typescript-eslint/ban-ts-comment": 0
+        "@typescript-eslint/ban-ts-comment": 0,
+        
     }
 }
