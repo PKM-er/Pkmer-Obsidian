@@ -299,61 +299,125 @@ const readMore = () => {
             <div class="w-full mx-auto max-w-7xl">
                 <!-- toolbar-->
                 <div
-                    class="sticky top-0 z-30 flex items-center w-full overflow-x-auto border divide-x rounded md:top-20 bg-white/90 dark:bg-muted-800/90 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
-                    <button
-                        tooltip="按下载量"
-                        @click="sortByDownloadCount"
-                        class="flex items-center px-2 py-3 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 bg-muted-50 dark:bg-muted-700">
-                        <span
-                            class="flex items-center justify-center w-8 h-8 text-muted-40">
-                            <i
-                                class="w-6 h-6 iconify"
-                                data-icon="solar:round-sort-vertical-line-duotone"></i>
-                        </span>
-                    </button>
+                    class="relative items-center top-0 w-full flex dark:bg-muted-800 border-muted-200 dark:border-muted-700 rounded divide-x divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 overflow-x-auto md:overflow-x-visible z-30">
                     <div class="widget-item">
                         <button
-                            tooltip="按更新时间"
-                            @click="sortByUpdateTime"
-                            class="items-center flex-1 px-2 py-3 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                            :class="{ active: sortBy == 'downloadCount' }"
+                            tooltip="按下载量"
+                            flow="down"
+                            @click="sortByDownloadCount"
+                            class="group flex items-center px-2 whitespace-nowrap font-sans text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors duration-300">
                             <span
-                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
-                                <i
-                                    class="w-6 h-6 iconify"
-                                    data-icon="ic:sharp-update"></i
+                                class="whitespace-pre-wrap flex items-center justify-center h-10 w-10 text-muted-400 group-hover:text-primary-500">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                    role="img"
+                                    width="1em"
+                                    height="1em"
+                                    viewBox="0 0 24 24"
+                                    data-icon="solar:round-sort-vertical-line-duotone"
+                                    class="iconify w-6 h-6 iconify--solar">
+                                    <g
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.5">
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            opacity=".5"></circle>
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M9.5 8v8m0 0L7 13.25M9.5 16l2.5-2.75M14.5 16V8m0 0L12 10.75M14.5 8l2.5 2.75"></path>
+                                    </g>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="widget-item">
+                        <button
+                            :class="{ active: sortBy == 'updateTime' }"
+                            tooltip="按更新时间"
+                            flow="down"
+                            @click="sortByUpdateTime"
+                            class="group flex-1 md:flex-auto md:flex items-center px-2 whitespace-nowrap font-sans text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors duration-300">
+                            <span
+                                class="whitespace-pre-wrap md:flex items-center justify-center h-10 w-10 text-muted-400 group-hover:text-primary-500">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                    role="img"
+                                    width="1em"
+                                    height="1em"
+                                    viewBox="0 0 24 24"
+                                    data-icon="ic:sharp-update"
+                                    class="iconify w-6 h-6 iconify--ic">
+                                    <path
+                                        fill="currentColor"
+                                        d="M11 8v5l4.25 2.52l.77-1.28l-3.52-2.09V8H11zm10 2V3l-2.64 2.64A8.937 8.937 0 0 0 12 3a9 9 0 1 0 9 9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7s3.14-7 7-7c1.93 0 3.68.79 4.95 2.05L14 10h7z"></path></svg
                             ></span>
                         </button>
                     </div>
 
                     <div class="widget-item">
                         <button
+                            :class="{ active: sortBy == 'fileName' }"
                             tooltip="按文件名排序"
+                            flow="down"
                             @click="sortByFilename"
-                            class="items-center flex-1 px-2 py-3 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                            class="group flex-1 md:flex-auto md:flex items-center px-2 whitespace-nowrap font-sans text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors duration-300">
                             <span
-                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
-                                <i
-                                    class="w-6 h-6 iconify"
-                                    data-icon="material-symbols:sort-by-alpha"></i>
+                                class="whitespace-pre-wrap md:flex items-center justify-center h-10 w-10 text-muted-400 group-hover:text-primary-500">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                    role="img"
+                                    width="1em"
+                                    height="1em"
+                                    viewBox="0 0 24 24"
+                                    data-icon="material-symbols:sort-by-alpha"
+                                    class="iconify w-6 h-6 iconify--material-symbols">
+                                    <path
+                                        fill="currentColor"
+                                        d="M2 17L5.75 7H7.9l3.75 10H9.6l-.85-2.4H4.9L4.1 17H2Zm3.5-4.1h2.6L6.9 9.15h-.15L5.5 12.9Zm8.2 4.1v-1.9l5.05-6.3H13.9V7h7.05v1.9l-5 6.3H21V17h-7.3ZM9 5l3-3l3 3H9Zm3 17l-3-3h6l-3 3Z"></path>
+                                </svg>
                             </span>
                         </button>
                     </div>
 
-                    <div class="relative w-full">
-                        <label class="hidden text-sm font-alt text-muted-400"
+                    <div class="w-full relative">
+                        <label class="hidden font-alt text-sm text-muted-400"
                             >Search</label
                         >
-                        <div class="relative group">
+                        <div class="group relative">
                             <input
                                 type="text"
-                                class="w-full h-16 py-3 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 bg-white border text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
+                                class="pl-16 pr-5 h-8 text-base leading-5 font-sans w-full text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 transition-all duration-300 tw-accessibility"
                                 placeholder="Search plugins..."
                                 v-model="searchTextRef" />
                             <div
-                                class="absolute top-0 left-0 flex items-center justify-center w-16 h-16 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
-                                <i
-                                    class="w-6 h-6 iconify"
-                                    data-icon="lucide:search"></i>
+                                class="absolute top-0 left-0 h-8 w-16 flex justify-center items-center text-muted-400 group-focus-within:text-primary-500 transition-colors duration-300">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                    role="img"
+                                    width="1em"
+                                    height="1em"
+                                    viewBox="0 0 24 24"
+                                    data-icon="lucide:search"
+                                    class="iconify w-4 h-4 iconify--lucide">
+                                    <g
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21l-4.3-4.3"></path>
+                                    </g>
+                                </svg>
                             </div>
                         </div>
                     </div>
@@ -405,7 +469,7 @@ const readMore = () => {
                                     <button
                                         v-if="showReadMoreButton"
                                         @click="readMore"
-                                        class="relative inline-flex items-center justify-center w-full gap-2 px-6 py-4 font-sans font-semibold transition-all duration-300 bg-white border rounded-lg dark:bg-muted-700 text-muted-800 dark:text-white border-muted-300 dark:border-muted-600 tw-accessibility hover:shadow-xl hover:shadow-muted-400/20">
+                                        class="relative inline-flex items-center justify-center w-full gap-2 px-6 py-4 font-sans font-semibold transition-all duration-300 border rounded-lg dark:bg-muted-700 text-muted-800 dark:text-white border-muted-300 dark:border-muted-600 tw-accessibility hover:shadow-xl hover:shadow-muted-400/20">
                                         <div>Load More</div>
                                     </button>
                                 </div>
@@ -425,7 +489,7 @@ const readMore = () => {
         v-show="showModal">
         <!-- Modal inner -->
         <div
-            class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg dark:bg-muted-800"
+            class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg dark:bg-muted-700"
             @click.away="showModal = false"
             x-transition:enter="motion-safe:ease-out duration-300"
             x-transition:enter-start="opacity-0 scale-90"
@@ -460,10 +524,66 @@ const readMore = () => {
                 <div class="container px-5 py-4 mx-auto">
                     <h3
                         class="mb-6 text-2xl font-medium text-center title-font">
-                        <i
-                            class="w-6 h-6 iconify"
-                            data-icon="line-md:downloading-loop"></i>
-                        即将下载....{{ selectPlugin.toUpperCase() }}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                            role="img"
+                            width="1em"
+                            height="1em"
+                            viewBox="0 0 24 24"
+                            data-icon="line-md:downloading-loop"
+                            class="iconify w-6 h-6 iconify--line-md">
+                            <g
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-width="2">
+                                <path
+                                    stroke-dasharray="2 4"
+                                    stroke-dashoffset="6"
+                                    d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21">
+                                    <animate
+                                        attributeName="stroke-dashoffset"
+                                        dur="0.6s"
+                                        repeatCount="indefinite"
+                                        values="6;0"></animate>
+                                </path>
+                                <path
+                                    stroke-dasharray="30"
+                                    stroke-dashoffset="30"
+                                    d="M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3">
+                                    <animate
+                                        fill="freeze"
+                                        attributeName="stroke-dashoffset"
+                                        begin="0.1s"
+                                        dur="0.3s"
+                                        values="30;0"></animate>
+                                </path>
+                                <path
+                                    stroke-dasharray="10"
+                                    stroke-dashoffset="10"
+                                    d="M12 8v7.5">
+                                    <animate
+                                        fill="freeze"
+                                        attributeName="stroke-dashoffset"
+                                        begin="0.5s"
+                                        dur="0.2s"
+                                        values="10;0"></animate>
+                                </path>
+                                <path
+                                    stroke-dasharray="6"
+                                    stroke-dashoffset="6"
+                                    d="M12 15.5l3.5 -3.5M12 15.5l-3.5 -3.5">
+                                    <animate
+                                        fill="freeze"
+                                        attributeName="stroke-dashoffset"
+                                        begin="0.7s"
+                                        dur="0.2s"
+                                        values="6;0"></animate>
+                                </path>
+                            </g>
+                        </svg>
+                        即将安装....{{ selectPlugin.toUpperCase() }}
                     </h3>
                     <div>
                         <p class="mb-4 text-base leading-relaxed">
@@ -479,19 +599,13 @@ const readMore = () => {
                                     v-if="isDownload"
                                     @click="handleDownloadPlugin"
                                     class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
-                                    <i
-                                        class="w-6 h-6 iconify"
-                                        data-icon="ph:download"></i>
-                                    确认
+                                    确 认
                                 </h2>
                                 <h2
                                     v-else
                                     @click="handleUpdatePlugin"
                                     class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
-                                    <i
-                                        class="w-6 h-6 iconify"
-                                        data-icon="ph:download"></i>
-                                    确认
+                                    更 新
                                 </h2>
                             </div>
                         </div>
@@ -500,10 +614,7 @@ const readMore = () => {
                                 <h2
                                     @click="cancelModal"
                                     class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
-                                    <i
-                                        class="w-6 h-6 iconify"
-                                        data-icon="arcticons:obsidian"></i>
-                                    取消
+                                    取 消
                                 </h2>
                             </div>
                         </div>

@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-20 19:27:38
+ * @LastEditTime: 2023-07-23 23:32:06
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -101,9 +101,9 @@ function getDefaultAvata(name: string) {
 	return url;
 }
 function generateRatingStars(rating: number) {
-	const fullStar = '<i class="w-4 h-4 text-yellow-400 iconify" data-icon="mingcute:star-fill"></i>';
-	const halfStar = '<i class="w-4 h-4 text-yellow-400 iconify" data-icon="mingcute:star-half-fill"></i>';
-	const emptyStar = '<i class="w-4 h-4 text-yellow-400 iconify" data-icon="mingcute:star-line"></i>';
+	const fullStar = '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 24 24" data-icon="mingcute:star-fill" class="iconify w-4 h-4 text-yellow-400 iconify--mingcute"><g fill="none"><path d="M24 0v24H0V0h24ZM12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035c-.01-.004-.019-.001-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427c-.002-.01-.009-.017-.017-.018Zm.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093c.012.004.023 0 .029-.008l.004-.014l-.034-.614c-.003-.012-.01-.02-.02-.022Zm-.715.002a.023.023 0 0 0-.027.006l-.006.014l-.034.614c0 .012.007.02.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01l-.184-.092Z"></path><path fill="currentColor" d="M10.92 2.868a1.25 1.25 0 0 1 2.16 0l2.795 4.798l5.428 1.176a1.25 1.25 0 0 1 .667 2.054l-3.7 4.141l.56 5.525a1.25 1.25 0 0 1-1.748 1.27L12 19.592l-5.082 2.24a1.25 1.25 0 0 1-1.748-1.27l.56-5.525l-3.7-4.14a1.25 1.25 0 0 1 .667-2.055l5.428-1.176l2.795-4.798Z"></path></g></svg>';
+	const halfStar = '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 24 24" data-icon="mingcute:star-half-fill" class="iconify w-4 h-4 text-yellow-400 iconify--mingcute"><g fill="none" fill-rule="evenodd"><path d="M24 0v24H0V0h24ZM12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036c-.01-.003-.019 0-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427c-.002-.01-.009-.017-.016-.018Zm.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092c.012.004.023 0 .029-.008l.004-.014l-.034-.614c-.003-.012-.01-.02-.02-.022Zm-.715.002a.023.023 0 0 0-.027.006l-.006.014l-.034.614c0 .012.007.02.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01l-.184-.092Z"/><path fill="currentColor" d="M13.08 2.868a1.25 1.25 0 0 0-2.16 0L8.126 7.665L2.697 8.842a1.25 1.25 0 0 0-.667 2.054l3.7 4.141l-.56 5.525a1.25 1.25 0 0 0 1.748 1.27L12 19.592l5.082 2.24a1.25 1.25 0 0 0 1.748-1.27l-.56-5.525l3.7-4.14a1.25 1.25 0 0 0-.667-2.055l-5.428-1.176l-2.795-4.798ZM12 17.523c.172 0 .344.035.504.106l4.206 1.854l-.463-4.573a1.25 1.25 0 0 1 .312-.959l3.062-3.427l-4.492-.973a1.25 1.25 0 0 1-.816-.592L12 4.987v12.536Z"/></g></svg>';
+	const emptyStar = '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 24 24" data-icon="mingcute:star-line" class="iconify w-4 h-4 text-yellow-400 iconify--mingcute"><g fill="none" fill-rule="evenodd"><path d="M24 0v24H0V0h24ZM12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035c-.01-.004-.019-.001-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427c-.002-.01-.009-.017-.017-.018Zm.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093c.012.004.023 0 .029-.008l.004-.014l-.034-.614c-.003-.012-.01-.02-.02-.022Zm-.715.002a.023.023 0 0 0-.027.006l-.006.014l-.034.614c0 .012.007.02.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01l-.184-.092Z"></path><path fill="currentColor" d="M10.92 2.868a1.25 1.25 0 0 1 2.16 0l2.795 4.798l5.428 1.176a1.25 1.25 0 0 1 .667 2.054l-3.7 4.141l.56 5.525a1.25 1.25 0 0 1-1.748 1.27L12 19.592l-5.082 2.24a1.25 1.25 0 0 1-1.748-1.27l.56-5.525l-3.7-4.14a1.25 1.25 0 0 1 .667-2.055l5.428-1.176l2.795-4.798ZM12 4.987L9.687 8.959a1.25 1.25 0 0 1-.816.592l-4.492.973l3.062 3.427c.234.262.347.61.312.959l-.463 4.573l4.206-1.854a1.25 1.25 0 0 1 1.008 0l4.206 1.854l-.463-4.573a1.25 1.25 0 0 1 .311-.959l3.063-3.427l-4.492-.973a1.25 1.25 0 0 1-.816-.592L12 4.987Z"></path></g></svg>';
 
 	let stars = '';
 	const fullStarsCount = Math.floor(rating);
@@ -128,7 +128,7 @@ function generateRatingStars(rating: number) {
 
 
 const getRadomImage = () => {
-	const url = `/img/cover/${Math.floor(Math.random() * 11)}.jpg`;
+	const url = `https://pkmer.cn/img/cover/${Math.floor(Math.random() * 11)}.jpg`;
 
 	return `background-image:url(${url});`;
 };
@@ -153,7 +153,7 @@ const getRadomImage = () => {
 
 					<div v-show="!pluginInfo.banner" class="noimg" :data-name="pluginInfo.name" :style="getRadomImage()" />
 
-					<img v-show="pluginInfo.banner" class="object-cover w-full h-52 rounded-xl" :src="pluginInfo.banner ? pluginInfo.banner : ''" :alt="pluginInfo.name"
+					<img v-show="pluginInfo.banner" class="w-full h-52 object-cover rounded-xl" :src="pluginInfo.banner?.replace('gif!pkmer','gif').replace('!pkmer','!nomark')" :alt="pluginInfo.name"
 						width="348" height="208"
 						onerror="javascript:this.src='https://cdn.pkmer.cn/covers/pkmer2.png!nomark';this.οnerrοr=null;" />
 				</div>
@@ -163,20 +163,21 @@ const getRadomImage = () => {
 					{{ pluginInfo.name }}
 					<img class="ml-2 -mt-2" alt="version"
 						:src="`https://img.shields.io/badge/${pluginInfo.version}-brightgreen`" />
-					<a class="absolute right-2"  :href="pluginInfo.contentUrl ? pluginInfo.contentUrl : 'javascript:void(0)'" v-show="pluginInfo.contentUrl">
-						<span class="  text-white  font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-500 ">
-							教程
-						</span>
-					</a>
+				
 				</h3>
-				<p class="leading-6 text-muted-600 dark:text-muted-400">
+				<p class="flex flex-wrap leading-6 text-muted-600 dark:text-muted-400">
 					<img class="" alt="GitHub stars"
 						:src="`https://img.shields.io/github/stars/${pluginInfo.repo}?style=plastic&color=4F46E5&label=关注量`" />
 
 					<img class="ml-2" alt="下载数量" :src="`https://img.shields.io/badge/下载总数-${formatNumber(
 						pluginInfo.downloadCount
 					)}-yellow`" />
-				<div class="inline-block float-right mr-2">
+					<a class=" ml-2"  :href="pluginInfo.contentUrl ? pluginInfo.contentUrl : 'javascript:void(0)'" v-show="pluginInfo.contentUrl">
+						<span class="  text-white  font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-500 ">
+							教程
+						</span>
+					</a>
+				<div class="inline-block float-right ml-2">
 					<span v-html="generateRatingStars(pluginInfo.score ? pluginInfo.score : 0)" />
 
 
@@ -211,22 +212,123 @@ const getRadomImage = () => {
                             v-if="!pluginInfo.isInstalled"
 							class="inline-flex items-center px-5 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							@click="$emit('download-update-plugin','download',pluginInfo.id)">
-							<i class="block w-4 h-4 mx-auto iconify" data-icon="line-md:cloud-download-outline-loop"></i>
+							<svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                        role="img"
+                                        width="1em"
+                                        height="1em"
+                                        viewBox="0 0 24 24"
+                                        data-v-1f16b271=""
+                                        data-icon="line-md:cloud-download-outline-loop"
+                                        class="block mx-auto iconify w-4 h-4 iconify--line-md">
+                                        <mask id="IconifyId189830ae935ba47180">
+                                            <g fill="#fff">
+                                                <circle
+                                                    cx="12"
+                                                    cy="10"
+                                                    r="6"></circle>
+                                                <rect
+                                                    width="9"
+                                                    height="8"
+                                                    x="8"
+                                                    y="12"></rect>
+                                                <rect
+                                                    width="17"
+                                                    height="12"
+                                                    x="1"
+                                                    y="8"
+                                                    rx="6">
+                                                    <animate
+                                                        attributeName="x"
+                                                        dur="19s"
+                                                        repeatCount="indefinite"
+                                                        values="1;0;1;2;1"></animate>
+                                                </rect>
+                                                <rect
+                                                    width="17"
+                                                    height="10"
+                                                    x="6"
+                                                    y="10"
+                                                    rx="5">
+                                                    <animate
+                                                        attributeName="x"
+                                                        dur="23s"
+                                                        repeatCount="indefinite"
+                                                        values="6;5;6;7;6"></animate>
+                                                </rect>
+                                            </g>
+                                            <circle
+                                                cx="12"
+                                                cy="10"
+                                                r="4"></circle>
+                                            <rect
+                                                width="8"
+                                                height="8"
+                                                x="8"
+                                                y="10"></rect>
+                                            <rect
+                                                width="11"
+                                                height="8"
+                                                x="3"
+                                                y="10"
+                                                rx="4">
+                                                <animate
+                                                    attributeName="x"
+                                                    dur="19s"
+                                                    repeatCount="indefinite"
+                                                    values="3;2;3;4;3"></animate>
+                                            </rect>
+                                            <rect
+                                                width="13"
+                                                height="6"
+                                                x="8"
+                                                y="12"
+                                                rx="3">
+                                                <animate
+                                                    attributeName="x"
+                                                    dur="23s"
+                                                    repeatCount="indefinite"
+                                                    values="8;7;8;9;8"></animate>
+                                            </rect>
+                                            <g fill="#fff">
+                                                <rect
+                                                    width="3"
+                                                    height="4"
+                                                    x="10.5"
+                                                    y="10"></rect>
+                                                <path d="M12 17L16 13H8L12 17Z">
+                                                    <animateMotion
+                                                        calcMode="linear"
+                                                        dur="1.5s"
+                                                        keyPoints="0;0.25;0.5;0.75;1"
+                                                        keyTimes="0;0.1;0.5;0.8;1"
+                                                        path="M0 0v1v-2z"
+                                                        repeatCount="indefinite"></animateMotion>
+                                                </path>
+                                            </g>
+                                        </mask>
+                                        <rect
+                                            width="24"
+                                            height="24"
+                                            fill="currentColor"
+                                            mask="url(#IconifyId189830ae935ba47180)"></rect>
+                                    </svg>
 							下载
 						</button>
 						<button
                             v-else-if="pluginInfo.isInstalled && pluginInfo.isOutdated"
 							class="inline-flex items-center px-5 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							@click="$emit('download-update-plugin', 'update', pluginInfo.id)">
-							<i class="block w-4 h-4 mx-auto iconify" data-icon="line-md:cloud-download-outline-loop"></i>
+							<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 20 20" data-v-5ade68da="" data-icon="dashicons:update" class="block mx-auto iconify w-4 h-4 iconify--dashicons"><path fill="currentColor" d="M10.2 3.28c3.53 0 6.43 2.61 6.92 6h2.08l-3.5 4l-3.5-4h2.32a4.439 4.439 0 0 0-4.32-3.45c-1.45 0-2.73.71-3.54 1.78L4.95 5.66a6.965 6.965 0 0 1 5.25-2.38zm-.4 13.44c-3.52 0-6.43-2.61-6.92-6H.8l3.5-4c1.17 1.33 2.33 2.67 3.5 4H5.48a4.439 4.439 0 0 0 4.32 3.45c1.45 0 2.73-.71 3.54-1.78l1.71 1.95a6.95 6.95 0 0 1-5.25 2.38z"></path></svg>
 							更新
 						</button>
                         <button
                             v-else
                             class="inline-flex items-center px-5 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
                             >
-                            <i class="block w-4 h-4 mx-auto iconify" data-icon="line-md:cloud-download-outline-loop"></i>
-                            已安装
+                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 48 48" data-v-5ade68da="" data-icon="icon-park-outline:link-cloud-sucess" class="block mx-auto iconify w-4 h-4 iconify--icon-park-outline"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M12 33c-3.333 0-8-1.5-8-7.5c0-7 7-8.5 9-8.5c1-3.5 3-9 11-9c7 0 10 4 11 7.5c0 0 9 1 9 9.5c0 6-4 8-8 8"></path><path d="m18 33l6 5l8-10"></path></g></svg>
+							 已安装
                         </button>
 					</div>
 				</div>

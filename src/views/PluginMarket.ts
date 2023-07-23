@@ -1,7 +1,15 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-23 17:35:33
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2023-07-23 18:46:58
+ * @Description: 
+ */
 import { ItemView, WorkspaceLeaf } from "obsidian"
 import PkmerDownloaderPlugin, { PkmerDownloaderSettings } from "../main"
 import PluginMarketView from "./PluginMarketView.vue"
 import { createApp } from "vue"
+import "../styles/global.css"
 import "../styles/base.css"
 
 export const DEFAULT_VIEW_TYPE = "pkmer-downloader"
