@@ -1,0 +1,556 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue"
+import Toolbar from "@/components/plugin/Toolbar.vue"
+import PluginCard from "@/components/plugin/PluginCard.vue"
+import { PkmerApi } from "@/api/api"
+import { PkmerDownloaderSettings } from "@/main"
+
+import type { PluginInfo } from "@/types/plugin"
+import PluginProcessor from "@/utils/downloader"
+import { App, Notice } from "obsidian"
+
+interface Props {
+    settings: PkmerDownloaderSettings
+    app: App
+}
+
+const props = defineProps<Props>()
+
+const sortBy = ref("")
+const showModal = ref(false)
+const AllPluginList = ref()
+let perPageCount = ref(24)
+let currentPage = ref(1)
+const isDownload = ref(true)
+const api = new PkmerApi(props.settings.token)
+const pluginProcessor = new PluginProcessor(props.app, props.settings)
+
+const isUserLogin = await api.isUserLogin()
+
+const loadAllPlugins = async () => {
+    if (isUserLogin) {
+        try {
+            AllPluginList.value = await api.getPluginList()
+            if (Array.isArray(AllPluginList.value)) {
+                AllPluginList.value.forEach((plugin) => {
+                    plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
+                    //@ts-ignore
+                    const pluginManifests = props.app.plugins.manifests
+
+                    plugin.isInstalled =
+                        pluginManifests[plugin.id] !== undefined
+                    plugin.isOutdated =
+                        plugin.isInstalled &&
+                        pluginManifests[plugin.id].version !== plugin.version
+                })
+            } else {
+                AllPluginList.value = []
+            }
+        } catch (error) {
+            console.error("Error loading plugins:", error)
+        }
+    } else {
+        AllPluginList.value = await api.getTop20Plugins()
+        if (Array.isArray(AllPluginList.value)) {
+            AllPluginList.value.forEach((plugin) => {
+                plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
+                //@ts-ignore
+                const manifest = props.app.plugins.manifests[plugin.id]
+                plugin.isInstalled = manifest !== undefined
+                plugin.isOutdated = manifest?.version !== plugin.version
+            })
+        } else {
+            AllPluginList.value = []
+        }
+    }
+}
+
+const searchTextRef = ref("")
+const activeCategory = ref("all")
+const selectPlugin = ref("")
+const handleDownloadPlugin = async () => {
+    showModal.value = false
+    new Notice("正在下载插件，请稍后...")
+    const downloadStatus = await pluginProcessor.downloadPluginToPluginFolder(
+        selectPlugin.value
+    )
+
+    if (!downloadStatus) return
+
+    AllPluginList.value = AllPluginList.value.map((plugin: any) => {
+        if (plugin.id == selectPlugin.value) {
+            plugin.isInstalled = true
+        }
+        return plugin
+    })
+}
+
+const handleUpdatePlugin = async () => {
+    showModal.value = false
+    new Notice("正在更新插件，请稍后...")
+    const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
+        selectPlugin.value
+    )
+    if (!updateStatus) return
+
+    AllPluginList.value = AllPluginList.value.map((plugin: any) => {
+        if (plugin.id == selectPlugin.value) {
+            plugin.isOutdated = false
+        }
+        return plugin
+    })
+}
+
+const cancelModal = () => {
+    showModal.value = false
+}
+
+const handleUpdateActiveCategory = (value: string) => {
+    activeCategory.value = value
+}
+
+const handleShowPluginModal = (
+    action: "download" | "update",
+    pluginId: string
+) => {
+    showModal.value = true
+    selectPlugin.value = pluginId
+    if (action === "download") {
+        isDownload.value = true
+    } else {
+        isDownload.value = false
+    }
+}
+
+// console.log(props.pluginList);
+// 从location.hash提取分类名称并赋值给activeCategory
+const extractCategoryFromHash = () => {
+    const hash = window.location.hash.slice(1) // 获取类似于“widget/widgetMarket#倒计时”的字符串，去掉前面的#
+    if (hash) {
+        const category = decodeURIComponent(hash)
+        activeCategory.value = category
+    }
+}
+
+onMounted(async () => {
+    extractCategoryFromHash() // 初始化时提取分类名称
+    await loadAllPlugins()
+})
+
+const filteredList = computed<PluginInfo[]>(() => {
+    const searchText = searchTextRef.value.toLowerCase().trim() // 将搜索关键字转为小写
+    if (searchText.length < 1) return AllPluginList.value
+    return AllPluginList.value.filter(
+        (plugin: PluginInfo) =>
+            plugin.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
+            plugin.author.toLowerCase().includes(searchText) || // 插件作者中包含搜索关键字
+            plugin.chineseDescription?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
+            plugin.tags?.toLowerCase().includes(searchText)
+    ) // 插件标签中包含搜索关键字
+})
+
+const totalPageCount = computed(() => {
+    return Math.ceil(filteredList.value?.length / perPageCount.value)
+})
+
+const showReadMoreButton = computed(() => {
+    return currentPage.value < totalPageCount.value
+})
+
+const sortOrder = ref("") // 排序操作
+function sortByDownloadCount() {
+    sortBy.value = "downloadCount"
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+}
+// 点击按更新时间排序按钮
+function sortByUpdateTime() {
+    sortBy.value = "updateTime"
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+}
+function sortByFilename() {
+    sortBy.value = "fileName"
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+}
+const displayedPlugins = computed<PluginInfo[]>(() => {
+    let ResultPlugins = []
+    if (activeCategory.value == "all") {
+        if (sortBy.value === "downloadCount") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = filteredList.value.sort(
+                    (a, b) => a.downloadCount - b.downloadCount
+                )
+            } else {
+                ResultPlugins = filteredList.value.sort(
+                    (a, b) => b.downloadCount - a.downloadCount
+                )
+            }
+        } else if (sortBy.value === "updateTime") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = filteredList.value.sort(
+                    (a, b) =>
+                        parseInt(a.pluginUpdatedTime) -
+                        parseInt(b.pluginUpdatedTime)
+                )
+            } else {
+                ResultPlugins = filteredList.value.sort(
+                    (a, b) =>
+                        parseInt(b.pluginUpdatedTime) -
+                        parseInt(a.pluginUpdatedTime)
+                )
+            }
+        } else if (sortBy.value === "fileName") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = filteredList.value.sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                )
+            } else {
+                ResultPlugins = filteredList.value.sort((a, b) =>
+                    b.name.localeCompare(a.name)
+                )
+            }
+        } else {
+            ResultPlugins = filteredList.value?.slice(
+                0,
+                currentPage.value * perPageCount.value
+            )
+        }
+    } else {
+        ResultPlugins = filteredList.value.filter((plugin) =>
+            plugin.tags?.toLowerCase().includes(activeCategory.value)
+        ) // 插件标签中包含搜索关键字
+
+        if (sortBy.value === "downloadCount") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = ResultPlugins.sort(
+                    (a, b) => a.downloadCount - b.downloadCount
+                )
+            } else {
+                ResultPlugins = ResultPlugins.sort(
+                    (a, b) => b.downloadCount - a.downloadCount
+                )
+            }
+        } else if (sortBy.value === "updateTime") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = ResultPlugins.sort(
+                    (a: PluginInfo, b: PluginInfo) =>
+                        parseInt(a.pluginUpdatedTime) -
+                        parseInt(b.pluginUpdatedTime)
+                )
+            } else {
+                ResultPlugins = ResultPlugins.sort(
+                    (a, b) =>
+                        parseInt(b.pluginUpdatedTime) -
+                        parseInt(a.pluginUpdatedTime)
+                )
+            }
+        } else if (sortBy.value === "fileName") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = ResultPlugins.sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                )
+            } else {
+                ResultPlugins = ResultPlugins.sort((a, b) =>
+                    b.name.localeCompare(a.name)
+                )
+            }
+        }
+    }
+
+    return ResultPlugins?.slice(0, currentPage.value * perPageCount.value)
+})
+const validPluginList = computed(() => {
+    if (Array.isArray(filteredList.value)) {
+        return filteredList.value
+    } else {
+        return []
+    }
+})
+const readMore = () => {
+    const startIndex = currentPage.value * perPageCount.value
+    const endIndex = startIndex + perPageCount.value
+    const pluginsToAdd = filteredList.value?.slice(startIndex, endIndex)
+    currentPage.value++
+    AllPluginList.value = [...AllPluginList.value, ...pluginsToAdd]
+}
+</script>
+
+<template>
+    <div
+        v-show="!isUserLogin"
+        class="z-10 flex w-3/4 p-4 m-auto my-4 top-20 bg-yellow-200/50">
+        <div class="flex items-center">
+            <div class="mr-2">
+                <i
+                    class="block w-6 h-6 mx-auto iconify"
+                    data-icon="gridicons:notice-outline"></i>
+            </div>
+            <div>
+                <span class="font-bold">提示：</span>
+                <span
+                    >当前是未登录状态，仅展示下载前20的热门插件，请登录后获取全部插件内容。</span
+                >
+            </div>
+        </div>
+    </div>
+    <main data-pagefind-body class="w-full">
+        <!-- Renders the page body -->
+
+        <section class="w-full bg-muted-100 dark:bg-muted-1000">
+            <div class="w-full mx-auto max-w-7xl">
+                <!-- toolbar-->
+                <div
+                    class="sticky top-0 z-30 flex items-center w-full overflow-x-auto border divide-x rounded md:top-20 bg-white/90 dark:bg-muted-800/90 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
+                    <button
+                        tooltip="按下载量"
+                        @click="sortByDownloadCount"
+                        class="flex items-center px-2 py-3 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 bg-muted-50 dark:bg-muted-700">
+                        <span
+                            class="flex items-center justify-center w-8 h-8 text-muted-40">
+                            <i
+                                class="w-6 h-6 iconify"
+                                data-icon="solar:round-sort-vertical-line-duotone"></i>
+                        </span>
+                    </button>
+                    <div class="widget-item">
+                        <button
+                            tooltip="按更新时间"
+                            @click="sortByUpdateTime"
+                            class="items-center flex-1 px-2 py-3 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                            <span
+                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                <i
+                                    class="w-6 h-6 iconify"
+                                    data-icon="ic:sharp-update"></i
+                            ></span>
+                        </button>
+                    </div>
+
+                    <div class="widget-item">
+                        <button
+                            tooltip="按文件名排序"
+                            @click="sortByFilename"
+                            class="items-center flex-1 px-2 py-3 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                            <span
+                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                <i
+                                    class="w-6 h-6 iconify"
+                                    data-icon="material-symbols:sort-by-alpha"></i>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="relative w-full">
+                        <label class="hidden text-sm font-alt text-muted-400"
+                            >Search</label
+                        >
+                        <div class="relative group">
+                            <input
+                                type="text"
+                                class="w-full h-16 py-3 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 bg-white border text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
+                                placeholder="Search plugins..."
+                                v-model="searchTextRef" />
+                            <div
+                                class="absolute top-0 left-0 flex items-center justify-center w-16 h-16 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
+                                <i
+                                    class="w-6 h-6 iconify"
+                                    data-icon="lucide:search"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--main -->
+                <div class="flex items-center w-full overflow-hidden">
+                    <!--Content-->
+                    <div
+                        class="flex flex-col justify-between w-full h-full px-6 pt-4 pb-16">
+                        <!--Search-->
+                        <div
+                            class="w-full max-w-[90vw] mx-auto space-y-4 text-center">
+                            <!--Categories-->
+                            <Toolbar
+                                :active-category.sync="activeCategory"
+                                :pluginList="validPluginList"
+                                @update-active-category="
+                                    handleUpdateActiveCategory
+                                ">
+                            </Toolbar>
+                        </div>
+
+                        <!--Blog content-->
+
+                        <div class="flex flex-col gap-12 py-12">
+                            <!--Articles grid-->
+                            <div
+                                class="grid gap-6 -m-3 ptablet:grid-cols-2 ltablet:grid-cols-3 lg:grid-cols-3">
+                                <!--Article-->
+
+                                <div
+                                    v-for="plugin in displayedPlugins"
+                                    :key="plugin.id">
+                                    <PluginCard
+                                        :plugin-info="plugin"
+                                        @download-update-plugin="
+                                            handleShowPluginModal
+                                        ">
+                                    </PluginCard>
+                                    <!-- 显示其他插件信息 -->
+                                </div>
+                                <!--Article-->
+                            </div>
+
+                            <!--Articles grid-->
+                            <div
+                                class="flex items-center justify-center w-full p-6 -m-3">
+                                <div class="w-full max-w-[210px] pt-16">
+                                    <button
+                                        v-if="showReadMoreButton"
+                                        @click="readMore"
+                                        class="relative inline-flex items-center justify-center w-full gap-2 px-6 py-4 font-sans font-semibold transition-all duration-300 bg-white border rounded-lg dark:bg-muted-700 text-muted-800 dark:text-white border-muted-300 dark:border-muted-600 tw-accessibility hover:shadow-xl hover:shadow-muted-400/20">
+                                        <div>Load More</div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!--End Layout-->
+    </main>
+
+    <!-- Modal price-->
+    <div
+        class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
+        v-show="showModal">
+        <!-- Modal inner -->
+        <div
+            class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg dark:bg-muted-800"
+            @click.away="showModal = false"
+            x-transition:enter="motion-safe:ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-90"
+            x-transition:enter-end="opacity-100 scale-100">
+            <!-- Title / Close-->
+            <div class="flex items-center justify-between">
+                <h5 class="mr-3 max-w-none"></h5>
+
+                <button
+                    type="button"
+                    class="z-50 cursor-pointer"
+                    @click="showModal = false">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- content -->
+
+            <section class="body-font">
+                <div class="container px-5 py-4 mx-auto">
+                    <h3
+                        class="mb-6 text-2xl font-medium text-center title-font">
+                        <i
+                            class="w-6 h-6 iconify"
+                            data-icon="line-md:downloading-loop"></i>
+                        即将下载....{{ selectPlugin.toUpperCase() }}
+                    </h3>
+                    <div>
+                        <p class="mb-4 text-base leading-relaxed">
+                            注意，安装和更新操作不可逆，请确认后再操作。
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex-wrap block -mx-4 -mt-4 space-y-6 md:flex sm:-m-4 md:-mb-10 md:space-y-0">
+                        <div class="flex md:p-4 md:w-1/2">
+                            <div class="flex-grow">
+                                <h2
+                                    v-if="isDownload"
+                                    @click="handleDownloadPlugin"
+                                    class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                    <i
+                                        class="w-6 h-6 iconify"
+                                        data-icon="ph:download"></i>
+                                    确认
+                                </h2>
+                                <h2
+                                    v-else
+                                    @click="handleUpdatePlugin"
+                                    class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                    <i
+                                        class="w-6 h-6 iconify"
+                                        data-icon="ph:download"></i>
+                                    确认
+                                </h2>
+                            </div>
+                        </div>
+                        <div class="flex md:p-4 md:w-1/2">
+                            <div class="flex-grow">
+                                <h2
+                                    @click="cancelModal"
+                                    class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                    <i
+                                        class="w-6 h-6 iconify"
+                                        data-icon="arcticons:obsidian"></i>
+                                    取消
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</template>
+
+<style>
+.noimg {
+    display: flex;
+    filter: saturate(70%) contrast(85%);
+    background: 50% 50% / cover;
+    border-radius: 0.5rem;
+    background-color: transparent;
+    color: var(--theme-text-light);
+    border-color: var(--theme-border);
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px,
+        rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+}
+
+.noimg::before {
+    content: attr(data-name);
+    /* 设置标题文字 */
+    display: block;
+    /* 将标题设置为块级元素 */
+    font-size: 1.6vw;
+    /* 设置标题文字大小 */
+    margin-left: 4px;
+
+    color: #fff;
+    text-shadow: 0 2px 2px #000;
+}
+
+img[src=""],
+img:not([src]) {
+    width: 0;
+    height: 0;
+    padding: 82px 130px;
+    background: url("https://cdn.pkmer.cn/covers/pkmer2.png!nomark") no-repeat
+        center;
+    background-size: 100% 100%;
+}
+</style>

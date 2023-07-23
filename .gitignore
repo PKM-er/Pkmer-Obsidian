@@ -26,3 +26,4 @@ dist-ssr
 # dist
 main.js
 styles.css
+data.json

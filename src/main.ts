@@ -1,6 +1,6 @@
 import { Notice, Plugin } from "obsidian";
 
-import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./pkmerView";
+import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./views/PluginMarket";
 import { PkmerSettingTab } from "./settings";
 // import { downloadAndInstallPlugins } from "./utils/download";
 
