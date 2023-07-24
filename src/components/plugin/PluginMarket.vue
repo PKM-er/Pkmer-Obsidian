@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue"
+import { computed, onMounted, onUnmounted, ref } from "vue"
 import Toolbar from "@/components/plugin/Toolbar.vue"
 import PluginCard from "@/components/plugin/PluginCard.vue"
 import { PkmerApi } from "@/api/api"
@@ -141,10 +141,29 @@ const extractCategoryFromHash = () => {
         activeCategory.value = category
     }
 }
-
+const pkmerSize = ref()
+const ele = ref<HTMLElement | null>(null)
 onMounted(async () => {
     extractCategoryFromHash() // 初始化时提取分类名称
     await loadAllPlugins()
+    ele.value = document.querySelector(
+        '.workspace-leaf-content[data-type="pkmer-downloader"]'
+    ) as HTMLElement
+    ele.value && resizeObserver.observe(ele.value)
+    window.addEventListener("resize", handleWindowResize)
+    handleWindowResize()
+})
+
+const handleWindowResize = () => {
+    pkmerSize.value = ele.value && ele.value?.offsetWidth
+}
+onUnmounted(() => {
+    ele.value && resizeObserver.unobserve(ele.value)
+    window.removeEventListener("resize", handleWindowResize)
+})
+
+const resizeObserver = new ResizeObserver(() => {
+    handleWindowResize()
 })
 
 const filteredList = computed<PluginInfo[]>(() => {
@@ -307,22 +326,30 @@ const handleOpenSettings = () => {
 
 <template>
     <div class="text-right pkmer-toolbar">
-        <button @click="handleRefreshPlugin" class="mr-4 bg-muted-100 dark:bg-muted-1000">刷新</button>
-        <button @click="handleOpenSettings">设置</button>
+        <button
+            @click="handleRefreshPlugin"
+            class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-green-500 text-white shadow-xl shadow-primary-500/20">
+            刷新
+        </button>
+        <button
+            class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-primary-500 text-white shadow-xl shadow-primary-500/20"
+            @click="handleOpenSettings">
+            设置
+        </button>
     </div>
     <div
         v-show="!isUserLogin"
         class="z-10 flex w-3/4 p-4 m-auto my-4 top-20 bg-yellow-200/50">
         <div class="flex items-center">
-            <div class="mr-2">
-                <i
-                    class="block w-6 h-6 mx-auto iconify"
-                    data-icon="gridicons:notice-outline"></i>
-            </div>
+            <div class="mr-2">⚠️</div>
             <div>
                 <span class="font-bold">提示：</span>
                 <span
-                    >当前是未登录状态，仅展示下载前20的热门插件，请登录后获取全部插件内容。</span
+                    >当前是未登录状态，仅展示下载前20的热门插件，请<button
+                        class="inline-block font-sans text-xs py-1 px-3 m-1 rounded-lg"
+                        @click="handleOpenSettings">
+                        登录</button
+                    >后获取全部插件内容。</span
                 >
             </div>
         </div>
@@ -337,7 +364,10 @@ const handleOpenSettings = () => {
                     class="relative top-0 z-30 flex items-center w-full overflow-x-auto divide-x rounded dark:bg-muted-800 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
                     <div class="widget-item">
                         <button
-                            :class="{ active: sortBy == 'downloadCount' }"
+                            :class="{
+                                active:
+                                    sortBy == 'downloadCount' || sortBy == ''
+                            }"
                             tooltip="按下载量"
                             flow="down"
                             @click="sortByDownloadCount"
@@ -438,10 +468,10 @@ const handleOpenSettings = () => {
                                     height="1em"
                                     viewBox="0 0 24 24"
                                     data-icon="material-symbols:sort-by-alpha"
-                                    class="w-6 h-6 iconify iconify--material-symbols">
+                                    class="w-5 h-5 iconify iconify--material-symbols">
                                     <path
                                         fill="currentColor"
-                                        d="M2 17L5.75 7H7.9l3.75 10H9.6l-.85-2.4H4.9L4.1 17H2Zm3.5-4.1h2.6L6.9 9.15h-.15L5.5 12.9Zm8.2 4.1v-1.9l5.05-6.3H13.9V7h7.05v1.9l-5 6.3H21V17h-7.3ZM9 5l3-3l3 3H9Zm3 17l-3-3h6l-3 3Z"></path>
+                                        d="M4.5 11a8.5 8.5 0 1 1 8.188 8.494a6.47 6.47 0 0 1-.68 1.457c.327.033.658.049.992.049c5.523 0 10-4.477 10-10S18.523 1 13 1S3 5.477 3 11c0 .334.016.665.048.991a6.51 6.51 0 0 1 1.458-.68A8.65 8.65 0 0 1 4.5 11Zm8.493-5.352a.75.75 0 0 0-1.493.102v6l.007.102a.75.75 0 0 0 .743.648h4l.102-.007A.75.75 0 0 0 16.25 11H13V5.75l-.007-.102ZM1 17.5a5.5 5.5 0 0 1 5-5.477v5.77l-1.646-1.647a.5.5 0 0 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l2.5-2.5a.5.5 0 0 0-.708-.708L7 17.793v-5.77A5.5 5.5 0 1 1 1 17.5Zm8.5 3A.5.5 0 0 0 9 20H4a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5Z" />
                                 </svg>
                             </span>
                         </button>
@@ -504,15 +534,23 @@ const handleOpenSettings = () => {
 
                         <div class="flex flex-col gap-12 py-12">
                             <!--Articles grid-->
-                            <div
-                                class="grid gap-6 -m-3 ptablet:grid-cols-2 ltablet:grid-cols-3 lg:grid-cols-3">
-                                <!--Article-->
 
+                            <!--Article-->
+                            <div
+                                class="grid gap-6 -m-3 ptablet:grid-cols-2 ltablet:grid-cols-3 lg:grid-cols-3"
+                                :class="{
+                                    '!grid-cols-1':
+                                        pkmerSize <= 768 && pkmerSize > 0,
+                                    '!grid-cols-2':
+                                        pkmerSize > 768 && pkmerSize < 1024,
+                                    '!grid-cols-3': pkmerSize > 1024
+                                }">
                                 <div
                                     v-for="plugin in displayedPlugins"
                                     :key="plugin.id">
                                     <PluginCard
                                         :plugin-info="plugin"
+                                        :islogin="isUserLogin"
                                         @download-update-plugin="
                                             handleShowPluginModal
                                         ">
@@ -723,5 +761,8 @@ img:not([src]) {
     background: url("https://cdn.pkmer.cn/covers/pkmer2.png!nomark") no-repeat
         center;
     background-size: 100% 100%;
+}
+button.active span {
+    color: rgb(208, 111, 78);
 }
 </style>

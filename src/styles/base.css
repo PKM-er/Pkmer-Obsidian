@@ -5,3 +5,6 @@
 button.mod-cta[disabled] {
     @apply bg-gray-400 opacity-50 cursor-not-allowed;
 }
+button.mod-cta {
+    @apply  inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg ;
+}

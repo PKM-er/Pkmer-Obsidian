@@ -2,17 +2,22 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-23 23:32:06
+ * @LastEditTime: 2023-07-24 18:04:18
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
 import type { PluginInfo } from '@/types/plugin';
-
 interface Props {
 	pluginInfo: PluginInfo;
+	islogin:boolean;
 }
 const prop = defineProps<Props>();
+
+const isUserLogin =prop.islogin;
+
+
+ 
 defineEmits(['download-update-plugin']);
 function getUsernameFromRepo() {
 	if (prop.pluginInfo.authorAvatar && prop.pluginInfo.authorAvatar.length > 0) {
@@ -35,8 +40,7 @@ if (prop.pluginInfo.tags && prop.pluginInfo.tags.length > 0) {
 	tags = prop.pluginInfo.tags.split(',');
 }
 
-
-
+ 
  
 // function formatDate(timestamp: string) {
 // 	if (timestamp) {
@@ -134,7 +138,7 @@ const getRadomImage = () => {
 };
 </script>
 <template>
-	<div class="relative h-[430px]">
+	<div class="relative">
 		<div class="flex flex-col items-start h-full gap-4 p-6">
 			<!--Article content-->
 			<div class="relative w-full space-y-2">
@@ -158,26 +162,29 @@ const getRadomImage = () => {
 						onerror="javascript:this.src='https://cdn.pkmer.cn/covers/pkmer2.png!nomark';this.οnerrοr=null;" />
 				</div>
 				<!--Title-->
+				<div class="plugin_name relative flex items-center h-10 overflow-hidden"> 
 				<h3 data-pagefind-meta="title"
 					class="flex items-center text-lg font-medium leading-6 plugin_name font-heading text-muted-800 dark:text-white">
 					{{ pluginInfo.name }}
+
 					<img class="ml-2 -mt-2" alt="version"
 						:src="`https://img.shields.io/badge/${pluginInfo.version}-brightgreen`" />
-				
 				</h3>
-				<p class="flex flex-wrap leading-6 text-muted-600 dark:text-muted-400">
-					<img class="" alt="GitHub stars"
+			
+			</div>
+				<p class="flex items-center flex-wrap leading-6 text-muted-600 dark:text-muted-400">
+					<img class="h-full" alt="GitHub stars"
 						:src="`https://img.shields.io/github/stars/${pluginInfo.repo}?style=plastic&color=4F46E5&label=关注量`" />
 
-					<img class="ml-2" alt="下载数量" :src="`https://img.shields.io/badge/下载总数-${formatNumber(
+					<img class="h-full ml-2" alt="下载数量" :src="`https://img.shields.io/badge/下载总数-${formatNumber(
 						pluginInfo.downloadCount
 					)}-yellow`" />
-					<a class=" ml-2"  :href="pluginInfo.contentUrl ? pluginInfo.contentUrl : 'javascript:void(0)'" v-show="pluginInfo.contentUrl">
-						<span class="  text-white  font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-500 ">
+					<a class=" ml-2"  :href="pluginInfo.contentUrl ? pluginInfo.contentUrl : 'javascript:void(0)'"   :class="{'visible':pluginInfo.contentUrl,'invisible':!pluginInfo.contentUrl}">
+						<span class="  text-white  font-sans text-xs py-1 px-3 m-1 rounded-lg bg-yellow-500 ">
 							教程
 						</span>
 					</a>
-				<div class="inline-block float-right ml-2">
+				<div class="inline-block float-right mr-2">
 					<span v-html="generateRatingStars(pluginInfo.score ? pluginInfo.score : 0)" />
 
 
@@ -208,7 +215,15 @@ const getRadomImage = () => {
 						</div>
 					</a>
 					<div class="block ml-auto font-sans text-sm text-muted-400">
+						<button v-show="!isUserLogin"
+							class="items-center whitespace-nowrap inline-flex text-white bg-primary-500 border-0 py-2 px-5 hover:bg-primary-600  shadow-xl shadow-primary-500/20 rounded tw-accessibility transition-colors duration-300"
+							>
+							请登录
+						</button>
+
+						<div  v-show="isUserLogin">
 						<button
+							v-show="isUserLogin"
                             v-if="!pluginInfo.isInstalled"
 							class="inline-flex items-center px-5 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							@click="$emit('download-update-plugin','download',pluginInfo.id)">
@@ -330,6 +345,7 @@ const getRadomImage = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 48 48" data-v-5ade68da="" data-icon="icon-park-outline:link-cloud-sucess" class="block mx-auto iconify w-4 h-4 iconify--icon-park-outline"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M12 33c-3.333 0-8-1.5-8-7.5c0-7 7-8.5 9-8.5c1-3.5 3-9 11-9c7 0 10 4 11 7.5c0 0 9 1 9 9.5c0 6-4 8-8 8"></path><path d="m18 33l6 5l8-10"></path></g></svg>
 							 已安装
                         </button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -372,7 +388,13 @@ const getRadomImage = () => {
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 }
+.plugin_name {
+overflow: hidden;
+    text-overflow: ellipsis;
 
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
 .mark {
 	position: absolute;
 	top: 0;
@@ -380,7 +402,7 @@ const getRadomImage = () => {
 	margin: 0;
 }
 
-.mark:before {
+/* .mark:before {
 	content: '';
 	position: absolute;
 	top: 0;
@@ -391,7 +413,7 @@ const getRadomImage = () => {
 	border-color: rgba(206, 118, 3, 0.7) rgba(206, 118, 3, 0.7) transparent transparent;
 	transform: translateX(-100%);
 	border-top-right-radius: 0.75rem;
-}
+} */
 
 .learn {
 	-moz-transform: rotate(0deg) translateX(-100%) translateZ(0);
