@@ -50,12 +50,16 @@ export default class PluginProcessor {
                 !(await adapter.exists(pluginTargetFolderPath + "manifest.json"))) {
                 await adapter.mkdir(pluginTargetFolderPath);
             }
-
-            zip.forEach(async (relativePath: string, file: any) => {
-                const absolutePath = pluginTargetFolderPath + relativePath;
-                const content = await file.async('nodebuffer');
-                await adapter.write(absolutePath, content)
-            })
+            try {
+                zip.forEach(async (relativePath: string, file: any) => {
+                    const absolutePath = pluginTargetFolderPath + relativePath;
+                    const content = await file.async('nodebuffer');
+                    await adapter.write(absolutePath, content)
+                })
+            } catch (e) {
+                new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`)
+                throw Error(`插件${pluginId}解压失败！`)
+            }
 
             new Notice(`插件${pluginId}安装成功！`)
             return true
@@ -95,11 +99,16 @@ export default class PluginProcessor {
 
             const zip = await JSZip.loadAsync(response.arrayBuffer);
 
-            zip.forEach(async (relativePath: string, file: any) => {
-                const absolutePath = pluginTargetFolderPath + relativePath;
-                const content = await file.async('nodebuffer');
-                await adapter.write(absolutePath, content)
-            })
+            try {
+                zip.forEach(async (relativePath: string, file: any) => {
+                    const absolutePath = pluginTargetFolderPath + relativePath;
+                    const content = await file.async('nodebuffer');
+                    await adapter.write(absolutePath, content)
+                })
+            } catch (e) {
+                new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`)
+                throw Error(`插件${pluginId}解压失败！`)
+            }
 
             new Notice(`插件${pluginId}更新成功！`)
             return true

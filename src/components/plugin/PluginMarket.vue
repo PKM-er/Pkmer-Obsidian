@@ -28,12 +28,18 @@ const pluginProcessor = new PluginProcessor(props.app, props.settings)
 const isUserLogin = await api.isUserLogin()
 
 const loadAllPlugins = async () => {
+    const pkmerDocs = await api.getPkmerDocs()
+
     if (isUserLogin) {
         try {
             AllPluginList.value = await api.getPluginList()
             if (Array.isArray(AllPluginList.value)) {
                 AllPluginList.value.forEach((plugin) => {
-                    plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
+                    if (pkmerDocs.includes(plugin.id)) {
+                        plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
+                    } else {
+                        plugin.contentUrl = ""
+                    }
                     //@ts-ignore
                     const pluginManifests = props.app.plugins.manifests
 
@@ -53,7 +59,11 @@ const loadAllPlugins = async () => {
         AllPluginList.value = await api.getTop20Plugins()
         if (Array.isArray(AllPluginList.value)) {
             AllPluginList.value.forEach((plugin) => {
-                plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
+                if (pkmerDocs.includes(plugin.id)) {
+                    plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
+                } else {
+                    plugin.contentUrl = ""
+                }
                 //@ts-ignore
                 const manifest = props.app.plugins.manifests[plugin.id]
                 plugin.isInstalled = manifest !== undefined
@@ -171,6 +181,12 @@ function sortByFilename() {
     sortBy.value = "fileName"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
+
+function sortByInstalled() {
+    sortBy.value = "installed"
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+}
+
 const displayedPlugins = computed<PluginInfo[]>(() => {
     let ResultPlugins = []
     if (activeCategory.value == "all") {
@@ -208,6 +224,10 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
                     b.name.localeCompare(a.name)
                 )
             }
+        } else if (sortBy.value === "installed") {
+            ResultPlugins = filteredList.value.filter(
+                (plugin) => plugin.isInstalled
+            )
         } else {
             ResultPlugins = filteredList.value?.slice(
                 0,
@@ -272,9 +292,24 @@ const readMore = () => {
     currentPage.value++
     AllPluginList.value = [...AllPluginList.value, ...pluginsToAdd]
 }
+
+const handleRefreshPlugin = async () => {
+    await loadAllPlugins()
+}
+
+const handleOpenSettings = () => {
+    //@ts-ignore
+    app.setting.open()
+    //@ts-ignore
+    props.app.setting.openTabById("Pkmer")
+}
 </script>
 
 <template>
+    <div class="text-right pkmer-toolbar">
+        <button @click="handleRefreshPlugin" class="mr-4 bg-muted-100 dark:bg-muted-1000">刷新</button>
+        <button @click="handleOpenSettings">设置</button>
+    </div>
     <div
         v-show="!isUserLogin"
         class="z-10 flex w-3/4 p-4 m-auto my-4 top-20 bg-yellow-200/50">
@@ -299,16 +334,16 @@ const readMore = () => {
             <div class="w-full mx-auto max-w-7xl">
                 <!-- toolbar-->
                 <div
-                    class="relative items-center top-0 w-full flex dark:bg-muted-800 border-muted-200 dark:border-muted-700 rounded divide-x divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 overflow-x-auto md:overflow-x-visible z-30">
+                    class="relative top-0 z-30 flex items-center w-full overflow-x-auto divide-x rounded dark:bg-muted-800 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
                     <div class="widget-item">
                         <button
                             :class="{ active: sortBy == 'downloadCount' }"
                             tooltip="按下载量"
                             flow="down"
                             @click="sortByDownloadCount"
-                            class="group flex items-center px-2 whitespace-nowrap font-sans text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors duration-300">
+                            class="flex items-center px-2 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                             <span
-                                class="whitespace-pre-wrap flex items-center justify-center h-10 w-10 text-muted-400 group-hover:text-primary-500">
+                                class="flex items-center justify-center w-10 h-10 whitespace-pre-wrap text-muted-400 group-hover:text-primary-500">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     aria-hidden="true"
@@ -317,7 +352,7 @@ const readMore = () => {
                                     height="1em"
                                     viewBox="0 0 24 24"
                                     data-icon="solar:round-sort-vertical-line-duotone"
-                                    class="iconify w-6 h-6 iconify--solar">
+                                    class="w-6 h-6 iconify iconify--solar">
                                     <g
                                         fill="none"
                                         stroke="currentColor"
@@ -342,9 +377,9 @@ const readMore = () => {
                             tooltip="按更新时间"
                             flow="down"
                             @click="sortByUpdateTime"
-                            class="group flex-1 md:flex-auto md:flex items-center px-2 whitespace-nowrap font-sans text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors duration-300">
+                            class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                             <span
-                                class="whitespace-pre-wrap md:flex items-center justify-center h-10 w-10 text-muted-400 group-hover:text-primary-500">
+                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     aria-hidden="true"
@@ -353,7 +388,7 @@ const readMore = () => {
                                     height="1em"
                                     viewBox="0 0 24 24"
                                     data-icon="ic:sharp-update"
-                                    class="iconify w-6 h-6 iconify--ic">
+                                    class="w-6 h-6 iconify iconify--ic">
                                     <path
                                         fill="currentColor"
                                         d="M11 8v5l4.25 2.52l.77-1.28l-3.52-2.09V8H11zm10 2V3l-2.64 2.64A8.937 8.937 0 0 0 12 3a9 9 0 1 0 9 9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7s3.14-7 7-7c1.93 0 3.68.79 4.95 2.05L14 10h7z"></path></svg
@@ -367,9 +402,9 @@ const readMore = () => {
                             tooltip="按文件名排序"
                             flow="down"
                             @click="sortByFilename"
-                            class="group flex-1 md:flex-auto md:flex items-center px-2 whitespace-nowrap font-sans text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors duration-300">
+                            class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                             <span
-                                class="whitespace-pre-wrap md:flex items-center justify-center h-10 w-10 text-muted-400 group-hover:text-primary-500">
+                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     aria-hidden="true"
@@ -378,7 +413,32 @@ const readMore = () => {
                                     height="1em"
                                     viewBox="0 0 24 24"
                                     data-icon="material-symbols:sort-by-alpha"
-                                    class="iconify w-6 h-6 iconify--material-symbols">
+                                    class="w-6 h-6 iconify iconify--material-symbols">
+                                    <path
+                                        fill="currentColor"
+                                        d="M2 17L5.75 7H7.9l3.75 10H9.6l-.85-2.4H4.9L4.1 17H2Zm3.5-4.1h2.6L6.9 9.15h-.15L5.5 12.9Zm8.2 4.1v-1.9l5.05-6.3H13.9V7h7.05v1.9l-5 6.3H21V17h-7.3ZM9 5l3-3l3 3H9Zm3 17l-3-3h6l-3 3Z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="widget-item">
+                        <button
+                            :class="{ active: sortBy == 'installed' }"
+                            tooltip="按已安装排序"
+                            flow="down"
+                            @click="sortByInstalled"
+                            class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                            <span
+                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                    role="img"
+                                    width="1em"
+                                    height="1em"
+                                    viewBox="0 0 24 24"
+                                    data-icon="material-symbols:sort-by-alpha"
+                                    class="w-6 h-6 iconify iconify--material-symbols">
                                     <path
                                         fill="currentColor"
                                         d="M2 17L5.75 7H7.9l3.75 10H9.6l-.85-2.4H4.9L4.1 17H2Zm3.5-4.1h2.6L6.9 9.15h-.15L5.5 12.9Zm8.2 4.1v-1.9l5.05-6.3H13.9V7h7.05v1.9l-5 6.3H21V17h-7.3ZM9 5l3-3l3 3H9Zm3 17l-3-3h6l-3 3Z"></path>
@@ -387,18 +447,18 @@ const readMore = () => {
                         </button>
                     </div>
 
-                    <div class="w-full relative">
-                        <label class="hidden font-alt text-sm text-muted-400"
+                    <div class="relative w-full">
+                        <label class="hidden text-sm font-alt text-muted-400"
                             >Search</label
                         >
-                        <div class="group relative">
+                        <div class="relative group">
                             <input
                                 type="text"
-                                class="pl-16 pr-5 h-8 text-base leading-5 font-sans w-full text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 transition-all duration-300 tw-accessibility"
+                                class="w-full h-8 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
                                 placeholder="Search plugins..."
                                 v-model="searchTextRef" />
                             <div
-                                class="absolute top-0 left-0 h-8 w-16 flex justify-center items-center text-muted-400 group-focus-within:text-primary-500 transition-colors duration-300">
+                                class="absolute top-0 left-0 flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     aria-hidden="true"
@@ -407,7 +467,7 @@ const readMore = () => {
                                     height="1em"
                                     viewBox="0 0 24 24"
                                     data-icon="lucide:search"
-                                    class="iconify w-4 h-4 iconify--lucide">
+                                    class="w-4 h-4 iconify iconify--lucide">
                                     <g
                                         fill="none"
                                         stroke="currentColor"
@@ -532,7 +592,7 @@ const readMore = () => {
                             height="1em"
                             viewBox="0 0 24 24"
                             data-icon="line-md:downloading-loop"
-                            class="iconify w-6 h-6 iconify--line-md">
+                            class="w-6 h-6 iconify iconify--line-md">
                             <g
                                 fill="none"
                                 stroke="currentColor"

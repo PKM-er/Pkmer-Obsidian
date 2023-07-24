@@ -14,9 +14,14 @@ export class PkmerSettingTab extends PluginSettingTab {
         const { containerEl } = this;
 
         containerEl.empty();
+        //给containerEl添加data-type属性，用于css选择器
+        containerEl.setAttribute('data-type', 'pkmer-downloader')
 
-        this.showLogin()
-        this.showLoginOut()
+        if (!this.plugin.settings.token) {
+            this.showLogin()
+        } else {
+            this.showLoginOut()
+        }
 
         new Setting(containerEl)
             .setName("Token")
@@ -36,7 +41,6 @@ export class PkmerSettingTab extends PluginSettingTab {
             return button
                 .setButtonText('登录')
                 .setCta()
-                .setDisabled(!!this.plugin.settings.token)
                 .onClick(async () => {
                     button.setDisabled(true);
                     const loginModel = new PkmerLoginModal(this);
@@ -51,7 +55,6 @@ export class PkmerSettingTab extends PluginSettingTab {
             return button
                 .setButtonText('退出')
                 .setCta()
-                .setDisabled(!!!this.plugin.settings.token)
                 .onClick(async () => {
                     button.setDisabled(true);
                     const loginModel = new PkmerLoginModal(this);

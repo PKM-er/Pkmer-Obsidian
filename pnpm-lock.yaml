@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   '@iconify/vue':
     specifier: ^4.1.1
@@ -7,12 +11,6 @@ dependencies:
   jszip:
     specifier: ^3.10.1
     version: 3.10.1
-  postcss-prefix-selector:
-    specifier: ^1.16.0
-    version: 1.16.0(postcss@8.4.27)
-  postcss-prefixer:
-    specifier: ^3.0.0
-    version: 3.0.0(postcss@8.4.27)
   vue:
     specifier: ^3.3.4
     version: 3.3.4
@@ -36,6 +34,12 @@ devDependencies:
   postcss:
     specifier: ^8.4.27
     version: 8.4.27
+  postcss-prefix-selector:
+    specifier: ^1.16.0
+    version: 1.16.0(postcss@8.4.27)
+  postcss-prefixer:
+    specifier: ^3.0.0
+    version: 3.0.0(postcss@8.4.27)
   tailwindcss:
     specifier: ^3.3.3
     version: 3.3.3
@@ -629,12 +633,13 @@ packages:
     dependencies:
       cssesc: 3.0.0
       fastparse: 1.1.2
-    dev: false
+    dev: true
 
   /cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
     engines: {node: '>=4'}
     hasBin: true
+    dev: true
 
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
@@ -706,7 +711,7 @@ packages:
 
   /fastparse@1.1.2:
     resolution: {integrity: sha512-483XLLxTVIwWK3QTrMGRqUfUpoOs/0hbQrl2oz4J0pAcm3A3bu84wxTFqGqkJzewCLdME38xJLJAxBABfQT8sQ==}
-    dev: false
+    dev: true
 
   /fastq@1.15.0:
     resolution: {integrity: sha512-wBrocU2LCXXa+lWBt8RoIRD89Fi8OdABODa/kEnyeyjS5aZO5/GNvI5sEINADqP/h8M29UHTHUb53sUu5Ihqdw==}
@@ -1038,7 +1043,7 @@ packages:
       postcss: '>4 <9'
     dependencies:
       postcss: 8.4.27
-    dev: false
+    dev: true
 
   /postcss-prefixer@3.0.0(postcss@8.4.27):
     resolution: {integrity: sha512-q5JEBO8KcJheLLK9RezOw6a26Kdvr2bmPXiK2rsU/5G4h/b6lQh2PhmhvTHvogLQnRUgTNGw76WOiIoiJh+2tw==}
@@ -1048,7 +1053,7 @@ packages:
     dependencies:
       css-selector-tokenizer: 0.7.3
       postcss: 8.4.27
-    dev: false
+    dev: true
 
   /postcss-selector-parser@6.0.13:
     resolution: {integrity: sha512-EaV1Gl4mUEV4ddhDnv/xtj7sxwrwxdetHdWUGnT4VJQf+4d05v6lHYZr8N573k5Z0BViss7BDhfWtKS3+sfAqQ==}
@@ -1338,7 +1343,3 @@ packages:
     resolution: {integrity: sha512-2eHWfjaoXgTBC2jNM1LRef62VQa0umtvRiDSk6HSzW7RvS5YtkabJrwYLLEKWBc8a5U2PTSCs+dJjUTJdlHsWQ==}
     engines: {node: '>= 14'}
     dev: true
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false

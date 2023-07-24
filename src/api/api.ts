@@ -1,3 +1,5 @@
+import { requestUrl } from "obsidian";
+
 const BASE_API_URL = 'https://api.pkmer.cn/api/v1/plugins';
 
 export interface ObsidianPluginInfo {
@@ -17,6 +19,18 @@ export interface ObsidianPluginInfo {
 
 }
 
+export interface PkmerDocsInfo {
+    id: string;
+    slug: string;
+    uid: number;
+    title: string;
+    description: string,
+    author: string;
+    type: string;
+    tags: string[];
+    modified: number;
+}
+
 export class PkmerApi {
     token: string
     constructor(token: string) {
@@ -34,6 +48,14 @@ export class PkmerApi {
 
     async isUserLogin(): Promise<boolean> {
         return !!this.token
+    }
+
+    async getPkmerDocs(): Promise<(string | undefined)[]> {
+        const response = await requestUrl("https://pkmer.cn/getPost.json")
+        const pkmerDocsInfo = JSON.parse(response.text) as PkmerDocsInfo[];
+        return pkmerDocsInfo.map((item) => {
+            return item.slug.split('/').pop()
+        })
     }
 
     async getDownloadUrl(id: string): Promise<string> {

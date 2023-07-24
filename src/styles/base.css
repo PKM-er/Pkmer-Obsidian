@@ -2,3 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
+button.mod-cta[disabled] {
+    @apply bg-gray-400 opacity-50 cursor-not-allowed;
+}

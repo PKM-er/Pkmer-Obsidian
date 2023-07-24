@@ -22,8 +22,6 @@ export default defineConfig({
         target: 'esNext',
         rollupOptions: {
             external: [
-                "fs",
-                "path",
                 "obsidian",
                 "electron",
                 "@codemirror/autocomplete",
