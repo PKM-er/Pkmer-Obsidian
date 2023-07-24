@@ -1,3 +1,10 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-23 17:35:33
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2023-07-24 22:20:51
+ * @Description: 
+ */
 import * as JSZip from "jszip";
 // import * as fs from "fs";
 // import * as path from "path";
@@ -59,7 +66,7 @@ async function downloadAndUpdatePlugin(url: string, id: string) {
                 fs.writeFileSync(absolutePath, content);
             });
 
-            new Notice(`下载安装${id}插件成功！`)
+            new Notice(`下载安装${id}插件成功！\n请在插件列表中开启。`, 5000)
         } catch (error) {
             console.error('An error occurred during download and unzip: ', error);
             new Notice(`下载安装${id}插件失败！`)

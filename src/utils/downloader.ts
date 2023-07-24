@@ -57,14 +57,16 @@ export default class PluginProcessor {
                     await adapter.write(absolutePath, content)
                 })
             } catch (e) {
-                new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`)
+                new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`, 5000)
                 throw Error(`插件${pluginId}解压失败！`)
             }
 
-            new Notice(`插件${pluginId}安装成功！`)
+            new Notice(`插件${pluginId}安装成功！\n请在插件列表中启用`, 5000)
+            //@ts-ignore
+            await app.plugins.loadManifests();
             return true
         } catch (error) {
-            new Notice(`插件${pluginId}安装失败！${error}`)
+            new Notice(`插件${pluginId}安装失败！${error}`, 5000)
             return false
         }
     }
@@ -110,7 +112,7 @@ export default class PluginProcessor {
                 throw Error(`插件${pluginId}解压失败！`)
             }
 
-            new Notice(`插件${pluginId}更新成功！`)
+            new Notice(`插件${pluginId}更新成功！\n 请在插件列表中重新启用`)
             return true
         } catch (error) {
             new Notice(`插件${pluginId}更新失败！${error}`)

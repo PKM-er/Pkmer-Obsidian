@@ -80,7 +80,7 @@ const activeCategory = ref("all")
 const selectPlugin = ref("")
 const handleDownloadPlugin = async () => {
     showModal.value = false
-    new Notice("正在下载插件，请稍后...")
+    new Notice("正在下载插件，请稍后...", 3000)
     const downloadStatus = await pluginProcessor.downloadPluginToPluginFolder(
         selectPlugin.value
     )
@@ -97,7 +97,7 @@ const handleDownloadPlugin = async () => {
 
 const handleUpdatePlugin = async () => {
     showModal.value = false
-    new Notice("正在更新插件，请稍后...")
+    new Notice("正在更新插件，请稍后...", 3000)
     const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
         selectPlugin.value
     )
