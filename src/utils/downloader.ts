@@ -12,17 +12,17 @@ export default class PluginProcessor {
         this.api = new PkmerApi(settings.token)
     }
 
-    private async getPluginDownloadUrl(pluginId: string) {
+    private async getPluginDownloadUrl(pluginId: string, version: string) {
         try {
-            return await this.api.getDownloadUrl(pluginId)
+            return await this.api.getDownloadUrl(pluginId, version)
         } catch (e) {
             new Notice(`获取${pluginId}插件下载地址失败！`)
             return undefined
         }
     }
 
-    async downloadPluginToPluginFolder(pluginId: string): Promise<boolean> {
-        const downloadUrl = await this.getPluginDownloadUrl(pluginId)
+    async downloadPluginToPluginFolder(pluginId: string, version: string): Promise<boolean> {
+        const downloadUrl = await this.getPluginDownloadUrl(pluginId, version)
 
         if (!downloadUrl) {
             new Notice(`获取${pluginId}插件下载地址失败！`)
@@ -71,8 +71,8 @@ export default class PluginProcessor {
         }
     }
 
-    async updatePluginToExistPluginFolder(pluginId: string): Promise<boolean> {
-        const downloadUrl = await this.getPluginDownloadUrl(pluginId)
+    async updatePluginToExistPluginFolder(pluginId: string, version: string): Promise<boolean> {
+        const downloadUrl = await this.getPluginDownloadUrl(pluginId, version)
 
         if (!downloadUrl) {
             new Notice(`获取${pluginId}插件下载地址失败！`)

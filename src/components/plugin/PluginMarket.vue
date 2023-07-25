@@ -78,11 +78,13 @@ const loadAllPlugins = async () => {
 const searchTextRef = ref("")
 const activeCategory = ref("all")
 const selectPlugin = ref("")
+const selectPluginVersion = ref("")
 const handleDownloadPlugin = async () => {
     showModal.value = false
     new Notice("正在下载插件，请稍后...", 3000)
     const downloadStatus = await pluginProcessor.downloadPluginToPluginFolder(
-        selectPlugin.value
+        selectPlugin.value, 
+        selectPluginVersion.value
     )
 
     if (!downloadStatus) return
@@ -99,7 +101,8 @@ const handleUpdatePlugin = async () => {
     showModal.value = false
     new Notice("正在更新插件，请稍后...", 3000)
     const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
-        selectPlugin.value
+        selectPlugin.value,
+        selectPluginVersion.value
     )
     if (!updateStatus) return
 
@@ -121,10 +124,12 @@ const handleUpdateActiveCategory = (value: string) => {
 
 const handleShowPluginModal = (
     action: "download" | "update",
-    pluginId: string
+    pluginId: string,
+    version: string
 ) => {
     showModal.value = true
     selectPlugin.value = pluginId
+    selectPluginVersion.value = version
     if (action === "download") {
         isDownload.value = true
     } else {
@@ -346,7 +351,7 @@ const handleOpenSettings = () => {
                 <span class="font-bold">提示：</span>
                 <span
                     >当前是未登录状态，仅展示下载前20的热门插件，请<button
-                        class="inline-block font-sans text-xs py-1 px-3 m-1 rounded-lg"
+                        class="inline-block px-3 py-1 m-1 font-sans text-xs rounded-lg"
                         @click="handleOpenSettings">
                         登录</button
                     >后获取全部插件内容。</span
