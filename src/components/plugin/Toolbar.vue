@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-06-22 13:17:46
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-23 22:27:21
+ * @LastEditTime: 2023-07-25 09:17:35
  * @Description: 
 -->
 <script setup lang="ts">
@@ -40,7 +40,7 @@ const uniqueCategories = computed(() => {
 <template>
     <div class="relative flex flex-wrap justify-center w-full gap-2">
         <button
-            class="inline-flex items-center justify-center px-4 py-2 font-sans text-sm transition-colors duration-300 rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 tw-accessibility"
+            class="inline-flex items-center border-2 shadow-md justify-center px-4 py-2 font-sans text-sm transition-colors duration-300 rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 tw-accessibility"
             :class="
                 activeCategory === 'all'
                     ? 'border-primary-500 bg-muted-50 dark:bg-muted-700'
@@ -54,7 +54,7 @@ const uniqueCategories = computed(() => {
             v-for="category in uniqueCategories"
             :key="category">
             <button
-                class="inline-flex items-center justify-center flex-1 px-4 py-2 font-sans text-sm transition-colors duration-300 rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 tw-accessibility"
+                class="inline-flex items-center border-2 shadow-md justify-center flex-1 px-4 py-2 font-sans text-sm transition-colors duration-300 rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 tw-accessibility"
                 :class="
                     activeCategory === category
                         ? 'border-primary-500 bg-muted-50 dark:bg-muted-700'
