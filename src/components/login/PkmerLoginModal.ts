@@ -1,7 +1,7 @@
 import { Notice } from 'obsidian';
 import { PkmerSettingTab } from '@/settings';
 
-export default class WereadLoginModel {
+export default class PkmerLoginModel {
     private modal: any;
     private settingTab: PkmerSettingTab;
     constructor(settingTab: PkmerSettingTab) {
@@ -23,9 +23,12 @@ export default class WereadLoginModel {
 
         this.modal.webContents.on('will-navigate', () => {
             this.modal.webContents.executeJavaScript(`localStorage.getItem('pkmer-token')`).then((result: string) => {
+                if(!result) return;
                 this.settingTab.saveToken(result);
                 this.settingTab.display();
                 this.modal.close();
+                //@ts-ignore
+                this.settingTab.app.workspace.activeLeaf.rebuildView();
             })
         })
 
@@ -65,11 +68,17 @@ export default class WereadLoginModel {
             await this.modal.loadURL('https://pkmer.cn/products/signIn/');
         } catch (error) {
             console.log(error);
-            this.modal.webContents.executeJavaScript(`localStorage.getItem('pkmer-token')`).then((result: string) => {
-                this.settingTab.saveToken(result);
-                this.settingTab.display();
-                this.modal.close();
-            })
+
+            // this.modal.webContents.on("storage", (event: any, key: string) => {
+            //     console.log(event, key)
+                // this.modal.webContents.executeJavaScript(`localStorage.getItem('pkmer-token')`).then((result: string) => {
+                //     this.settingTab.saveToken(result);
+                //     this.settingTab.display();
+                //     this.modal.close();
+                // })
+
+            // })
+
         }
     }
 

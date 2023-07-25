@@ -318,7 +318,8 @@ const readMore = () => {
 }
 
 const handleRefreshPlugin = async () => {
-    await loadAllPlugins()
+    //@ts-ignore
+    props.app.workspace.activeLeaf.rebuildView()
 }
 
 const handleOpenSettings = () => {
