@@ -1,3 +1,10 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-25 23:58:28
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2023-07-26 20:34:45
+ * @Description: 
+ */
 import { requestUrl } from "obsidian";
 
 const BASE_API_URL = 'https://api.pkmer.cn/api/v1/download/obsidian';
@@ -46,9 +53,32 @@ export class PkmerApi {
         })
     }
 
-    async isUserLogin(): Promise<boolean> {
-        return !!this.token
+    // async isUserLogin(): Promise<boolean> {
+
+    //     return !!this.token
+    // }
+    isTokenExpired(token: any): boolean {
+        const currentTimestamp = Math.floor(Date.now() / 1000); // 当前时间的时间戳
+        return currentTimestamp > token.exp;
     }
+
+    async isUserLogin(): Promise<boolean> {
+        const token = this.token;
+        if (token) {
+            const strings = token.split(".");
+            const decryptedToken = JSON.parse(decodeURIComponent(escape(window.atob(strings[1].replace(/-/g, "+").replace(/_/g, "/")))));
+            if (this.isTokenExpired(decryptedToken)) {
+                // JWT 已过期，重新登录获取新的 token
+                console.log("Pkmer Token has expired. Please log in again to get a new token.");
+                return false;
+            } else {
+                // JWT 未过期，可以继续进行其他操作
+                // console.log("Token is valid. Proceed with the operation.");
+                return true;
+            }
+        } else
+            return false;
+    };
 
     async getPkmerDocs(): Promise<(string | undefined)[]> {
         const response = await requestUrl("https://pkmer.cn/getPost.json")
@@ -59,7 +89,7 @@ export class PkmerApi {
     }
 
     async getDownloadUrl(pluginId: string, version: string): Promise<string> {
-        const response = await this.fetchWithToken(BASE_API_URL + '/getPluginDownloadUrl/' + pluginId +'/'+ version, {
+        const response = await this.fetchWithToken(BASE_API_URL + '/getPluginDownloadUrl/' + pluginId + '/' + version, {
             method: 'GET',
         })
         return await response.text() as string;

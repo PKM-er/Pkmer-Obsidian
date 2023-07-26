@@ -1,3 +1,10 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-24 16:35:56
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2023-07-26 20:54:16
+ * @Description: 
+ */
 import PkmerLoginModal from "./components/login/PkmerLoginModal";
 import PkmerPlugin from "./main";
 import { App, PluginSettingTab, Setting } from "obsidian";
@@ -28,7 +35,9 @@ export class PkmerSettingTab extends PluginSettingTab {
             .setDesc("Default token for pkmer downloader")
             .addText((text) =>
                 text
+                    .setPlaceholder('登录获取token')
                     .setValue(this.plugin.settings.token)
+                    .setDisabled(true)
                     .onChange(async (value) => {
                         this.plugin.settings.token = value;
                         await this.plugin.saveSettings();

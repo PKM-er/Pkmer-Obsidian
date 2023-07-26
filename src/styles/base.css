@@ -6,5 +6,12 @@ button.mod-cta[disabled] {
     @apply bg-gray-400 opacity-50 cursor-not-allowed;
 }
 button.mod-cta {
-    @apply  inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg ;
+    background-color: var(--interactive-normal);
+    color: var(--text-normal);
+    font-size: var(--font-ui-small);
+    border-radius: var(--button-radius);
+    border: 0;
+    padding: var(--size-4-1) var(--size-4-3);
+    height: var(--input-height);
+    font-weight: var(--input-font-weight);
 }

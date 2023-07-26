@@ -158,7 +158,7 @@ onMounted(async () => {
     ele.value && resizeObserver.observe(ele.value)
     window.addEventListener("resize", handleWindowResize)
     handleWindowResize()
-    downloadCount.value = await api.getDownloadCount()
+    if (isUserLogin) downloadCount.value = await api.getDownloadCount()
 })
 
 const handleWindowResize = () => {
@@ -330,13 +330,14 @@ const handleOpenSettings = () => {
     //@ts-ignore
     props.app.setting.openTabById("Pkmer")
 }
-
 </script>
 
 <template>
     <div class="text-right pkmer-toolbar">
-        <span>
-            {{downloadCount}}
+        <span
+            v-show="isUserLogin"
+            class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
+            剩余下载次数 {{ downloadCount }}
         </span>
         <button
             @click="handleRefreshPlugin"
@@ -550,7 +551,7 @@ const handleOpenSettings = () => {
                             <div class="widget-item">
                                 <button
                                     :class="{ active: sortBy == 'installed' }"
-                                    tooltip="按已安装排序"
+                                    tooltip="筛选已安装插件"
                                     flow="down"
                                     @click="sortByInstalled"
                                     class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">

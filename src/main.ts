@@ -1,8 +1,15 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-26 16:57:16
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2023-07-26 21:06:41
+ * @Description: 
+ */
 import { Notice, Plugin } from "obsidian";
 
 import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./views/PluginMarket";
 import { PkmerSettingTab } from "./settings";
-// import { downloadAndInstallPlugins } from "./utils/download";
+import PluginProcessor from "@/utils/downloader"
 
 export interface PkmerDownloaderSettings {
     token: string;
@@ -41,16 +48,26 @@ export default class PkmerPlugin extends Plugin {
 
     private registerCustomURI() {
         this.registerObsidianProtocolHandler("pkmer-installer", async (params) => {
-            const pluginId = params.pluginId;
-            const pkmerToken = localStorage.getItem("pkmer-token");
-            // console.log(pkmerToken)
+            const pluginId = params.pluginID;
+            const version = params.version;
+            const pkmerToken = this.settings.token
+
             if (!pkmerToken) {
-                new Notice("请登录插件内的pkmer页面");
+                new Notice("请先登录获取token", 5000);
+                //@ts-ignore
+                app.setting.open()
+                //@ts-ignore
+                app.setting.openTabById("Pkmer")
                 return;
             }
             if (pluginId) {
                 try {
-                    // await downloadAndInstallPlugins(pluginId, this.settings.token);
+                    new Notice("正在下载插件，请稍后...", 3000)
+                    const pluginProcessor = new PluginProcessor(app, this.settings)
+                    await pluginProcessor.downloadPluginToPluginFolder(
+                        pluginId,
+                        version
+                    )
                 } catch (e) {
                     new Notice("下载失败，请检查网络");
                 }

@@ -12,6 +12,43 @@ export default class PluginProcessor {
         this.api = new PkmerApi(settings.token)
     }
 
+
+
+
+    private async getPluginUrl(pluginName: string, pluginVersion: string) {
+        const currentTime = Date.now();
+        const cachedPluginUrl = localStorage.getItem('pluginUrl');
+        // 如果有缓存的地址，并且插件名称和版本号都与缓存一致
+        if (cachedPluginUrl) {
+            const cachedInfo = JSON.parse(cachedPluginUrl);
+
+            if (
+                cachedInfo.name === pluginName &&
+                cachedInfo.version === pluginVersion &&
+                currentTime < cachedInfo.expiryTime
+            ) {
+                // 返回缓存的地址
+                return cachedInfo.url;
+            }
+        }
+
+        // 调用后端接口获取新的地址
+        const newPluginUrl = await this.getPluginDownloadUrl(pluginName, pluginVersion)
+
+        // 保存新的地址到 localStorage，并记录有效期为 15 分钟
+        const expiryTime = currentTime + 15 * 60 * 1000;
+        const cacheInfo = {
+            name: pluginName,
+            version: pluginVersion,
+            url: newPluginUrl,
+            expiryTime: expiryTime,
+        };
+        localStorage.setItem('pluginUrl', JSON.stringify(cacheInfo));
+
+        // 返回新的地址
+        return newPluginUrl;
+    }
+
     private async getPluginDownloadUrl(pluginId: string, version: string): Promise<string> {
         const downloadUrl = await this.api.getDownloadUrl(pluginId, version)
         if (downloadUrl.startsWith('http')) {
@@ -24,8 +61,7 @@ export default class PluginProcessor {
     }
 
     async downloadPluginToPluginFolder(pluginId: string, version: string): Promise<boolean> {
-        const downloadUrl = await this.getPluginDownloadUrl(pluginId, version)
-        console.log(downloadUrl)
+        const downloadUrl = await this.getPluginUrl(pluginId, version)
 
         if (!downloadUrl) {
             new Notice(`获取${pluginId}插件下载地址失败！`)
