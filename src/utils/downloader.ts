@@ -1,12 +1,12 @@
 import { App, Notice, normalizePath, requestUrl } from 'obsidian';
 import * as JSZip from 'jszip';
 import { PkmerApi } from '../api/api';
-import { PkmerDownloaderSettings } from '../main';
+import { PkmerSettings } from '../main';
 export default class PluginProcessor {
-    settings: PkmerDownloaderSettings
+    settings: PkmerSettings
     app: App
     api: PkmerApi
-    constructor(app: App, settings: PkmerDownloaderSettings) {
+    constructor(app: App, settings: PkmerSettings) {
         this.app = app
         this.settings = settings
         this.api = new PkmerApi(settings.token)

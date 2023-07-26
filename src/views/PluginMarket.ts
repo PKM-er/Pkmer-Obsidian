@@ -6,7 +6,7 @@
  * @Description: 
  */
 import { ItemView, WorkspaceLeaf } from "obsidian"
-import PkmerDownloaderPlugin, { PkmerDownloaderSettings } from "../main"
+import PkmerDownloaderPlugin, { PkmerSettings } from "../main"
 import PluginMarketView from "./PluginMarketView.vue"
 import { createApp } from "vue"
 import "../styles/global.css"
@@ -16,7 +16,7 @@ export const DEFAULT_VIEW_TYPE = "pkmer-downloader"
 
 export class PkmderDownloaderView extends ItemView {
     plugin: PkmerDownloaderPlugin
-    settings: PkmerDownloaderSettings
+    settings: PkmerSettings
 
     constructor(leaf: WorkspaceLeaf, plugin: PkmerDownloaderPlugin) {
         super(leaf)

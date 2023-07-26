@@ -3,14 +3,14 @@ import { computed, onMounted, onUnmounted, ref } from "vue"
 import Toolbar from "@/components/plugin/Toolbar.vue"
 import PluginCard from "@/components/plugin/PluginCard.vue"
 import { PkmerApi } from "@/api/api"
-import { PkmerDownloaderSettings } from "@/main"
+import { PkmerSettings } from "@/main"
 
 import type { PluginInfo } from "@/types/plugin"
 import PluginProcessor from "@/utils/downloader"
 import { App, Notice } from "obsidian"
 
 interface Props {
-    settings: PkmerDownloaderSettings
+    settings: PkmerSettings
     app: App
 }
 

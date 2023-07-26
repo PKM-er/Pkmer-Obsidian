@@ -11,15 +11,15 @@ import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./views/PluginMarket";
 import { PkmerSettingTab } from "./settings";
 import PluginProcessor from "@/utils/downloader"
 
-export interface PkmerDownloaderSettings {
+export interface PkmerSettings {
     token: string;
 }
 
-const DEFAULT_SETTINGS: PkmerDownloaderSettings = {
+const DEFAULT_SETTINGS: PkmerSettings = {
     token: "",
 }
 export default class PkmerPlugin extends Plugin {
-    settings!: PkmerDownloaderSettings;
+    settings!: PkmerSettings;
 
     async onload() {
         await this.loadSettings();

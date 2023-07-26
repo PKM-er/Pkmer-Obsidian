@@ -1,18 +1,34 @@
-# Vue 3 + TypeScript + Vite
+# Pkmer Obsidian
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Pkmer Obsidian 是一款 Obsidian 插件，旨在帮助国内用户轻松自由的访问优秀的 Obsidian 插件。
 
-## Recommended IDE Setup
+![Pkmer](./public/pkmer.png)
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## 主要功能
 
-## Type Support For `.vue` Imports in TS
+- 插件浏览：提供丰富的插件浏览视图，帮助用户按标签，下载量，更新日期，关注量等多维度找到想要的插件
+- 插件文档：对常用插件在 Pkmer 提供由社区贡献者编写的中文文档，帮助用户上手使用插件
+- 插件下载和更新：提供一键下载和更新插件，极致的下载速度，彻底摆脱访问困难
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+## 实现原理
 
-1. Disable the built-in TypeScript Extension
-   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+Pkmer 从 Obsidian 官方发布的插件信息列表中，找到最近更新的插件版本，定时两小时不间断获取最新的插件，放在云端以便下载(这涉及到服务器、对象存储和 CDN 费用)。
+
+在本插件内，用户点击下载按钮，如果用户 Obsidian 插件目录中，不存在名为插件 id 的目录，则会新建一个目录，在该插件内解压插件内容到该目录。如果存在名为插件 id 的目录，则会直接解压插件内容覆盖里面的 `main.js`, `manifest.json` 和 `styles.css` 三个文件，并不会删除和覆盖 `data.json` 等配置文件。
+
+
+## 价格
+
+注册 [Pkmer](https://pkmer.cn) 的用户完全免费使用该插件及下载插件，但为了防止滥用和过高的成本，免费下载 15次/月 插件，Pkmer 会员则限制 200次/月 插件（视实际情况而定）。
+
+Pkmer 会员除了付费获取外，可以通过为社区提供知识管理相关的文档，视频，翻译，开发 Obsidian 插件，协助运营 Pkmer 等多种方式免费获取，具体方式可参考 [社区指南]( https://pkmer.cn/show/20230330155738 ) 参与贡献。
+
+## 注意事项
+
+本插件完全开源，云端下载的文件任何人都可通过文件哈希和原开源项目发布的文件哈希比对，以确保安全性。
+
+1. Pkmer 社区承担着成本，如无必要，尽量别挥霍下载资源（ Pkmer 会员除外）
+2. 插件解压缩会覆盖原来的文件，理论上会存在解压缩失败的情况，其风险和在 Obsidian 社区更新相当，如您的库非常重要，建议下载更新前及时备份
+
+如有任何问题，可以加 [Pkmer](https://pkmer.cn) 网站上的 QQ 群和微信群进行联系。
