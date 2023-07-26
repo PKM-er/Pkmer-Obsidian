@@ -57,7 +57,7 @@ export default class PkmerPlugin extends Plugin {
                 //@ts-ignore
                 app.setting.open()
                 //@ts-ignore
-                app.setting.openTabById("Pkmer")
+                app.setting.openTabById("PKMer")
                 return;
             }
             if (pluginId) {

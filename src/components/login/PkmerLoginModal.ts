@@ -23,7 +23,7 @@ export default class PkmerLoginModel {
 
         this.modal.webContents.on('will-navigate', () => {
             this.modal.webContents.executeJavaScript(`localStorage.getItem('pkmer-token')`).then((result: string) => {
-                if(!result) return;
+                if (!result) return;
                 this.settingTab.saveToken(result);
                 this.settingTab.display();
                 this.modal.close();
@@ -71,11 +71,11 @@ export default class PkmerLoginModel {
 
             // this.modal.webContents.on("storage", (event: any, key: string) => {
             //     console.log(event, key)
-                // this.modal.webContents.executeJavaScript(`localStorage.getItem('pkmer-token')`).then((result: string) => {
-                //     this.settingTab.saveToken(result);
-                //     this.settingTab.display();
-                //     this.modal.close();
-                // })
+            // this.modal.webContents.executeJavaScript(`localStorage.getItem('pkmer-token')`).then((result: string) => {
+            //     this.settingTab.saveToken(result);
+            //     this.settingTab.display();
+            //     this.modal.close();
+            // })
 
             // })
 
@@ -89,6 +89,8 @@ export default class PkmerLoginModel {
                 this.settingTab.saveToken("");
                 this.settingTab.display();
                 this.modal.close();
+                //@ts-ignore
+                this.settingTab.app.workspace.activeLeaf.rebuildView();
             })
         } catch (error) {
             console.log(error);

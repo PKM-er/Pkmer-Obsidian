@@ -328,7 +328,7 @@ const handleOpenSettings = () => {
     //@ts-ignore
     app.setting.open()
     //@ts-ignore
-    props.app.setting.openTabById("Pkmer")
+    props.app.setting.openTabById("PKMer")
 }
 </script>
 
