@@ -1,10 +1,10 @@
 {
-    "id": "Pkmer",
-    "name": "Pkmer Downloader",
+    "id": "PKMer",
+    "name": "PKMer Downloader",
     "version": "0.0.1",
     "minAppVersion": "0.15.0",
     "description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-    "author": "pkmer",
+    "author": "PKMer(windily-cloud&cumany)",
     "authorUrl": "https://pkmer.cn",
     "fundingUrl": {
         "patreon": "https://pkmer.cn/products/price/"
