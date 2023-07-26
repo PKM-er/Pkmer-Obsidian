@@ -1,13 +1,13 @@
 {
-    "id": "PKMer",
-    "name": "PKMer Downloader",
-    "version": "0.0.1",
-    "minAppVersion": "0.15.0",
-    "description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-    "author": "PKMer(windily-cloud&cumany)",
-    "authorUrl": "https://pkmer.cn",
-    "fundingUrl": {
-        "patreon": "https://pkmer.cn/products/price/"
-    },
-    "isDesktopOnly": false
+  "id": "PKMer",
+  "name": "PKMer",
+  "version": "0.0.2",
+  "minAppVersion": "0.15.0",
+  "description": "This is a plugin for connecting pkmer.cn",
+  "author": "PKMer(windily-cloud&cumany)",
+  "authorUrl": "https://pkmer.cn",
+  "fundingUrl": {
+    "patreon": "https://pkmer.cn/products/price/"
+  },
+  "isDesktopOnly": false
 }
