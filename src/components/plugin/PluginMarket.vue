@@ -84,7 +84,7 @@ const handleDownloadPlugin = async () => {
     showModal.value = false
     new Notice("正在下载插件，请稍后...", 3000)
     const downloadStatus = await pluginProcessor.downloadPluginToPluginFolder(
-        selectPlugin.value, 
+        selectPlugin.value,
         selectPluginVersion.value
     )
 
@@ -368,162 +368,257 @@ const handleOpenSettings = () => {
     </div>
     <main data-pagefind-body class="w-full">
         <!-- Renders the page body -->
-
-        <section class="w-full bg-muted-100 dark:bg-muted-1000">
-            <div class="w-full mx-auto max-w-7xl">
-                <!-- toolbar-->
+        <div class="flex md:content-center flex-wrap">
+            <!--Site logo-->
+            <div
+                class="logo md:scale-125 max-w-7xl mx-auto flex items-center justify-between px-8 font-sans">
                 <div
-                    class="relative top-0 z-30 flex items-center w-full overflow-x-auto divide-x rounded dark:bg-muted-800 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
-                    <div class="widget-item">
-                        <button
-                            :class="{
-                                active:
-                                    sortBy == 'downloadCount' || sortBy == ''
-                            }"
-                            tooltip="按下载量"
-                            flow="down"
-                            @click="sortByDownloadCount"
-                            class="flex items-center px-2 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
-                            <span
-                                class="flex items-center justify-center w-10 h-10 whitespace-pre-wrap text-muted-400 group-hover:text-primary-500">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    role="img"
-                                    width="1em"
-                                    height="1em"
-                                    viewBox="0 0 24 24"
-                                    data-icon="solar:round-sort-vertical-line-duotone"
-                                    class="w-6 h-6 iconify iconify--solar">
-                                    <g
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.5">
-                                        <circle
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            opacity=".5"></circle>
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            d="M9.5 8v8m0 0L7 13.25M9.5 16l2.5-2.75M14.5 16V8m0 0L12 10.75M14.5 8l2.5 2.75"></path>
-                                    </g>
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
-                    <div class="widget-item">
-                        <button
-                            :class="{ active: sortBy == 'updateTime' }"
-                            tooltip="按更新时间"
-                            flow="down"
-                            @click="sortByUpdateTime"
-                            class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
-                            <span
-                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    role="img"
-                                    width="1em"
-                                    height="1em"
-                                    viewBox="0 0 24 24"
-                                    data-icon="ic:sharp-update"
-                                    class="w-6 h-6 iconify iconify--ic">
-                                    <path
-                                        fill="currentColor"
-                                        d="M11 8v5l4.25 2.52l.77-1.28l-3.52-2.09V8H11zm10 2V3l-2.64 2.64A8.937 8.937 0 0 0 12 3a9 9 0 1 0 9 9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7s3.14-7 7-7c1.93 0 3.68.79 4.95 2.05L14 10h7z"></path></svg
-                            ></span>
-                        </button>
-                    </div>
-
-                    <div class="widget-item">
-                        <button
-                            :class="{ active: sortBy == 'fileName' }"
-                            tooltip="按文件名排序"
-                            flow="down"
-                            @click="sortByFilename"
-                            class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
-                            <span
-                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    role="img"
-                                    width="1em"
-                                    height="1em"
-                                    viewBox="0 0 24 24"
-                                    data-icon="material-symbols:sort-by-alpha"
-                                    class="w-6 h-6 iconify iconify--material-symbols">
-                                    <path
-                                        fill="currentColor"
-                                        d="M2 17L5.75 7H7.9l3.75 10H9.6l-.85-2.4H4.9L4.1 17H2Zm3.5-4.1h2.6L6.9 9.15h-.15L5.5 12.9Zm8.2 4.1v-1.9l5.05-6.3H13.9V7h7.05v1.9l-5 6.3H21V17h-7.3ZM9 5l3-3l3 3H9Zm3 17l-3-3h6l-3 3Z"></path>
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
-                    <div class="widget-item">
-                        <button
-                            :class="{ active: sortBy == 'installed' }"
-                            tooltip="按已安装排序"
-                            flow="down"
-                            @click="sortByInstalled"
-                            class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
-                            <span
-                                class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    role="img"
-                                    width="1em"
-                                    height="1em"
-                                    viewBox="0 0 24 24"
-                                    data-icon="material-symbols:sort-by-alpha"
-                                    class="w-5 h-5 iconify iconify--material-symbols">
-                                    <path
-                                        fill="currentColor"
-                                        d="M4.5 11a8.5 8.5 0 1 1 8.188 8.494a6.47 6.47 0 0 1-.68 1.457c.327.033.658.049.992.049c5.523 0 10-4.477 10-10S18.523 1 13 1S3 5.477 3 11c0 .334.016.665.048.991a6.51 6.51 0 0 1 1.458-.68A8.65 8.65 0 0 1 4.5 11Zm8.493-5.352a.75.75 0 0 0-1.493.102v6l.007.102a.75.75 0 0 0 .743.648h4l.102-.007A.75.75 0 0 0 16.25 11H13V5.75l-.007-.102ZM1 17.5a5.5 5.5 0 0 1 5-5.477v5.77l-1.646-1.647a.5.5 0 0 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l2.5-2.5a.5.5 0 0 0-.708-.708L7 17.793v-5.77A5.5 5.5 0 1 1 1 17.5Zm8.5 3A.5.5 0 0 0 9 20H4a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5Z" />
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
-
-                    <div class="relative w-full">
-                        <label class="hidden text-sm font-alt text-muted-400"
-                            >Search</label
-                        >
-                        <div class="relative group">
-                            <input
-                                type="text"
-                                class="w-full h-8 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
-                                placeholder="Search plugins..."
-                                v-model="searchTextRef" />
+                    class="w-full justify-center flex-wrap max-w-7xl mx-auto flex items-center">
+                    <!--Logo-->
+                    <div class="w-auto items-center gap-6 basis-0">
+                        <a
+                            href="https://pkmer.cn"
+                            class="no-underline text-inherit flex items-center gap-3">
                             <div
-                                class="absolute top-0 left-0 flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
+                                class="transition-all duration-300 text-primary-600">
                                 <svg
+                                    class="fill-current w-7 h-7"
+                                    :class="'w-7 h-7'"
+                                    width="1.75rem"
                                     xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    role="img"
-                                    width="1em"
-                                    height="1em"
-                                    viewBox="0 0 24 24"
-                                    data-icon="lucide:search"
-                                    class="w-4 h-4 iconify iconify--lucide">
-                                    <g
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <path d="m21 21l-4.3-4.3"></path>
+                                    version="1.1"
+                                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    xmlns:svgjs="http://svgjs.com/svgjs"
+                                    viewBox="0 0 512 512"
+                                    xml:space="preserve">
+                                    <g>
+                                        <path
+                                            d="M395.631 98.837C358.783 45.867 309.195 16.696 256 16.696S153.217 45.867 116.369 98.837c-35.565 51.124-55.151 118.797-55.151 190.554 0 113.54 87.379 205.913 194.783 205.913s194.783-92.373 194.783-205.913c-.001-71.756-19.588-139.43-55.153-190.554z"
+                                            style=""
+                                            fill="#ffc170"
+                                            class=""></path>
+                                        <path
+                                            d="M256 495.304c107.403 0 194.783-92.373 194.783-205.913 0-71.757-19.586-139.43-55.151-190.554C358.783 45.867 309.195 16.696 256 16.696"
+                                            style=""
+                                            fill="#e1a05a"
+                                            data-original="#ffd6a0"
+                                            class=""></path>
+                                        <path
+                                            d="M0 128h55.652v33.391H0z"
+                                            style=""
+                                            fill="#a0bdd4"
+                                            class=""></path>
+                                        <path
+                                            d="M13.053 51.94h55.65v33.391h-55.65z"
+                                            style=""
+                                            transform="rotate(-160.527 40.878 68.636)"
+                                            fill="#a0bdd4"
+                                            class=""></path>
+                                        <path
+                                            d="M456.348 128H512v33.391h-55.652z"
+                                            style=""
+                                            fill="#a0bdd4"
+                                            class=""></path>
+                                        <path
+                                            d="M454.411 40.807h33.391v55.65h-33.391z"
+                                            style=""
+                                            transform="rotate(-109.469 471.111 68.636)"
+                                            fill="#a0bdd4"
+                                            class=""></path>
+                                        <path
+                                            d="m187.719 277.315 14.949-29.896-47.598-21.154-93.659 51.085c-.124 4-.194 8.013-.194 12.041 0 8.564.505 17.005 1.471 25.298l93.892-51.214 31.139 13.84zM450.63 278.997l-105.587-52.794-89.463 44.731-22.369-9.942-14.948 29.896 38.155 16.958 88.625-44.31 104.166 52.083a218.592 218.592 0 0 0 1.573-26.228c.001-3.476-.059-6.938-.152-10.394z"
+                                            style=""
+                                            fill="#f8f8f8"
+                                            class=""></path>
+                                        <path
+                                            d="m450.63 278.997-105.587-52.794-89.463 44.731.839 36.913 88.624-44.31 104.166 52.083a218.592 218.592 0 0 0 1.573-26.228 382.07 382.07 0 0 0-.152-10.395z"
+                                            style=""
+                                            fill="#fef5ea"
+                                            class=""></path>
                                     </g>
                                 </svg>
+                            </div>
+                            <span
+                                class="whitespace-nowrap font-sans font-extrabold text-lg tracking-widest uppercase feat dark:text-muted-100"
+                                >PKMer Plugin Market</span
+                            >
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!--Site search-->
+            <div
+                class="search w-full first-letter: mx-auto flex items-center justify-between px-2 py-4 font-sans">
+                <div
+                    class="w-full justify-center flex-wrap first-letter:mx-auto flex items-center">
+                    <!--Search-->
+                    <div class="w-full lg:max-w-[60vw] mx-auto py-3 md:px-6">
+                        <!-- toolbar-->
+                        <div
+                            class="relative top-0 z-30 flex items-center w-full overflow-x-auto divide-x rounded dark:bg-muted-800 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
+                            <div class="widget-item">
+                                <button
+                                    :class="{
+                                        active:
+                                            sortBy == 'downloadCount' ||
+                                            sortBy == ''
+                                    }"
+                                    tooltip="按下载量"
+                                    flow="down"
+                                    @click="sortByDownloadCount"
+                                    class="flex items-center px-2 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                                    <span
+                                        class="flex items-center justify-center w-10 h-10 whitespace-pre-wrap text-muted-400 group-hover:text-primary-500">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                            role="img"
+                                            width="1em"
+                                            height="1em"
+                                            viewBox="0 0 24 24"
+                                            data-icon="solar:round-sort-vertical-line-duotone"
+                                            class="w-6 h-6 iconify iconify--solar">
+                                            <g
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.5">
+                                                <circle
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    opacity=".5"></circle>
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M9.5 8v8m0 0L7 13.25M9.5 16l2.5-2.75M14.5 16V8m0 0L12 10.75M14.5 8l2.5 2.75"></path>
+                                            </g>
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+                            <div class="widget-item">
+                                <button
+                                    :class="{ active: sortBy == 'updateTime' }"
+                                    tooltip="按更新时间"
+                                    flow="down"
+                                    @click="sortByUpdateTime"
+                                    class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                                    <span
+                                        class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                            role="img"
+                                            width="1em"
+                                            height="1em"
+                                            viewBox="0 0 24 24"
+                                            data-icon="ic:sharp-update"
+                                            class="w-6 h-6 iconify iconify--ic">
+                                            <path
+                                                fill="currentColor"
+                                                d="M11 8v5l4.25 2.52l.77-1.28l-3.52-2.09V8H11zm10 2V3l-2.64 2.64A8.937 8.937 0 0 0 12 3a9 9 0 1 0 9 9h-2c0 3.86-3.14 7-7 7s-7-3.14-7-7s3.14-7 7-7c1.93 0 3.68.79 4.95 2.05L14 10h7z"></path></svg
+                                    ></span>
+                                </button>
+                            </div>
+
+                            <div class="widget-item">
+                                <button
+                                    :class="{ active: sortBy == 'fileName' }"
+                                    tooltip="按文件名排序"
+                                    flow="down"
+                                    @click="sortByFilename"
+                                    class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                                    <span
+                                        class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                            role="img"
+                                            width="1em"
+                                            height="1em"
+                                            viewBox="0 0 24 24"
+                                            data-icon="material-symbols:sort-by-alpha"
+                                            class="w-6 h-6 iconify iconify--material-symbols">
+                                            <path
+                                                fill="currentColor"
+                                                d="M2 17L5.75 7H7.9l3.75 10H9.6l-.85-2.4H4.9L4.1 17H2Zm3.5-4.1h2.6L6.9 9.15h-.15L5.5 12.9Zm8.2 4.1v-1.9l5.05-6.3H13.9V7h7.05v1.9l-5 6.3H21V17h-7.3ZM9 5l3-3l3 3H9Zm3 17l-3-3h6l-3 3Z"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+                            <div class="widget-item">
+                                <button
+                                    :class="{ active: sortBy == 'installed' }"
+                                    tooltip="按已安装排序"
+                                    flow="down"
+                                    @click="sortByInstalled"
+                                    class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
+                                    <span
+                                        class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                            role="img"
+                                            width="1em"
+                                            height="1em"
+                                            viewBox="0 0 24 24"
+                                            data-icon="material-symbols:sort-by-alpha"
+                                            class="w-5 h-5 iconify iconify--material-symbols">
+                                            <path
+                                                fill="currentColor"
+                                                d="M4.5 11a8.5 8.5 0 1 1 8.188 8.494a6.47 6.47 0 0 1-.68 1.457c.327.033.658.049.992.049c5.523 0 10-4.477 10-10S18.523 1 13 1S3 5.477 3 11c0 .334.016.665.048.991a6.51 6.51 0 0 1 1.458-.68A8.65 8.65 0 0 1 4.5 11Zm8.493-5.352a.75.75 0 0 0-1.493.102v6l.007.102a.75.75 0 0 0 .743.648h4l.102-.007A.75.75 0 0 0 16.25 11H13V5.75l-.007-.102ZM1 17.5a5.5 5.5 0 0 1 5-5.477v5.77l-1.646-1.647a.5.5 0 0 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l2.5-2.5a.5.5 0 0 0-.708-.708L7 17.793v-5.77A5.5 5.5 0 1 1 1 17.5Zm8.5 3A.5.5 0 0 0 9 20H4a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5Z" />
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div class="relative w-full">
+                                <label
+                                    class="hidden text-sm font-alt text-muted-400"
+                                    >Search</label
+                                >
+                                <div class="relative group">
+                                    <input
+                                        type="text"
+                                        class="w-full h-8 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
+                                        placeholder="Search plugins..."
+                                        v-model="searchTextRef" />
+                                    <div
+                                        class="absolute top-0 left-0 flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                            role="img"
+                                            width="1em"
+                                            height="1em"
+                                            viewBox="0 0 24 24"
+                                            data-icon="lucide:search"
+                                            class="w-4 h-4 iconify iconify--lucide">
+                                            <g
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2">
+                                                <circle
+                                                    cx="11"
+                                                    cy="11"
+                                                    r="8"></circle>
+                                                <path
+                                                    d="m21 21l-4.3-4.3"></path>
+                                            </g>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <section class="w-full bg-muted-100 dark:bg-muted-1000">
+            <div class="w-full mx-auto max-w-7xl">
                 <!--main -->
                 <div class="flex items-center w-full overflow-hidden">
                     <!--Content-->
