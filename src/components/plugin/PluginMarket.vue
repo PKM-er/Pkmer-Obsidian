@@ -79,6 +79,7 @@ const searchTextRef = ref("")
 const activeCategory = ref("all")
 const selectPlugin = ref("")
 const selectPluginVersion = ref("")
+const downloadCount = ref(0)
 const handleDownloadPlugin = async () => {
     showModal.value = false
     new Notice("正在下载插件，请稍后...", 3000)
@@ -157,6 +158,7 @@ onMounted(async () => {
     ele.value && resizeObserver.observe(ele.value)
     window.addEventListener("resize", handleWindowResize)
     handleWindowResize()
+    downloadCount.value = await api.getDownloadCount()
 })
 
 const handleWindowResize = () => {
@@ -328,10 +330,14 @@ const handleOpenSettings = () => {
     //@ts-ignore
     props.app.setting.openTabById("Pkmer")
 }
+
 </script>
 
 <template>
     <div class="text-right pkmer-toolbar">
+        <span>
+            {{downloadCount}}
+        </span>
         <button
             @click="handleRefreshPlugin"
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-green-500 text-white shadow-xl shadow-primary-500/20">

@@ -66,8 +66,8 @@ export class PkmerApi {
     }
 
     async getDownloadCount(): Promise<number> {
-        const response = await this.fetchWithToken(BASE_API_URL + '/gePlugintDownloadCount')
-        return await response.text() as unknown as number;
+        const response = await this.fetchWithToken(BASE_API_URL + '/getPluginDownloadCount')
+        return parseInt(await response.text()) + 1 as unknown as number;
     }
 
     async getTop20Plugins(): Promise<ObsidianPluginInfo[]> {
