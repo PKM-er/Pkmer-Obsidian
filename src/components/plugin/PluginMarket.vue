@@ -7,7 +7,7 @@ import { PkmerSettings } from "@/main"
 
 import type { PluginInfo } from "@/types/plugin"
 import PluginProcessor from "@/utils/downloader"
-import { App, Notice } from "obsidian"
+import { App, Notice, debounce } from "obsidian"
 
 interface Props {
     settings: PkmerSettings
@@ -172,6 +172,12 @@ onUnmounted(() => {
 const resizeObserver = new ResizeObserver(() => {
     handleWindowResize()
 })
+
+const handleSetSearchText = (event: any) => {
+    debounce(() => {
+        searchTextRef.value = event.target.value
+    }, 1500)()
+}
 
 const filteredList = computed<PluginInfo[]>(() => {
     const searchText = searchTextRef.value.toLowerCase().trim() // 将搜索关键字转为小写
@@ -369,17 +375,17 @@ const handleOpenSettings = () => {
     </div>
     <main data-pagefind-body class="w-full">
         <!-- Renders the page body -->
-        <div class="flex md:content-center flex-wrap">
+        <div class="flex flex-wrap md:content-center">
             <!--Site logo-->
             <div
-                class="logo md:scale-125 max-w-7xl mx-auto flex items-center justify-between px-8 font-sans">
+                class="flex items-center justify-between px-8 mx-auto font-sans logo md:scale-125 max-w-7xl">
                 <div
-                    class="w-full justify-center flex-wrap max-w-7xl mx-auto flex items-center">
+                    class="flex flex-wrap items-center justify-center w-full mx-auto max-w-7xl">
                     <!--Logo-->
-                    <div class="w-auto items-center gap-6 basis-0">
+                    <div class="items-center w-auto gap-6 basis-0">
                         <a
                             href="https://pkmer.cn"
-                            class="no-underline text-inherit flex items-center gap-3">
+                            class="flex items-center gap-3 no-underline text-inherit">
                             <div
                                 class="transition-all duration-300 text-primary-600">
                                 <svg
@@ -440,7 +446,7 @@ const handleOpenSettings = () => {
                                 </svg>
                             </div>
                             <span
-                                class="whitespace-nowrap font-sans font-extrabold text-lg tracking-widest uppercase feat dark:text-muted-100"
+                                class="font-sans text-lg font-extrabold tracking-widest uppercase whitespace-nowrap feat dark:text-muted-100"
                                 >PKMer Plugin Market</span
                             >
                         </a>
@@ -450,9 +456,9 @@ const handleOpenSettings = () => {
 
             <!--Site search-->
             <div
-                class="search w-full first-letter: mx-auto flex items-center justify-between px-2 py-4 font-sans">
+                class="flex items-center justify-between w-full px-2 py-4 mx-auto font-sans search first-letter:">
                 <div
-                    class="w-full justify-center flex-wrap first-letter:mx-auto flex items-center">
+                    class="flex flex-wrap items-center justify-center w-full first-letter:mx-auto">
                     <!--Search-->
                     <div class="w-full lg:max-w-[60vw] mx-auto py-3 md:px-6">
                         <!-- toolbar-->
@@ -584,7 +590,8 @@ const handleOpenSettings = () => {
                                         type="text"
                                         class="w-full h-8 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
                                         placeholder="Search plugins..."
-                                        v-model="searchTextRef" />
+                                        @input="handleSetSearchText"
+                                        :value="searchTextRef" />
                                     <div
                                         class="absolute top-0 left-0 flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
                                         <svg
