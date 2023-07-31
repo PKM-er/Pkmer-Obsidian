@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue"
-import Toolbar from "@/components/plugin/Toolbar.vue"
-import PluginCard from "@/components/plugin/PluginCard.vue"
+import { ref, onMounted, onUnmounted, computed } from "vue"
+import ThemeCard from "./ThemeCard.vue"
+import ThemeToolbar from "./ThemeToolbar.vue"
 import { PkmerApi } from "@/api/api"
 import { PkmerSettings } from "@/main"
 import Head from "@/components/common/Head.vue"
-import type { PluginInfo } from "@/types/plugin"
-import PluginProcessor from "@/utils/downloader"
+import type { ThemeInfo } from "@/types/theme"
+import ThemeProcessor from "@/utils/tdownloader"
 import { App, Notice, debounce } from "obsidian"
 
 interface Props {
@@ -18,101 +18,75 @@ const props = defineProps<Props>()
 
 const sortBy = ref("")
 const showModal = ref(false)
-const AllPluginList = ref()
+const AllThemeList = ref()
 let perPageCount = ref(24)
 let currentPage = ref(1)
+
 const isDownload = ref(true)
 const api = new PkmerApi(props.settings.token)
-const pluginProcessor = new PluginProcessor(props.app, props.settings)
+const themeProcessor = new ThemeProcessor(props.app, props.settings)
 
 const isUserLogin = await api.isUserLogin()
-
-const loadAllPlugins = async () => {
+const loadAllThemes = async () => {
     const pkmerDocs = await api.getPkmerDocs()
-
     if (isUserLogin) {
         try {
-            AllPluginList.value = await api.getPluginList()
-            if (Array.isArray(AllPluginList.value)) {
-                AllPluginList.value.forEach((plugin) => {
-                    if (pkmerDocs.includes(plugin.id)) {
-                        plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
-                    } else {
-                        plugin.contentUrl = ""
+            AllThemeList.value = await api.getThemeList()
+            AllThemeList.value = AllThemeList.value.sort(
+                (a, b) => b.downloadCount - a.downloadCount
+            )
+            if (Array.isArray(AllThemeList.value)) {
+                AllThemeList.value.forEach((theme) => {
+                    if (pkmerDocs.includes(theme.name)) {
+                        theme.contentUrl = `https://pkmer.cn/show/${theme.name
+                            .replace(/\s+/g, "-")
+                            .toLowerCase()}`
                     }
                     //@ts-ignore
-                    const pluginManifests = props.app.plugins.manifests
+                    const themeManifests = props.app.customCss.themes
 
-                    plugin.isInstalled =
-                        pluginManifests[plugin.id] !== undefined
-                    plugin.isOutdated =
-                        plugin.isInstalled &&
-                        pluginManifests[plugin.id].version !== plugin.version
+                    theme.isInstalled = themeManifests[theme.name] !== undefined
+                    theme.isOutdated =
+                        theme.isInstalled &&
+                        themeManifests[theme.name].version !== theme.version
                 })
             } else {
-                AllPluginList.value = []
+                AllThemeList.value = []
             }
         } catch (error) {
-            console.error("Error loading plugins:", error)
+            console.error("Error loading themes:", error)
         }
     } else {
-        AllPluginList.value = await api.getTop20Plugins()
-        if (Array.isArray(AllPluginList.value)) {
-            AllPluginList.value.forEach((plugin) => {
-                if (pkmerDocs.includes(plugin.id)) {
-                    plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
-                } else {
-                    plugin.contentUrl = ""
+        AllThemeList.value = await api.getTop20Themes()
+        if (Array.isArray(AllThemeList.value)) {
+            AllThemeList.value.forEach((theme) => {
+                if (pkmerDocs.includes(theme.name)) {
+                    theme.contentUrl = `https://pkmer.cn/show/${theme.name}`
                 }
                 //@ts-ignore
-                const manifest = props.app.plugins.manifests[plugin.id]
-                plugin.isInstalled = manifest !== undefined
-                plugin.isOutdated = manifest?.version !== plugin.version
+                const themeManifests = props.app.customCss.themes
+
+                theme.isInstalled = themeManifests[theme.name] !== undefined
+                theme.isOutdated =
+                    theme.isInstalled &&
+                    themeManifests[theme.name].version !== theme.version
             })
         } else {
-            AllPluginList.value = []
+            AllThemeList.value = []
         }
     }
 }
 
 const searchTextRef = ref("")
 const activeCategory = ref("all")
-const selectPlugin = ref("")
-const selectPluginVersion = ref("")
+const selectTheme = ref("")
+const selectThemeVersion = ref("")
+const downloadCount = ref(0)
 
-const handleDownloadPlugin = async () => {
-    showModal.value = false
-    new Notice("正在下载插件，请稍后...", 3000)
-    const downloadStatus = await pluginProcessor.downloadPluginToPluginFolder(
-        selectPlugin.value,
-        selectPluginVersion.value
-    )
-
-    if (!downloadStatus) return
-
-    AllPluginList.value = AllPluginList.value.map((plugin: any) => {
-        if (plugin.id == selectPlugin.value) {
-            plugin.isInstalled = true
-        }
-        return plugin
-    })
-}
-
-const handleUpdatePlugin = async () => {
-    showModal.value = false
-    new Notice("正在更新插件，请稍后...", 3000)
-    const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
-        selectPlugin.value,
-        selectPluginVersion.value
-    )
-    if (!updateStatus) return
-
-    AllPluginList.value = AllPluginList.value.map((plugin: any) => {
-        if (plugin.id == selectPlugin.value) {
-            plugin.isOutdated = false
-        }
-        return plugin
-    })
+const handleSetSearchText = (event: any) => {
+    debounce(() => {
+        searchTextRef.value = event.target.value
+    }, 800)()
 }
 
 const cancelModal = () => {
@@ -123,19 +97,59 @@ const handleUpdateActiveCategory = (value: string) => {
     activeCategory.value = value
 }
 
-const handleShowPluginModal = (
+const handleShowThemeModal = (
     action: "download" | "update",
-    pluginId: string,
+    themeName: string,
     version: string
 ) => {
     showModal.value = true
-    selectPlugin.value = pluginId
-    selectPluginVersion.value = version
+    selectTheme.value = themeName
+    selectThemeVersion.value = version
     if (action === "download") {
         isDownload.value = true
     } else {
         isDownload.value = false
     }
+}
+
+const handleUpdateTheme = async () => {
+    showModal.value = false
+    new Notice("正在更新插件，请稍后...", 3000)
+    const updateStatus = await themeProcessor.updateThemeToExistThemeFolder(
+        selectTheme.value,
+        selectThemeVersion.value
+    )
+    if (!updateStatus) return
+
+    AllThemeList.value = AllThemeList.value.map((theme: any) => {
+        if (theme.name == selectTheme.value) {
+            theme.isOutdated = false
+        }
+        return theme
+    })
+}
+
+const handleDownloadTheme = async () => {
+    showModal.value = false
+    new Notice("正在下载主题，请稍后...", 3000)
+
+    const downloadStatus = await themeProcessor.downloadThemeToThemeFolder(
+        selectTheme.value,
+        selectThemeVersion.value
+    )
+
+    if (!downloadStatus) return
+
+    AllThemeList.value = AllThemeList.value.map((theme: any) => {
+        if (theme.name == selectTheme.value) {
+            theme.isInstalled = true
+        }
+        return theme
+    })
+}
+
+const hideModal = () => {
+    showModal.value = false
 }
 
 // console.log(props.pluginList);
@@ -151,42 +165,36 @@ const pkmerSize = ref()
 const ele = ref<HTMLElement | null>(null)
 onMounted(async () => {
     extractCategoryFromHash() // 初始化时提取分类名称
-    await loadAllPlugins()
+    await loadAllThemes()
     ele.value = document.querySelector(
         '.workspace-leaf-content[data-type="pkmer-downloader"]'
     ) as HTMLElement
     ele.value && resizeObserver.observe(ele.value)
     window.addEventListener("resize", handleWindowResize)
     handleWindowResize()
+    if (isUserLogin) downloadCount.value = await api.getDownloadCount()
 })
-
 const handleWindowResize = () => {
     pkmerSize.value = ele.value && ele.value?.offsetWidth
 }
+
 onUnmounted(() => {
     ele.value && resizeObserver.unobserve(ele.value)
     window.removeEventListener("resize", handleWindowResize)
 })
-
 const resizeObserver = new ResizeObserver(() => {
     handleWindowResize()
 })
 
-const handleSetSearchText = (event: any) => {
-    debounce(() => {
-        searchTextRef.value = event.target.value
-    }, 800)()
-}
-
-const filteredList = computed<PluginInfo[]>(() => {
+const filteredList = computed<ThemeInfo[]>(() => {
     const searchText = searchTextRef.value.toLowerCase().trim() // 将搜索关键字转为小写
-    if (searchText.length < 1) return AllPluginList.value
-    return AllPluginList.value.filter(
-        (plugin: PluginInfo) =>
-            plugin.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
-            plugin.author.toLowerCase().includes(searchText) || // 插件作者中包含搜索关键字
-            plugin.chineseDescription?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
-            plugin.tags?.toLowerCase().includes(searchText)
+    if (searchText.length < 1) return AllThemeList.value
+    return AllThemeList.value.filter(
+        (theme: ThemeInfo) =>
+            theme.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
+            theme.author.toLowerCase().includes(searchText) || // 插件作者中包含搜索关键字
+            theme.chineseDescription?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
+            theme.tags?.toLowerCase().includes(searchText)
     ) // 插件标签中包含搜索关键字
 })
 
@@ -197,6 +205,24 @@ const totalPageCount = computed(() => {
 const showReadMoreButton = computed(() => {
     return currentPage.value < totalPageCount.value
 })
+
+//是否显示"Read More"按钮
+
+// const bestTheme = computed(() => {
+// 	let bestList = prop.pluginList.filter(
+// 		(plugin) => plugin.rating == 5
+// 		// (plugin.rating == 5 && plugin.author == 'Cuman') ||
+// 		// (plugin.rating == 5 && plugin.author == 'Boninall')
+// 		// 插件评级等于5
+// 	);
+// 	let randomIndex1 = Math.floor(Math.random() * bestList.length);
+// 	let randomIndex2 = Math.floor(Math.random() * bestList.length);
+// 	while (randomIndex2 === randomIndex1) {
+// 		randomIndex2 = Math.floor(Math.random() * bestList.length);
+// 	}
+
+// 	return [bestList[randomIndex1], bestList[randomIndex2]];
+// });
 
 const sortOrder = ref("") // 排序操作
 function sortByDownloadCount() {
@@ -212,104 +238,116 @@ function sortByFilename() {
     sortBy.value = "fileName"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
-
 function sortByInstalled() {
     sortBy.value = "installed"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
-
-const displayedPlugins = computed<PluginInfo[]>(() => {
-    let ResultPlugins = []
+const displayedThemes = computed(() => {
+    let ResultThemes = []
     if (activeCategory.value == "all") {
         if (sortBy.value === "downloadCount") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort(
+                ResultThemes = filteredList.value.sort(
                     (a, b) => a.downloadCount - b.downloadCount
                 )
             } else {
-                ResultPlugins = filteredList.value.sort(
+                ResultThemes = filteredList.value.sort(
                     (a, b) => b.downloadCount - a.downloadCount
                 )
             }
         } else if (sortBy.value === "updateTime") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) =>
-                        parseInt(a.pluginUpdatedTime) -
-                        parseInt(b.pluginUpdatedTime)
+                ResultThemes = filteredList.value.sort(
+                    (a, b) => new Date(a.updatedTime) - new Date(b.updatedTime)
                 )
             } else {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) =>
-                        parseInt(b.pluginUpdatedTime) -
-                        parseInt(a.pluginUpdatedTime)
+                ResultThemes = filteredList.value.sort(
+                    (a, b) => new Date(b.updatedTime) - new Date(a.updatedTime)
                 )
             }
         } else if (sortBy.value === "fileName") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort((a, b) =>
+                ResultThemes = filteredList.value.sort((a, b) =>
                     a.name.localeCompare(b.name)
                 )
             } else {
-                ResultPlugins = filteredList.value.sort((a, b) =>
+                ResultThemes = filteredList.value.sort((a, b) =>
                     b.name.localeCompare(a.name)
                 )
             }
+        } else if (sortBy.value === "pkmerDownloadCount") {
+            if (sortOrder.value === "asc") {
+                ResultThemes = filteredList.value.sort(
+                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
+                )
+            } else {
+                ResultThemes = filteredList.value.sort(
+                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
+                )
+            }
         } else if (sortBy.value === "installed") {
-            ResultPlugins = filteredList.value.filter(
-                (plugin) => plugin.isInstalled
+            ResultThemes = filteredList.value.filter(
+                (theme) => theme.isInstalled
             )
         } else {
-            ResultPlugins = filteredList.value?.slice(
+            ResultThemes = filteredList.value?.slice(
                 0,
                 currentPage.value * perPageCount.value
             )
         }
     } else {
-        ResultPlugins = filteredList.value.filter((plugin) =>
-            plugin.tags?.toLowerCase().includes(activeCategory.value)
+        ResultThemes = filteredList.value.filter(
+            (theme) =>
+                theme.tags?.toLowerCase().includes(activeCategory.value) ||
+                theme.modes?.toLowerCase().includes(activeCategory.value)
         ) // 插件标签中包含搜索关键字
 
         if (sortBy.value === "downloadCount") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort(
+                ResultThemes = ResultThemes.sort(
                     (a, b) => a.downloadCount - b.downloadCount
                 )
             } else {
-                ResultPlugins = ResultPlugins.sort(
+                ResultThemes = ResultThemes.sort(
                     (a, b) => b.downloadCount - a.downloadCount
                 )
             }
         } else if (sortBy.value === "updateTime") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort(
-                    (a: PluginInfo, b: PluginInfo) =>
-                        parseInt(a.pluginUpdatedTime) -
-                        parseInt(b.pluginUpdatedTime)
+                ResultThemes = ResultThemes.sort(
+                    (a, b) => new Date(a.updatedTime) - new Date(b.updatedTime)
                 )
             } else {
-                ResultPlugins = ResultPlugins.sort(
-                    (a, b) =>
-                        parseInt(b.pluginUpdatedTime) -
-                        parseInt(a.pluginUpdatedTime)
+                ResultThemes = ResultThemes.sort(
+                    (a, b) => new Date(b.updatedTime) - new Date(a.updatedTime)
                 )
             }
         } else if (sortBy.value === "fileName") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort((a, b) =>
+                ResultThemes = ResultThemes.sort((a, b) =>
                     a.name.localeCompare(b.name)
                 )
             } else {
-                ResultPlugins = ResultPlugins.sort((a, b) =>
+                ResultThemes = ResultThemes.sort((a, b) =>
                     b.name.localeCompare(a.name)
+                )
+            }
+        } else if (sortBy.value === "pkmerDownloadCount") {
+            if (sortOrder.value === "asc") {
+                ResultThemes = ResultThemes.sort(
+                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
+                )
+            } else {
+                ResultThemes = ResultThemes.sort(
+                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
                 )
             }
         }
     }
 
-    return ResultPlugins?.slice(0, currentPage.value * perPageCount.value)
+    return ResultThemes?.slice(0, currentPage.value * perPageCount.value)
 })
-const validPluginList = computed(() => {
+const validThemeList = computed(() => {
     if (Array.isArray(filteredList.value)) {
         return filteredList.value
     } else {
@@ -319,17 +357,23 @@ const validPluginList = computed(() => {
 const readMore = () => {
     const startIndex = currentPage.value * perPageCount.value
     const endIndex = startIndex + perPageCount.value
-    const pluginsToAdd = filteredList.value?.slice(startIndex, endIndex)
+    const themesToAdd = filteredList.value?.slice(startIndex, endIndex)
     currentPage.value++
-    AllPluginList.value = [...AllPluginList.value, ...pluginsToAdd]
+    AllThemeList.value = [...AllThemeList.value, ...themesToAdd]
 }
-</script>
 
+// 加载更多插件
+
+// const readMore = async () => {
+// 	page.value++;
+// 	await loadThemes();
+// };
+</script>
 <template>
     <Head :settings="props.settings" :isLogin="isUserLogin" :app="props.app">
     </Head>
     <main data-pagefind-body class="w-full">
-        <!--Site search-->
+        <!-- Renders the page body -->
         <div
             class="flex items-center justify-between w-full px-2 py-4 mx-auto font-sans search first-letter:">
             <div
@@ -432,7 +476,7 @@ const readMore = () => {
                         <div class="widget-item">
                             <button
                                 :class="{ active: sortBy == 'installed' }"
-                                tooltip="筛选已安装插件"
+                                tooltip="筛选已安装主题"
                                 flow="down"
                                 @click="sortByInstalled"
                                 class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
@@ -460,7 +504,7 @@ const readMore = () => {
                                 <input
                                     type="text"
                                     class="w-full h-8 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
-                                    placeholder="Search plugins..."
+                                    placeholder="Search themes..."
                                     @input="handleSetSearchText"
                                     :value="searchTextRef" />
                                 <div
@@ -496,23 +540,25 @@ const readMore = () => {
         </div>
 
         <section class="w-full bg-muted-100 dark:bg-muted-1000">
-            <div class="w-full mx-auto max-w-7xl">
+            <div class="w-full max-w-7xl mx-auto">
+                <!-- ThemeToolbar-->
+
                 <!--main -->
-                <div class="flex items-center w-full overflow-hidden">
+                <div class="w-full flex items-center overflow-hidden">
                     <!--Content-->
                     <div
-                        class="flex flex-col justify-between w-full h-full px-6 pt-4 pb-16">
+                        class="w-full h-full flex flex-col justify-between px-6 pb-16 pt-4">
                         <!--Search-->
                         <div
                             class="w-full max-w-[90vw] mx-auto space-y-4 text-center">
                             <!--Categories-->
-                            <Toolbar
+                            <ThemeToolbar
                                 :active-category.sync="activeCategory"
-                                :pluginList="validPluginList"
+                                :themeList="validThemeList"
                                 @update-active-category="
                                     handleUpdateActiveCategory
                                 ">
-                            </Toolbar>
+                            </ThemeToolbar>
                         </div>
 
                         <!--Blog content-->
@@ -520,7 +566,6 @@ const readMore = () => {
                         <div class="flex flex-col gap-12 py-12">
                             <!--Articles grid-->
 
-                            <!--Article-->
                             <div
                                 class="grid gap-6 -m-3 ptablet:grid-cols-2 ltablet:grid-cols-3 lg:grid-cols-3"
                                 :class="{
@@ -530,29 +575,42 @@ const readMore = () => {
                                         pkmerSize > 768 && pkmerSize < 1024,
                                     '!grid-cols-3': pkmerSize > 1024
                                 }">
+                                <!--Article-->
+
+                                <!-- <div
+									v-show="
+										activeCategory === 'all' ||
+										ThemeInfo.tags.includes(activeCategory)
+									"
+									v-for="(ThemeInfo, index) in displayedThemes"
+									:key="ThemeInfo.name + index"
+								>
+									<ThemeCard :plugin-info="ThemeInfo"> </ThemeCard>
+								</div> -->
+
                                 <div
-                                    v-for="plugin in displayedPlugins"
-                                    :key="plugin.id">
-                                    <PluginCard
-                                        :plugin-info="plugin"
+                                    v-for="theme in displayedThemes"
+                                    :key="displayedThemes.id">
+                                    <ThemeCard
+                                        :theme-info="theme"
                                         :isLogin="isUserLogin"
-                                        @download-update-plugin="
-                                            handleShowPluginModal
+                                        @download-update-theme="
+                                            handleShowThemeModal
                                         ">
-                                    </PluginCard>
-                                    <!-- 显示其他插件信息 -->
+                                    </ThemeCard>
+                                    <!-- 显示其他主题信息 -->
                                 </div>
                                 <!--Article-->
                             </div>
 
                             <!--Articles grid-->
                             <div
-                                class="flex items-center justify-center w-full p-6 -m-3">
+                                class="w-full flex items-center justify-center p-6 -m-3">
                                 <div class="w-full max-w-[210px] pt-16">
                                     <button
                                         v-if="showReadMoreButton"
                                         @click="readMore"
-                                        class="relative inline-flex items-center justify-center w-full gap-2 px-6 py-4 font-sans font-semibold transition-all duration-300 border rounded-lg dark:bg-muted-700 text-muted-800 dark:text-white border-muted-300 dark:border-muted-600 tw-accessibility hover:shadow-xl hover:shadow-muted-400/20">
+                                        class="w-full inline-flex items-center justify-center gap-2 font-sans font-semibold bg-white dark:bg-muted-700 text-muted-800 dark:text-white border border-muted-300 dark:border-muted-600 relative px-6 py-4 rounded-lg tw-accessibility hover:shadow-xl hover:shadow-muted-400/20 transition-all duration-300">
                                         <div>Load More</div>
                                     </button>
                                 </div>
@@ -566,14 +624,14 @@ const readMore = () => {
         <!--End Layout-->
     </main>
 
-    <!-- Modal price-->
+    <!-- Modal plugin-->
     <div
         class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
         v-show="showModal">
         <!-- Modal inner -->
         <div
             class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg dark:bg-muted-700"
-            @click.away="showModal = false"
+            @click.away="hideModal"
             x-transition:enter="motion-safe:ease-out duration-300"
             x-transition:enter-start="opacity-0 scale-90"
             x-transition:enter-end="opacity-100 scale-100">
@@ -584,7 +642,7 @@ const readMore = () => {
                 <button
                     type="button"
                     class="z-50 cursor-pointer"
-                    @click="showModal = false">
+                    @click="hideModal">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="24"
@@ -604,9 +662,9 @@ const readMore = () => {
             <!-- content -->
 
             <section class="body-font">
-                <div class="container px-5 py-4 mx-auto">
+                <div class="container md:px-5 py-4 mx-auto">
                     <h3
-                        class="mb-6 text-2xl font-medium text-center title-font">
+                        class="text-2xl font-medium title-font text-center mb-6">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             aria-hidden="true"
@@ -666,7 +724,7 @@ const readMore = () => {
                                 </path>
                             </g>
                         </svg>
-                        即将安装....{{ selectPlugin.toUpperCase() }}
+                        即将安装....{{ selectTheme.toUpperCase() }}
                     </h3>
                     <div>
                         <p class="mb-4 text-base leading-relaxed">
@@ -675,24 +733,24 @@ const readMore = () => {
                     </div>
 
                     <div
-                        class="flex-wrap block -mx-4 -mt-4 space-y-6 md:flex sm:-m-4 md:-mb-10 md:space-y-0">
-                        <div class="flex md:p-4 md:w-1/2">
+                        class="block md:flex flex-wrap sm:-m-4 -mx-4 md:-mb-10 md:-mt-4 md:space-y-0">
+                        <div class="md:p-4 md:w-1/2 flex">
                             <div class="flex-grow">
                                 <h2
                                     v-if="isDownload"
-                                    @click="handleDownloadPlugin"
+                                    @click="handleDownloadTheme"
                                     class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
                                     确 认
                                 </h2>
                                 <h2
                                     v-else
-                                    @click="handleUpdatePlugin"
+                                    @click="handleUpdateTheme"
                                     class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
                                     更 新
                                 </h2>
                             </div>
                         </div>
-                        <div class="flex md:p-4 md:w-1/2">
+                        <div class="md:p-4 md:w-1/2 flex">
                             <div class="flex-grow">
                                 <h2
                                     @click="cancelModal"
@@ -707,7 +765,6 @@ const readMore = () => {
         </div>
     </div>
 </template>
-
 <style>
 .noimg {
     display: flex;
@@ -738,13 +795,17 @@ const readMore = () => {
     text-shadow: 0 2px 2px #000;
 }
 
-img[src=""],
-img:not([src]) {
-    opacity: 0;
-    flex: 0;
-    display: none;
-}
 button.active span {
     color: rgb(208, 111, 78);
+}
+
+img[src=""],
+img:not([src]) {
+    width: 0;
+    height: 0;
+    padding: 82px 130px;
+    background: url("https://cdn.pkmer.cn/covers/pkmer2.png!nomark") no-repeat
+        center;
+    background-size: 100% 100%;
 }
 </style>

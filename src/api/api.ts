@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-25 23:58:28
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-26 20:34:45
+ * @LastEditTime: 2023-07-31 00:25:45
  * @Description: 
  */
 import { requestUrl } from "obsidian";
@@ -24,6 +24,27 @@ export interface ObsidianPluginInfo {
     category: string | null;
     score: number | null;
 
+}
+
+export interface ObsidianThemeInfo {
+    id: string;
+    name: string;
+    repo: string;
+    author: string;
+    authorAvatar: string | null;
+    banner: string | null;
+    modes: string;
+    tags: string | null;
+    score: number | null;
+    description: string;
+    chineseDescription: string | null;
+    version: string;
+    updatedTime: string;
+    downloadCount: number;
+    pkmerDownloadCount: number;
+    downloadUrl: string;
+    source: string | null;
+    contentUrl: string | null;
 }
 
 export interface PkmerDocsInfo {
@@ -117,6 +138,24 @@ export class PkmerApi {
             method: 'GET',
         })
         return await response.json() as ObsidianPluginInfo[];
+    }
+
+ async getTop20Themes(): Promise<ObsidianThemeInfo[]> {
+        const response = await this.fetchWithToken(BASE_API_URL + '/getTop20Themes')
+        return await response.json() as ObsidianThemeInfo[];
+    }
+    async getThemeList(): Promise<ObsidianThemeInfo[]> {
+        const response = await this.fetchWithToken(BASE_API_URL + '/getAllThemes', {
+            method: 'GET',
+        })
+        return await response.json() as ObsidianThemeInfo[];
+    }
+
+    async getThemeDownloadUrl(themeName: string, version: string): Promise<string> {
+        const response = await this.fetchWithToken(BASE_API_URL + '/getThemeDownloadUrl/' + themeName + '/' + version, {
+            method: 'GET',
+        })
+        return await response.text() as string;
     }
 
     // async getPluginInfo(id: string): Promise<ObsidianPluginInfo> {
