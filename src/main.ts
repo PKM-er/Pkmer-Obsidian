@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-26 16:57:16
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-26 21:06:41
+ * @LastEditTime: 2023-07-31 17:08:25
  * @Description: 
  */
 import { Notice, Plugin } from "obsidian";
@@ -10,7 +10,7 @@ import { Notice, Plugin } from "obsidian";
 import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./views/PluginMarket";
 import { PkmerSettingTab } from "./settings";
 import PluginProcessor from "@/utils/downloader"
-
+import ThemeProcessor from "@/utils/tdownloader" 
 export interface PkmerSettings {
     token: string;
 }
@@ -47,8 +47,10 @@ export default class PkmerPlugin extends Plugin {
     }
 
     private registerCustomURI() {
+        //注册协议 pkmer-installer
         this.registerObsidianProtocolHandler("pkmer-installer", async (params) => {
             const pluginId = params.pluginID;
+            const themeID = params.themeID;
             const version = params.version;
             const pkmerToken = this.settings.token
 
@@ -72,6 +74,18 @@ export default class PkmerPlugin extends Plugin {
                     new Notice("下载失败，请检查网络");
                 }
             }
+            if (themeID) {
+                try {
+                    new Notice("正在安装主题，请稍后...", 3000)
+                    const themeProcessor = new ThemeProcessor(app, this.settings)
+                    await themeProcessor.downloadThemeToThemeFolder(
+                        themeID,
+                        version
+                    )
+                } catch (e) {
+                    new Notice("下载失败，请检查网络");
+                }
+            }
 
 
         });
@@ -79,8 +93,8 @@ export default class PkmerPlugin extends Plugin {
 
     private registerCustomCommands() {
         this.addCommand({
-            id: 'open-pkmer-download-view',
-            name: 'Open Pkmer Download View',
+            id: 'open-pkmer-market-view',
+            name: 'Open Pkmer Market View',
             callback: () => {
                 app.workspace.getLeaf().setViewState({ active: true, type: DEFAULT_VIEW_TYPE });
             }
@@ -88,7 +102,7 @@ export default class PkmerPlugin extends Plugin {
     }
 
     private registerCustomRibbon() {
-        this.addRibbonIcon('download', 'Open Pkmer Download View', () => {
+        this.addRibbonIcon('download', 'Open Pkmer Market', () => {
             this.app.workspace.getLeaf().setViewState({ active: true, type: DEFAULT_VIEW_TYPE });
         });
     }

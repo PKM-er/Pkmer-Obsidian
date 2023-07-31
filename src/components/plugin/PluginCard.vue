@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-31 14:31:13
+ * @LastEditTime: 2023-07-31 16:57:29
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -190,7 +190,7 @@ const getRadomImage = () => {
 							教程
 						</span>
 					</a>
-				<div class="inline-block float-right mr-2">
+				<div class="inline-block w-full mr-2">
 					<span v-html="generateRatingStars(pluginInfo.score ? pluginInfo.score : 0)" />
 
 

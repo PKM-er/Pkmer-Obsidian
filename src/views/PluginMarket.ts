@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-23 17:35:33
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-23 18:46:58
+ * @LastEditTime: 2023-07-31 15:06:34
  * @Description: 
  */
 import { ItemView, WorkspaceLeaf } from "obsidian"
@@ -29,7 +29,7 @@ export class PkmderDownloaderView extends ItemView {
     }
 
     getDisplayText() {
-        return "Pkmer Downloader"
+        return "Pkmer Market"
     }
 
     getViewType() {
