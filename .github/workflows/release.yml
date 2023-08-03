@@ -26,6 +26,7 @@ jobs:
                     mkdir ${{ env.PLUGIN_NAME }}
                     cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
                     zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+                    mkdir tmp && chmod +w tmp && cp ${{ env.PLUGIN_NAME }}.zip  tmp
                     ls
                     echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
             - name: Create Release
@@ -86,7 +87,7 @@ jobs:
             - name: Copy folder with build to the remote server
               uses: garygrossgarten/github-action-scp@release
               with: #we will upload data from folder in git hab actions to folder on server
-                  local: ./${{ env.PLUGIN_NAME }}.zip
+                  local: tmp
                   remote: /www/wwwroot/pkmer.cn/ 
                   host: ${{ secrets.HOST }}
                   port: ${{ secrets.PORT }}
