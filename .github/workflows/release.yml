@@ -88,7 +88,7 @@ jobs:
               uses: garygrossgarten/github-action-scp@release
               with: #we will upload data from folder in git hab actions to folder on server
                   local: tmp
-                  remote: /www/wwwroot/pkmer.cn/ 
+                  remote: /www/wwwroot/pkmer.cn/_release/ 
                   host: ${{ secrets.HOST }}
                   port: ${{ secrets.PORT }}
                   username: www
