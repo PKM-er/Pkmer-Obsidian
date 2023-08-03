@@ -3,9 +3,12 @@ name: Release Obsidian plugin
 on:
     release:
         types: [ created ]
-
+    push:
+        # Sequence of patterns matched against refs/tags
+        tags:
+            - "*" # Push events to matching any tag format, i.e. 1.0, 20.15.10
 env:
-    PLUGIN_NAME: obsidian-canvas-presentation
+    PLUGIN_NAME: obsidian-pkmer
 
 jobs:
     build:
