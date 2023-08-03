@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-01 21:34:24
+ * @LastEditTime: 2023-08-03 16:16:27
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -185,9 +185,16 @@ const getRadomImage = () => {
 					<img class="h-full ml-2" alt="下载数量" :src="`https://img.shields.io/badge/下载总数-${formatNumber(
 						pluginInfo.downloadCount
 					)}-yellow`" />
-					<a class="ml-2 "  :href="pluginInfo.contentUrl ? pluginInfo.contentUrl : 'javascript:void(0)'"   :class="{'visible':pluginInfo.contentUrl,'invisible':!pluginInfo.contentUrl}">
-						<span class="px-3 py-1 m-1 font-sans text-xs text-white bg-yellow-500 rounded-lg ">
+					<a class=" ml-2" :href="pluginInfo.contentUrl ? pluginInfo.contentUrl : 'javascript:void(0)'"
+						v-show="pluginInfo.contentUrl"> <span
+							class="  text-white  font-sans text-xs py-1 px-3 m-1   rounded-lg bg-yellow-500 ">
 							教程
+						</span>
+					</a>
+					<a class=" ml-2" :href="pluginInfo.readme_zh ? pluginInfo.readme_zh : 'javascript:void(0)'"
+					v-show="pluginInfo.readme_zh" > <span
+							class="  text-white  font-sans text-xs py-1 px-3 m-1   rounded-lg bg-green-500 ">
+							Readme
 						</span>
 					</a>
 				<div class="inline-block w-full mr-2">

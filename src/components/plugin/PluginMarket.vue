@@ -40,6 +40,11 @@ const loadAllPlugins = async () => {
                     } else {
                         plugin.contentUrl = ""
                     }
+                    if (pkmerDocs.includes(plugin.id + "_readme")) {
+                        plugin.readme_zh = `https://pkmer.cn/show/${plugin.id}_readme`
+                    } else {
+                        plugin.readme_zh = ""
+                    }
                     //@ts-ignore
                     const pluginManifests = props.app.plugins.manifests
 
@@ -63,6 +68,9 @@ const loadAllPlugins = async () => {
                     plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
                 } else {
                     plugin.contentUrl = ""
+                }
+                if (pkmerDocs.includes(plugin.id + "_readme")) {
+                    plugin.readme_zh = `https://pkmer.cn/show/${plugin.id}_readme`
                 }
                 //@ts-ignore
                 const manifest = props.app.plugins.manifests[plugin.id]

@@ -37,11 +37,16 @@ const loadAllThemes = async () => {
             )
             if (Array.isArray(AllThemeList.value)) {
                 AllThemeList.value.forEach((theme) => {
-                    if (pkmerDocs.includes(theme.name)) {
+                    if (
+                        pkmerDocs.includes(
+                            theme.name.replace(/\s+/g, "-").toLowerCase()
+                        )
+                    ) {
                         theme.contentUrl = `https://pkmer.cn/show/${theme.name
                             .replace(/\s+/g, "-")
                             .toLowerCase()}`
                     }
+
                     //@ts-ignore
                     const themeManifests = props.app.customCss.themes
 

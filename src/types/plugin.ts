@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-18 23:44:50
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-26 15:33:19
+ * @LastEditTime: 2023-08-03 16:16:05
  * @Description: 
  */
 export interface PluginInfo {
@@ -24,6 +24,7 @@ export interface PluginInfo {
     pkmerDownloadCount: number;
     downloadUrl: string;
     contentUrl: string | null;
+    readme_zh: string | null;
     isInstalled: boolean | undefined;
     isOutdated: boolean | undefined;
     __entity: string;
