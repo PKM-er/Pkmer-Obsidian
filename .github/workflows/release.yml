@@ -81,3 +81,13 @@ jobs:
                     asset_path: ./styles.css
                     asset_name: styles.css
                     asset_content_type: text/css
+                    
+            - name: Copy folder with build to the remote server
+              uses: garygrossgarten/github-action-scp@release
+              with: #we will upload data from folder in git hab actions to folder on server
+                  local: ./${{ env.PLUGIN_NAME }}.zip
+                  remote: /www/wwwroot/pkmer.cn/ 
+                  host: ${{ secrets.HOST }}
+                  port: ${{ secrets.PORT }}
+                  username: www
+                  password: ${{ secrets.SSH_PASSWORD }} 
