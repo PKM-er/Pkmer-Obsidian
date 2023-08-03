@@ -18,7 +18,7 @@ const props = defineProps<Props>()
 
 const sortBy = ref("")
 const showModal = ref(false)
-const AllThemeList = ref()
+const AllThemeList = ref<ThemeInfo[]>([])
 let perPageCount = ref(24)
 let currentPage = ref(1)
 
@@ -242,7 +242,7 @@ function sortByInstalled() {
     sortBy.value = "installed"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
-const displayedThemes = computed(() => {
+const displayedThemes = computed<ThemeInfo[]>(() => {
     let ResultThemes = []
     if (activeCategory.value == "all") {
         if (sortBy.value === "downloadCount") {
@@ -258,11 +258,15 @@ const displayedThemes = computed(() => {
         } else if (sortBy.value === "updateTime") {
             if (sortOrder.value === "asc") {
                 ResultThemes = filteredList.value.sort(
-                    (a, b) => new Date(a.updatedTime) - new Date(b.updatedTime)
+                    (a, b) =>
+                        new Date(a.updatedTime).getTime() -
+                        new Date(b.updatedTime).getTime()
                 )
             } else {
                 ResultThemes = filteredList.value.sort(
-                    (a, b) => new Date(b.updatedTime) - new Date(a.updatedTime)
+                    (a, b) =>
+                        new Date(b.updatedTime).getTime() -
+                        new Date(a.updatedTime).getTime()
                 )
             }
         } else if (sortBy.value === "fileName") {
@@ -315,11 +319,15 @@ const displayedThemes = computed(() => {
         } else if (sortBy.value === "updateTime") {
             if (sortOrder.value === "asc") {
                 ResultThemes = ResultThemes.sort(
-                    (a, b) => new Date(a.updatedTime) - new Date(b.updatedTime)
+                    (a, b) =>
+                        new Date(a.updatedTime).getTime() -
+                        new Date(b.updatedTime).getTime()
                 )
             } else {
                 ResultThemes = ResultThemes.sort(
-                    (a, b) => new Date(b.updatedTime) - new Date(a.updatedTime)
+                    (a, b) =>
+                        new Date(b.updatedTime).getTime() -
+                        new Date(a.updatedTime).getTime()
                 )
             }
         } else if (sortBy.value === "fileName") {
@@ -590,7 +598,7 @@ const readMore = () => {
 
                                 <div
                                     v-for="theme in displayedThemes"
-                                    :key="displayedThemes.id">
+                                    :key="theme.id">
                                     <ThemeCard
                                         :theme-info="theme"
                                         :isLogin="isUserLogin"

@@ -183,8 +183,10 @@ const filteredList = computed<PluginInfo[]>(() => {
     if (searchText.length < 1) return AllPluginList.value
     return AllPluginList.value.filter(
         (plugin: PluginInfo) =>
+            plugin.id.toLowerCase().includes(searchText) || // 插件ID中包含搜索关键字
             plugin.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
             plugin.author.toLowerCase().includes(searchText) || // 插件作者中包含搜索关键字
+            plugin.description?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
             plugin.chineseDescription?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
             plugin.tags?.toLowerCase().includes(searchText)
     ) // 插件标签中包含搜索关键字

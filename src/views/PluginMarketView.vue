@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 10:11:39
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-31 11:37:16
+ * @LastEditTime: 2023-08-02 20:37:48
  * @Description: 
 -->
 <script setup lang="ts">
@@ -116,8 +116,8 @@ const switchTab = (tab: string) => {
                 :class="{ active: currentTab === 'plugin' }"
                 @click="switchTab('plugin')">
                 <span
-                    class="cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4  font-bold  uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
-                   插件市场
+                    class="cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
+                    插件市场
                 </span>
             </li>
             <li
@@ -125,7 +125,7 @@ const switchTab = (tab: string) => {
                 :class="{ active: currentTab === 'theme' }"
                 @click="switchTab('theme')">
                 <span
-                    class="cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4   font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
+                    class="cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
                     主题市场
                 </span>
             </li>
@@ -153,6 +153,7 @@ const switchTab = (tab: string) => {
                 </template>
                 <template #fallback>
                     <h1>Loading...</h1>
+                    <h2>如果长时间加载，请确保网络通常，并关闭网络代理。</h2>
                 </template>
             </Suspense>
         </div>

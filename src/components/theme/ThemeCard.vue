@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-31 17:00:44
+ * @LastEditTime: 2023-08-03 10:54:21
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -41,7 +41,7 @@ if (prop.themeInfo.tags && prop.themeInfo.tags.length > 0) {
 }
 
 
-function formatNumber(num) {
+function formatNumber(num:number) {
 	// 转换数字
 	if (num >= 1000000) {
 		return (num / 1000000).toFixed(0) + 'M';
@@ -173,7 +173,7 @@ const getRadomImage = () => {
 			<!--Article meta-->
 			<div class="w-full mt-auto space-y-6">
 				<div class="flex items-center justify-start w-full relative">
-					<img class="w-12 mask mask-blob" :src="getUsernameFromRepo(themeInfo.repo)"
+					<img class="w-12 mask mask-blob" :src="getUsernameFromRepo()"
 						:onerror="`javascript:this.src='${getDefaultAvata(themeInfo.author)}'`" alt="avatar" />
 					<a :href="'https://github.com/' + themeInfo.repo">
 						<div class="pl-2">
@@ -200,108 +200,7 @@ const getRadomImage = () => {
                             v-if="!themeInfo.isInstalled"
 							class="inline-flex items-center px-5 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							@click="$emit('download-update-theme','download',themeInfo.name, themeInfo.version)">
-							<svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        aria-hidden="true"
-                                        role="img"
-                                        width="1em"
-                                        height="1em"
-                                        viewBox="0 0 24 24"
-                                        data-v-1f16b271=""
-                                        data-icon="line-md:cloud-download-outline-loop"
-                                        class="block w-4 h-4 mx-auto iconify iconify--line-md">
-                                        <mask id="IconifyId189830ae935ba47180">
-                                            <g fill="#fff">
-                                                <circle
-                                                    cx="12"
-                                                    cy="10"
-                                                    r="6"></circle>
-                                                <rect
-                                                    width="9"
-                                                    height="8"
-                                                    x="8"
-                                                    y="12"></rect>
-                                                <rect
-                                                    width="17"
-                                                    height="12"
-                                                    x="1"
-                                                    y="8"
-                                                    rx="6">
-                                                    <animate
-                                                        attributeName="x"
-                                                        dur="19s"
-                                                        repeatCount="indefinite"
-                                                        values="1;0;1;2;1"></animate>
-                                                </rect>
-                                                <rect
-                                                    width="17"
-                                                    height="10"
-                                                    x="6"
-                                                    y="10"
-                                                    rx="5">
-                                                    <animate
-                                                        attributeName="x"
-                                                        dur="23s"
-                                                        repeatCount="indefinite"
-                                                        values="6;5;6;7;6"></animate>
-                                                </rect>
-                                            </g>
-                                            <circle
-                                                cx="12"
-                                                cy="10"
-                                                r="4"></circle>
-                                            <rect
-                                                width="8"
-                                                height="8"
-                                                x="8"
-                                                y="10"></rect>
-                                            <rect
-                                                width="11"
-                                                height="8"
-                                                x="3"
-                                                y="10"
-                                                rx="4">
-                                                <animate
-                                                    attributeName="x"
-                                                    dur="19s"
-                                                    repeatCount="indefinite"
-                                                    values="3;2;3;4;3"></animate>
-                                            </rect>
-                                            <rect
-                                                width="13"
-                                                height="6"
-                                                x="8"
-                                                y="12"
-                                                rx="3">
-                                                <animate
-                                                    attributeName="x"
-                                                    dur="23s"
-                                                    repeatCount="indefinite"
-                                                    values="8;7;8;9;8"></animate>
-                                            </rect>
-                                            <g fill="#fff">
-                                                <rect
-                                                    width="3"
-                                                    height="4"
-                                                    x="10.5"
-                                                    y="10"></rect>
-                                                <path d="M12 17L16 13H8L12 17Z">
-                                                    <animateMotion
-                                                        calcMode="linear"
-                                                        dur="1.5s"
-                                                        keyPoints="0;0.25;0.5;0.75;1"
-                                                        keyTimes="0;0.1;0.5;0.8;1"
-                                                        path="M0 0v1v-2z"
-                                                        repeatCount="indefinite"></animateMotion>
-                                                </path>
-                                            </g>
-                                        </mask>
-                                        <rect
-                                            width="24"
-                                            height="24"
-                                            fill="currentColor"
-                                            mask="url(#IconifyId189830ae935ba47180)"></rect>
-                                    </svg>
+							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
 							下载
 						</button>
 						<button
@@ -412,9 +311,10 @@ const getRadomImage = () => {
   justify-content: center;
 }
 
-.overlay img {
-	min-width: 60vw;
-  max-width: 80%;
- 
+.overlay img{
+    min-width: 60vw;
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
 }
 </style>

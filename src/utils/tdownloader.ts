@@ -156,7 +156,9 @@ export default class ThemeProcessor {
                 throw Error(`主题${themeName}解压失败！`)
             }
 
-            new Notice(`主题${themeName}更新成功！\n 请在主题列表中重新启用`)
+            new Notice(`主题${themeName}更新成功！\n 新主题已生效`)
+            //@ts-ignore
+            await app.customCss.setTheme(themeName);
             return true
         } catch (error) {
             new Notice(`主题${themeName}更新失败！${error}`)

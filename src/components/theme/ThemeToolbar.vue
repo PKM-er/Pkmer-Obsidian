@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-06-22 13:17:46
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-31 10:03:18
+ * @LastEditTime: 2023-08-03 10:56:44
  * @Description: 
 -->
 <script setup lang="ts">
@@ -72,7 +72,7 @@ const uniqueCategories = computed(() => {
 						: 'border-transparent'
 				"
 				@click="
-					(e) => {
+					() => {
 						$emit('update-active-category', category);
 					}
 				"
