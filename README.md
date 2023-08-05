@@ -1,7 +1,8 @@
 # Pkmer Obsidian
 
 > 这不是 Obsidian 官方插件主题市场，是由社区爱好者自发建立的插件主题市场！
-> This is not an Obsidian official plugin themed marketplace, it is a plugin themed marketplace created by community enthusiasts themselves!
+>
+> This is not an Obsidian official plugin and theme marketplace, it is a plugin and theme marketplace created by community enthusiasts themselves!
 
 Pkmer Obsidian 是一款 Obsidian 插件，旨在帮助国内用户轻松自由的访问优秀的 Obsidian 插件。
 
