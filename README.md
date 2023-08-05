@@ -1,5 +1,8 @@
 # Pkmer Obsidian
 
+> 这不是 Obsidian 官方插件主题市场，是由社区爱好者自发建立的插件主题市场！
+> This is not an Obsidian official plugin themed marketplace, it is a plugin themed marketplace created by community enthusiasts themselves!
+
 Pkmer Obsidian 是一款 Obsidian 插件，旨在帮助国内用户轻松自由的访问优秀的 Obsidian 插件。
 
 ![Pkmer](./public/pkmer.png)
@@ -20,7 +23,7 @@ Pkmer 从 Obsidian 官方发布的插件信息列表中，找到最近更新的�
 
 ## 价格
 
-注册 [Pkmer](https://pkmer.cn) 的用户完全免费使用该插件及下载插件，但为了防止滥用和过高的成本，免费下载 15次/月 插件，Pkmer 会员则限制 200次/月 插件（视实际情况而定）。
+注册 [Pkmer](https://pkmer.cn) 的用户完全免费使用该插件及下载插件，但为了防止滥用和过高的成本，每月免费下载 15次 插件，Pkmer 会员则每月限制下载 200次 插件（视实际情况而定，防止有人肆意爬取我们的插件数据）。
 
 Pkmer 会员除了付费获取外，可以通过为社区提供知识管理相关的文档，视频，翻译，开发 Obsidian 插件，协助运营 Pkmer 等多种方式免费获取，具体方式可参考 [社区指南]( https://pkmer.cn/show/20230330155738 ) 参与贡献。
 
