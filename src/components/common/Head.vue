@@ -1,7 +1,15 @@
+<!--
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-31 08:33:07
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2023-08-07 23:37:39
+ * @Description: 
+-->
 <script setup lang="ts">
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import { PkmerSettings } from "@/main"
-import { App } from "obsidian"
+import PluginProcessor from "@/utils/downloader"
+import { App, Notice } from "obsidian"
 import { PkmerApi } from "@/api/api"
 interface Props {
     isLogin: boolean
@@ -11,10 +19,33 @@ interface Props {
 
 const props = defineProps<Props>()
 const downloadCount = ref(0)
+const pkmerVer = ref("")
+const remoteVersion = ref()
 const isUserLogin = props.isLogin
 const api = new PkmerApi(props.settings.token)
+const pluginProcessor = new PluginProcessor(props.app, props.settings)
+remoteVersion.value = await api.getPkmerVersion()
 if (isUserLogin) downloadCount.value = await api.getDownloadCount()
+//@ts-ignore
+pkmerVer.value = props.app.plugins.manifests["pkmer"].version
 
+const isUpdate = computed(() => {
+    if (remoteVersion.value != pkmerVer.value) return "发现新版本:"+remoteVersion.value
+    if (remoteVersion.value == pkmerVer.value) return  "版本号:"+pkmerVer.value
+})
+
+const handleUpdatePlugin = async () => {
+    if (remoteVersion.value == pkmerVer.value) return 
+    new Notice("正在更新插件，请稍后...", 3000)
+    const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
+        'obsidian-pkmer',
+        pkmerVer.value,
+    )
+    if (!updateStatus) return
+    handleRefreshPlugin()
+}
+
+ 
 const handleRefreshPlugin = async () => {
     //@ts-ignore
     props.app.workspace.activeLeaf.rebuildView()
@@ -30,6 +61,11 @@ const handleOpenSettings = () => {
 
 <template>
     <div class="text-right pkmer-toolbar">
+        <span   @click="handleUpdatePlugin"
+            class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
+            {{ isUpdate }}
+        </span>
+
         <span
             v-show="isUserLogin"
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
