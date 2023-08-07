@@ -27,6 +27,7 @@ jobs:
                     cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
                     zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
                     mkdir tmp && chmod +w tmp && cp ${{ env.PLUGIN_NAME }}.zip  tmp
+                    cp manifest.json tmp
                     ls
                     echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
             - name: Create Release
