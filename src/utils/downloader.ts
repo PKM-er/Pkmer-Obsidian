@@ -90,27 +90,11 @@ export default class PluginProcessor {
                 await adapter.mkdir(pluginTargetFolderPath);
             }
             try {
-                // zip.forEach(async (relativePath: string, file: any) => {
-                //     const absolutePath = pluginTargetFolderPath + relativePath;
-                //     const content = await file.async('nodebuffer');
-                //     await adapter.write(absolutePath, content)
-                // })
-                //增加对压缩包包含目录的支持
-                for (const [relativePath, file] of Object.entries(zip.files)) {
+                zip.forEach(async (relativePath: string, file: any) => {
                     const absolutePath = pluginTargetFolderPath + relativePath;
-
-                    // 创建文件所属目录
-                    const directory = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
-                    await adapter.mkdir(directory);
-
-                    // 将文件解压到对应的目录
-                    if (!file.dir) {
-                        const content: any = await file.async('nodebuffer');
-                        await adapter.write(absolutePath, content);
-                    }
-                };
-
-
+                    const content = await file.async('nodebuffer');
+                    await adapter.write(absolutePath, content)
+                })
             } catch (e) {
                 new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`, 5000)
                 throw Error(`插件${pluginId}解压失败！`)
@@ -134,21 +118,16 @@ export default class PluginProcessor {
             new Notice(`获取${pluginId}插件下载地址失败！`)
             throw new Error(`获取${pluginId}插件下载地址失败！`)
         }
-        //pkmer插件不判断是否安装，因为在市场里更新肯定是安装的。
-        if (pluginId != 'obsidian-pkmer') {
-            //@ts-ignore
-            if (!app.plugins.manifests[pluginId]) {
-                new Notice(`插件${pluginId}未安装！`)
-                return false
-            }
+
+
+        //@ts-ignore
+        if (!app.plugins.manifests[pluginId]) {
+            new Notice(`插件${pluginId}未安装！`)
+            return false
         }
 
         try {
-
-            let pluginTargetFolderPath = normalizePath(app.vault.configDir + "/plugins/" + pluginId) + "/";
-            //pkmer压缩包本身已经有目录
-            if (pluginId == 'obsidian-pkmer')
-                pluginTargetFolderPath = normalizePath(app.vault.configDir + "/plugins/") + "/";
+            const pluginTargetFolderPath = normalizePath(app.vault.configDir + "/plugins/" + pluginId) + "/";
             const adapter = this.app.vault.adapter
 
             if (await adapter.exists(pluginTargetFolderPath) === false && !(await adapter.exists(pluginTargetFolderPath + "manifest.json"))) {
@@ -163,25 +142,11 @@ export default class PluginProcessor {
             const zip = await JSZip.loadAsync(response.arrayBuffer);
 
             try {
-                //// zip.forEach(async (relativePath: string, file: any) => {
-                //     const absolutePath = pluginTargetFolderPath + relativePath;
-                //     const content = await file.async('nodebuffer');
-                //     await adapter.write(absolutePath, content)
-                // })
-                //增加对压缩包包含目录的支持
-                for (const [relativePath, file] of Object.entries(zip.files)) {
+                zip.forEach(async (relativePath: string, file: any) => {
                     const absolutePath = pluginTargetFolderPath + relativePath;
-
-                    // 创建文件所属目录
-                    const directory = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
-                    await adapter.mkdir(directory);
-
-                    // 将文件解压到对应的目录
-                    if (!file.dir) {
-                        const content: any = await file.async('nodebuffer');
-                        await adapter.write(absolutePath, content);
-                    }
-                };
+                    const content = await file.async('nodebuffer');
+                    await adapter.write(absolutePath, content)
+                })
             } catch (e) {
                 new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`)
                 throw Error(`插件${pluginId}解压失败！`)

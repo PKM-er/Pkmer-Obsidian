@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-07 22:52:39
+ * @LastEditTime: 2023-08-03 16:16:27
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -192,8 +192,10 @@ const getRadomImage = () => {
 						</span>
 					</a>
 					<a class=" ml-2" :href="pluginInfo.readme_zh ? pluginInfo.readme_zh : 'javascript:void(0)'"
-					v-show="pluginInfo.readme_zh"  tooltip="Readme文档"> 
-					<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 32 32" data-v-5df2a037="" data-icon="la:readme" class="text-green-500 block mx-auto iconify w-6 h-6 iconify--la"><path fill="currentColor" d="M5 6C3.346 6 2 7.346 2 9v12c0 1.654 1.346 3 3 3l6.184-.02c.99 0 1.949.31 2.773.86L16 26.2l2.043-1.361a4.988 4.988 0 0 1 2.773-.84H27c1.654 0 3-1.346 3-3V9c0-1.654-1.346-3-3-3h-6.184c-1.386 0-2.73.408-3.882 1.176L16 7.799l-.934-.623A6.978 6.978 0 0 0 11.184 6H5zm0 2h6.184c.99 0 1.949.29 2.773.84L16 10.2l2.043-1.361A4.988 4.988 0 0 1 20.816 8H27c.552 0 1 .449 1 1v12c0 .551-.448 1-1 1h-6.184c-1.386 0-2.73.408-3.882 1.176l-.934.623l-.934-.623A6.978 6.978 0 0 0 11.184 22H5c-.552 0-1-.449-1-1V9c0-.551.448-1 1-1zm1 4v2h8v-2H6zm12 0v2h8v-2h-8zM6 16v2h8v-2H6zm12 0v2h8v-2h-8z"></path></svg>
+					v-show="pluginInfo.readme_zh" > <span
+							class="  text-white  font-sans text-xs py-1 px-3 m-1   rounded-lg bg-green-500 ">
+							Readme
+						</span>
 					</a>
 				<div class="inline-block w-full mr-2">
 					<span v-html="generateRatingStars(pluginInfo.score ? pluginInfo.score : 0)" />
