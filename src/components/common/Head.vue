@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 08:33:07
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-07 23:37:39
+ * @LastEditTime: 2023-08-08 00:34:23
  * @Description: 
 -->
 <script setup lang="ts">
@@ -39,7 +39,7 @@ const handleUpdatePlugin = async () => {
     new Notice("正在更新插件，请稍后...", 3000)
     const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
         'obsidian-pkmer',
-        pkmerVer.value,
+        remoteVersion.value,
     )
     if (!updateStatus) return
     handleRefreshPlugin()
