@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-25 23:58:28
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-03 11:18:19
+ * @LastEditTime: 2023-08-07 23:38:09
  * @Description: 
  */
 import { requestUrl } from "obsidian";
@@ -115,6 +115,7 @@ export class PkmerApi {
     }
 
     async getDownloadUrl(pluginId: string, version: string): Promise<string> {
+        if (pluginId == "obsidian-pkmer") return 'https://pkmer.cn/_release/obsidian-pkmer.zip';
         const response = await this.fetchWithToken(BASE_API_URL + '/getPluginDownloadUrl/' + pluginId + '/' + version, {
             method: 'GET',
         })
@@ -162,7 +163,11 @@ export class PkmerApi {
         })
         return await response.text() as string;
     }
-
+    async getPkmerVersion(): Promise<(string | undefined)[]> {
+        const response = await requestUrl("https://pkmer.cn/_release/manifest.json")
+        const mainfestInfo = JSON.parse(response.text);
+        return mainfestInfo.version;
+    }
     // async getPluginInfo(id: string): Promise<ObsidianPluginInfo> {
     //     const response = await this.fetchWithToken(BASE_API_URL + '/getPluginInfo/' + id, {
     //         method: 'GET',
