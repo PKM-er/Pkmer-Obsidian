@@ -83,6 +83,31 @@ const loadAllPlugins = async () => {
     }
 }
 
+const countInstalledPlugins = computed(() => {
+    // 使用 filter 方法筛选 isInstalled 为 true 的记录
+    if (AllPluginList.value) {
+        let installedPlugins = AllPluginList.value.filter(
+            (plugin: { isInstalled: boolean }) => plugin.isInstalled === true
+        )
+
+        // 统计筛选后记录的数量
+        let count = installedPlugins.length
+        return count
+    }
+})
+const countUpdatedPlugins = computed(() => {
+    // 使用 filter 方法筛选 isInstalled 为 true 的记录
+    if (AllPluginList.value) {
+        let updatedPlugins = AllPluginList.value.filter(
+            (plugin: { isOutdated: boolean }) => plugin.isOutdated === true
+        )
+
+        // 统计筛选后记录的数量
+        let count = updatedPlugins.length
+        return count
+    }
+    return false
+})
 const searchTextRef = ref("")
 const activeCategory = ref("all")
 const selectPlugin = ref("")
@@ -227,7 +252,10 @@ function sortByInstalled() {
     sortBy.value = "installed"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
-
+function sortByUpdated() {
+    sortBy.value = "updated"
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+}
 const displayedPlugins = computed<PluginInfo[]>(() => {
     let ResultPlugins = []
     if (activeCategory.value == "all") {
@@ -268,6 +296,10 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
         } else if (sortBy.value === "installed") {
             ResultPlugins = filteredList.value.filter(
                 (plugin) => plugin.isInstalled
+            )
+        } else if (sortBy.value === "updated") {
+            ResultPlugins = filteredList.value.filter(
+                (plugin) => plugin.isOutdated
             )
         } else {
             ResultPlugins = filteredList.value?.slice(
@@ -505,6 +537,19 @@ const readMore = () => {
             </div>
         </div>
 
+        <div class="text-right">
+            <button
+                @click="sortByInstalled"
+                class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
+                已装插件： {{ countInstalledPlugins }}
+            </button>
+            <button
+                @click="sortByUpdated"
+                v-show="countUpdatedPlugins"
+                class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-green-600 text-white shadow-xl shadow-primary-500/20">
+                发现 {{ countUpdatedPlugins }} 个更新！
+            </button>
+        </div>
         <section class="w-full bg-muted-100 dark:bg-muted-1000">
             <div class="w-full mx-auto max-w-7xl">
                 <!--main -->
