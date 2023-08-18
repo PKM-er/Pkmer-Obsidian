@@ -37,14 +37,15 @@ const loadAllThemes = async () => {
             )
             if (Array.isArray(AllThemeList.value)) {
                 AllThemeList.value.forEach((theme) => {
-                    if (
-                        pkmerDocs.includes(
+                    //把主题名称中的空格替换为下划线
+                    const matchingPkmerDoc = pkmerDocs.find(
+                        (doc) =>
+                            doc.slug ==
                             theme.name.replace(/\s+/g, "-").toLowerCase()
-                        )
-                    ) {
-                        theme.contentUrl = `https://pkmer.cn/show/${theme.name
-                            .replace(/\s+/g, "-")
-                            .toLowerCase()}`
+                    )
+
+                    if (matchingPkmerDoc) {
+                        theme.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
                     }
 
                     //@ts-ignore
@@ -65,9 +66,17 @@ const loadAllThemes = async () => {
         AllThemeList.value = await api.getTop20Themes()
         if (Array.isArray(AllThemeList.value)) {
             AllThemeList.value.forEach((theme) => {
-                if (pkmerDocs.includes(theme.name)) {
-                    theme.contentUrl = `https://pkmer.cn/show/${theme.name}`
+                //把主题名称中的空格替换为下划线
+                const matchingPkmerDoc = pkmerDocs.find(
+                    (doc) =>
+                        doc.slug ==
+                        theme.name.replace(/\s+/g, "-").toLowerCase()
+                )
+
+                if (matchingPkmerDoc) {
+                    theme.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
                 }
+
                 //@ts-ignore
                 const themeManifests = props.app.customCss.themes
 
@@ -144,7 +153,7 @@ const handleShowThemeModal = (
 
 const handleUpdateTheme = async () => {
     showModal.value = false
-    new Notice("正在更新插件，请稍后...", 3000)
+    new Notice("正在更新主题，请稍后...", 3000)
     const updateStatus = await themeProcessor.updateThemeToExistThemeFolder(
         selectTheme.value,
         selectThemeVersion.value

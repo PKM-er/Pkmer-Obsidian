@@ -35,16 +35,19 @@ const loadAllPlugins = async () => {
             AllPluginList.value = await api.getPluginList()
             if (Array.isArray(AllPluginList.value)) {
                 AllPluginList.value.forEach((plugin) => {
-                    if (pkmerDocs.includes(plugin.id)) {
-                        plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
-                    } else {
-                        plugin.contentUrl = ""
+                    const matchingPkmerDoc = pkmerDocs.find((doc) =>
+                        doc.slug.includes(plugin.id)
+                    )
+                    if (matchingPkmerDoc) {
+                        plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
                     }
-                    if (pkmerDocs.includes(plugin.id + "_readme")) {
-                        plugin.readme_zh = `https://pkmer.cn/show/${plugin.id}_readme`
-                    } else {
-                        plugin.readme_zh = ""
+                    const matchingReadme = pkmerDocs.find((doc) =>
+                        doc.slug.includes(plugin.id + "_readme")
+                    )
+                    if (matchingReadme) {
+                        plugin.readme_zh = `https://pkmer.cn/show/${matchingReadme.uid}`
                     }
+
                     //@ts-ignore
                     const pluginManifests = props.app.plugins.manifests
 
@@ -64,14 +67,19 @@ const loadAllPlugins = async () => {
         AllPluginList.value = await api.getTop20Plugins()
         if (Array.isArray(AllPluginList.value)) {
             AllPluginList.value.forEach((plugin) => {
-                if (pkmerDocs.includes(plugin.id)) {
-                    plugin.contentUrl = `https://pkmer.cn/show/${plugin.id}`
-                } else {
-                    plugin.contentUrl = ""
+                const matchingPkmerDoc = pkmerDocs.find((doc) =>
+                    doc.slug.includes(plugin.id)
+                )
+                if (matchingPkmerDoc) {
+                    plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
                 }
-                if (pkmerDocs.includes(plugin.id + "_readme")) {
-                    plugin.readme_zh = `https://pkmer.cn/show/${plugin.id}_readme`
+                const matchingReadme = pkmerDocs.find((doc) =>
+                    doc.slug.includes(plugin.id + "_readme")
+                )
+                if (matchingReadme) {
+                    plugin.readme_zh = `https://pkmer.cn/show/${matchingReadme.uid}`
                 }
+
                 //@ts-ignore
                 const manifest = props.app.plugins.manifests[plugin.id]
                 plugin.isInstalled = manifest !== undefined

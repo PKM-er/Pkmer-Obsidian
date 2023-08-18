@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-25 23:58:28
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-08 00:40:28
+ * @LastEditTime: 2023-08-18 17:25:28
  * @Description: 
  */
 import { requestUrl } from "obsidian";
@@ -106,13 +106,18 @@ export class PkmerApi {
             return false;
     };
 
-    async getPkmerDocs(): Promise<(string | undefined)[]> {
+    async getPkmerDocs(): Promise<({slug:string,uid:number})[]> {
         const response = await requestUrl("https://pkmer.cn/getPost.json")
         const pkmerDocsInfo = JSON.parse(response.text) as PkmerDocsInfo[];
         return pkmerDocsInfo.map((item) => {
-            return item.slug.split('/').pop()
-        })
+            return {
+                slug: item.slug.split('/').pop() as string,
+                uid: item.uid
+            };
+        });
     }
+
+  
 
     async getDownloadUrl(pluginId: string, version: string): Promise<string> {
         if (pluginId == "obsidian-pkmer") return 'https://pkmer.cn/_release/obsidian-pkmer.zip' + `?v=${version}`;
