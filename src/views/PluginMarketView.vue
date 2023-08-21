@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 10:11:39
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-02 20:37:48
+ * @LastEditTime: 2023-08-21 15:57:49
  * @Description: 
 -->
 <script setup lang="ts">
@@ -109,7 +109,7 @@ const switchTab = (tab: string) => {
         </div>
         <!--End Layout-->
     </div>
-    <div class="tab-container">
+    <div class="pkmer-tab-container">
         <ul class="mb-5 flex list-none flex-row flex-wrap border-b-0 pl-0">
             <li
                 class="flex-auto text-center"
@@ -131,7 +131,7 @@ const switchTab = (tab: string) => {
             </li>
         </ul>
 
-        <div class="tab-content">
+        <div class="pkmer-tab-content">
             <Suspense>
                 <template #default>
                     <template v-if="currentTab === 'plugin'">
@@ -160,7 +160,7 @@ const switchTab = (tab: string) => {
     </div>
 </template>
 <style>
-.tab-container {
+.pkmer-tab-container {
     margin-top: 30px;
 }
 
@@ -169,7 +169,7 @@ li.active span {
     border-color: var(--text-accent-hover);
 }
 
-.tab-content {
+.pkmer-tab-content {
     margin-top: 30px;
 }
 </style>

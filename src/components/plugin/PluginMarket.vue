@@ -35,8 +35,8 @@ const loadAllPlugins = async () => {
             AllPluginList.value = await api.getPluginList()
             if (Array.isArray(AllPluginList.value)) {
                 AllPluginList.value.forEach((plugin) => {
-                    const matchingPkmerDoc = pkmerDocs.find((doc) =>
-                        doc.slug.includes(plugin.id)
+                    const matchingPkmerDoc = pkmerDocs.find(
+                        (doc) => doc.slug == plugin.id
                     )
                     if (matchingPkmerDoc) {
                         plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
@@ -67,8 +67,8 @@ const loadAllPlugins = async () => {
         AllPluginList.value = await api.getTop20Plugins()
         if (Array.isArray(AllPluginList.value)) {
             AllPluginList.value.forEach((plugin) => {
-                const matchingPkmerDoc = pkmerDocs.find((doc) =>
-                    doc.slug.includes(plugin.id)
+                const matchingPkmerDoc = pkmerDocs.find(
+                    (doc) => doc.slug == plugin.id
                 )
                 if (matchingPkmerDoc) {
                     plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
