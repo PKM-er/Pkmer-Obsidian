@@ -281,14 +281,14 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
             if (sortOrder.value === "asc") {
                 ResultPlugins = filteredList.value.sort(
                     (a, b) =>
-                        parseInt(a.pluginUpdatedTime) -
-                        parseInt(b.pluginUpdatedTime)
+                        new Date(a.pluginUpdatedTime).getTime() -
+                        new Date(b.pluginUpdatedTime).getTime()
                 )
             } else {
                 ResultPlugins = filteredList.value.sort(
                     (a, b) =>
-                        parseInt(b.pluginUpdatedTime) -
-                        parseInt(a.pluginUpdatedTime)
+                        new Date(b.pluginUpdatedTime).getTime() -
+                        new Date(a.pluginUpdatedTime).getTime()
                 )
             }
         } else if (sortBy.value === "fileName") {
@@ -334,14 +334,14 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
             if (sortOrder.value === "asc") {
                 ResultPlugins = ResultPlugins.sort(
                     (a: PluginInfo, b: PluginInfo) =>
-                        parseInt(a.pluginUpdatedTime) -
-                        parseInt(b.pluginUpdatedTime)
+                        new Date(a.pluginUpdatedTime).getTime() -
+                        new Date(b.pluginUpdatedTime).getTime()
                 )
             } else {
                 ResultPlugins = ResultPlugins.sort(
                     (a, b) =>
-                        parseInt(b.pluginUpdatedTime) -
-                        parseInt(a.pluginUpdatedTime)
+                        new Date(b.pluginUpdatedTime).getTime() -
+                        new Date(a.pluginUpdatedTime).getTime()
                 )
             }
         } else if (sortBy.value === "fileName") {
@@ -597,6 +597,7 @@ const readMore = () => {
                                     v-for="plugin in displayedPlugins"
                                     :key="plugin.id">
                                     <PluginCard
+                                        :app="props.app"
                                         :plugin-info="plugin"
                                         :isLogin="isUserLogin"
                                         @download-update-plugin="

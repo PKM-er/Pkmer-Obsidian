@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 08:33:07
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-08 00:34:23
+ * @LastEditTime: 2023-08-24 22:16:49
  * @Description: 
 -->
 <script setup lang="ts">
@@ -93,7 +93,7 @@ const handleOpenSettings = () => {
                     >当前是未登录状态，仅展示下载前20的热门内容，请<button
                         class="inline-block px-3 py-1 m-1 font-sans text-xs rounded-lg"
                         @click="handleOpenSettings">
-                        登录</button
+                        点我登录</button
                     >后获取全部内容。</span
                 >
             </div>

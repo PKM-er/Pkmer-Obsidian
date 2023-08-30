@@ -2,14 +2,16 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-13 13:32:05
+ * @LastEditTime: 2023-08-30 21:25:00
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { ThemeInfo } from '@/types/theme';
+import { App } from "obsidian"
 interface Props {
+	app:App;
 	themeInfo: ThemeInfo;
 	isLogin:boolean;
 }
@@ -104,6 +106,13 @@ const getRadomImage = () => {
 
 	return `background-image:url(${url});`;
 };
+
+const handleOpenSettings = () => {
+    //@ts-ignore
+    prop.app.setting.open()
+    //@ts-ignore
+    prop.app.setting.openTabById("pkmer")
+}
 </script>
 <template>
 	<div class="relative">
@@ -189,6 +198,7 @@ const getRadomImage = () => {
 					</a>
 					<div class="block ml-auto font-sans text-sm text-muted-400">
 						<button v-show="!isUserLogin"
+						@click="handleOpenSettings"
 							class="inline-flex items-center px-3 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							>
 							请登录

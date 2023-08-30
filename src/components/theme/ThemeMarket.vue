@@ -660,6 +660,7 @@ const readMore = () => {
                                     v-for="theme in displayedThemes"
                                     :key="theme.id">
                                     <ThemeCard
+                                        :app="props.app"
                                         :theme-info="theme"
                                         :isLogin="isUserLogin"
                                         @download-update-theme="

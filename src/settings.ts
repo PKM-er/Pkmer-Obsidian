@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-24 16:35:56
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-26 20:54:16
+ * @LastEditTime: 2023-08-24 22:19:09
  * @Description: 
  */
 import PkmerLoginModal from "./components/login/PkmerLoginModal";
@@ -43,6 +43,10 @@ export class PkmerSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     })
             );
+            new Setting(containerEl)
+            .setName("Tips")
+            .setDesc("如果登录后，仍然提示登录，请退出重新登录PKMER。")
+
     }
 
     private showLogin(): void {
