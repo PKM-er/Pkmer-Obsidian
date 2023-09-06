@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import replace from '@rollup/plugin-replace'
 
-const isProd = process.env.NODE_ENV === 'production'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,7 +20,7 @@ export default defineConfig({
             name: 'main',
             formats: ['cjs']
         },
-        emptyOutDir: isProd ?  false : true,
+        emptyOutDir: false,
         target: 'esNext',
         rollupOptions: {
             external: [
@@ -37,6 +37,12 @@ export default defineConfig({
                 "@lezer/common",
                 "@lezer/highlight",
                 "@lezer/lr"
+            ],
+            plugins: [
+                replace({
+                    'process.env.NODE_ENV': JSON.stringify('production'),
+                    preventAssignment: true
+                })
             ],
             output: {
                 entryFileNames: "main.js",

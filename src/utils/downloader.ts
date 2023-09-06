@@ -105,14 +105,15 @@ export default class PluginProcessor {
 
                     // 将文件解压到对应的目录
                     if (!file.dir) {
-                        const content: any = await file.async('nodebuffer');
+                        const content: any = await file.async('string');
                         await adapter.write(absolutePath, content);
                     }
                 };
 
 
             } catch (e) {
-                new Notice(`插件${pluginId}解压失败！得手动清除残留文件！`, 5000)
+                new Notice(`插件${pluginId}解压失败！请联系开发者处理！`, 5000)
+                adapter.rmdir(pluginTargetFolderPath, true)
                 throw Error(`插件${pluginId}解压失败！`)
             }
 
@@ -178,7 +179,7 @@ export default class PluginProcessor {
 
                     // 将文件解压到对应的目录
                     if (!file.dir) {
-                        const content: any = await file.async('nodebuffer');
+                        const content: any = await file.async('string');
                         await adapter.write(absolutePath, content);
                     }
                 };

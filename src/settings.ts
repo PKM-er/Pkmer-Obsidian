@@ -37,7 +37,7 @@ export class PkmerSettingTab extends PluginSettingTab {
                 text
                     .setPlaceholder('登录获取token')
                     .setValue(this.plugin.settings.token)
-                    .setDisabled(true)
+                    .setDisabled(false)
                     .onChange(async (value) => {
                         this.plugin.settings.token = value;
                         await this.plugin.saveSettings();
@@ -45,7 +45,7 @@ export class PkmerSettingTab extends PluginSettingTab {
             );
             new Setting(containerEl)
             .setName("Tips")
-            .setDesc("如果登录后，仍然提示登录，请退出重新登录PKMER。")
+            .setDesc("如果登录后，仍然提示登录，请退出重新登录PKMER。移动端您需要手动在电脑端登录获取token后复制到 ")
 
     }
 
