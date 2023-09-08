@@ -205,6 +205,8 @@ const ele = ref<HTMLElement | null>(null)
 onMounted(async () => {
     extractCategoryFromHash() // 初始化时提取分类名称
     await loadAllThemes()
+    sortBy.value = "pkmerDownloadCount"
+    sortOrder.value = "asc"
     ele.value = document.querySelector(
         '.workspace-leaf-content[data-type="pkmer-downloader"]'
     ) as HTMLElement
@@ -412,7 +414,7 @@ const validThemeList = computed(() => {
 const readMore = () => {
     const startIndex = currentPage.value * perPageCount.value
     const endIndex = startIndex + perPageCount.value
-    const themesToAdd = filteredList.value?.slice(startIndex, endIndex)
+    const themesToAdd = displayedThemes.value?.slice(startIndex, endIndex)
     currentPage.value++
     AllThemeList.value = [...AllThemeList.value, ...themesToAdd]
 }
@@ -450,7 +452,7 @@ const readMore = () => {
                                 @click="sortByDownloadCount"
                                 class="flex items-center px-2 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                                 <span
-                                    class="flex items-center justify-center w-10 h-10 whitespace-pre-wrap text-muted-400 group-hover:text-primary-500">
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -615,7 +617,7 @@ const readMore = () => {
                 <div class="w-full flex items-center overflow-hidden">
                     <!--Content-->
                     <div
-                        class="w-full h-full flex flex-col justify-between px-6 pb-16 pt-4">
+                        class="w-full h-full flex flex-col justify-between md:px-6 pb-16 pt-4">
                         <!--Search-->
                         <div
                             class="w-full max-w-[90vw] mx-auto space-y-4 text-center">

@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-30 21:23:53
+ * @LastEditTime: 2023-09-07 13:55:47
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -184,6 +184,8 @@ const handleOpenSettings = () => {
 
 					<img class="ml-2 -mt-2" alt="version"
 						:src="`https://img.shields.io/badge/${pluginInfo.version}-brightgreen`" />
+						<span class="-mt-2 text-orange-500 ml-2 text-lg font-serif font-bold italic">{{ formatNumber(pluginInfo.pkmerDownloadCount) }} </span>
+						<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 24 24" data-v-35974737="" data-icon="mdi:temperature-celsius" class="-mt-2 text-orange-500 iconify w-4 h-4 iconify--mdi"><path fill="currentColor" d="M16.5 5c1.55 0 3 .47 4.19 1.28l-1.16 2.89A4.47 4.47 0 0 0 16.5 8C14 8 12 10 12 12.5s2 4.5 4.5 4.5c1.03 0 1.97-.34 2.73-.92l1.14 2.85A7.47 7.47 0 0 1 16.5 20A7.5 7.5 0 0 1 9 12.5A7.5 7.5 0 0 1 16.5 5M6 3a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0 2a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1Z"></path></svg>
 				</h3>
 			
 			</div>
@@ -236,7 +238,7 @@ const handleOpenSettings = () => {
 					</a>
 					<div class="block ml-auto font-sans text-sm text-muted-400">
 						<button v-show="!isUserLogin"   @click="handleOpenSettings"
-							class="inline-flex items-center px-3 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
+							class="inline-flex items-center  h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							>
 							请登录
 						</button>
@@ -245,21 +247,21 @@ const handleOpenSettings = () => {
 						<button
 							v-show="isUserLogin"
                             v-if="!pluginInfo.isInstalled"
-							class="inline-flex items-center px-3 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
+							class="inline-flex items-center  h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							@click="$emit('download-update-plugin','download',pluginInfo.id, pluginInfo.version)">
 							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
 							下载
 						</button>
 						<button
                             v-else-if="pluginInfo.isInstalled && pluginInfo.isOutdated"
-							class="inline-flex items-center px-3 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
+							class="inline-flex items-center  h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
 							@click="$emit('download-update-plugin', 'update', pluginInfo.id, pluginInfo.version)">
 							<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 20 20" data-v-5ade68da="" data-icon="dashicons:update" class="block w-4 h-4 mx-auto iconify iconify--dashicons"><path fill="currentColor" d="M10.2 3.28c3.53 0 6.43 2.61 6.92 6h2.08l-3.5 4l-3.5-4h2.32a4.439 4.439 0 0 0-4.32-3.45c-1.45 0-2.73.71-3.54 1.78L4.95 5.66a6.965 6.965 0 0 1 5.25-2.38zm-.4 13.44c-3.52 0-6.43-2.61-6.92-6H.8l3.5-4c1.17 1.33 2.33 2.67 3.5 4H5.48a4.439 4.439 0 0 0 4.32 3.45c1.45 0 2.73-.71 3.54-1.78l1.71 1.95a6.95 6.95 0 0 1-5.25 2.38z"></path></svg>
 							更新
 						</button>
                         <button
                             v-else
-                            class="inline-flex items-center px-3 py-2 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
+                            class="inline-flex items-center  h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility"
                             >
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em" height="1em" viewBox="0 0 48 48" data-v-5ade68da="" data-icon="icon-park-outline:link-cloud-sucess" class="block w-4 h-4 mx-auto iconify iconify--icon-park-outline"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M12 33c-3.333 0-8-1.5-8-7.5c0-7 7-8.5 9-8.5c1-3.5 3-9 11-9c7 0 10 4 11 7.5c0 0 9 1 9 9.5c0 6-4 8-8 8"></path><path d="m18 33l6 5l8-10"></path></g></svg>
 							 已安装

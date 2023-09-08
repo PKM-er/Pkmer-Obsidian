@@ -15,3 +15,8 @@ button.mod-cta {
     height: var(--input-height);
     font-weight: var(--input-font-weight);
 }
+
+.setting-item-control>input
+{
+    padding:1em;
+}

@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 10:11:39
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-21 15:57:49
+ * @LastEditTime: 2023-09-07 22:42:19
  * @Description: 
 -->
 <script setup lang="ts">
@@ -31,7 +31,7 @@ const switchTab = (tab: string) => {
         <div class="flex flex-wrap md:content-center">
             <!--Site logo-->
             <div
-                class="flex items-center justify-between px-8 mx-auto font-sans logo md:scale-125 max-w-7xl">
+                class="flex items-center justify-between md:px-8 mx-auto font-sans logo scale-90 md:scale-125 max-w-7xl">
                 <div
                     class="flex flex-wrap items-center justify-center w-full mx-auto max-w-7xl">
                     <!--Logo-->

@@ -53,7 +53,7 @@ const uniqueCategories = computed(() => {
 <template>
 	<div class="relative w-full flex justify-center gap-2 flex-wrap">
 		<button
-			class="inline-flex justify-center items-center py-2 px-4 font-sans text-sm rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 border-2 transition-colors duration-300 tw-accessibility"
+			class="h-6 inline-flex justify-center items-center py-2 px-4 font-sans text-sm rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 border-2 transition-colors duration-300 tw-accessibility"
 			:class="
 				activeCategory === 'all'
 					? 'border-primary-500 bg-muted-50 dark:bg-muted-700'

@@ -193,6 +193,8 @@ const ele = ref<HTMLElement | null>(null)
 onMounted(async () => {
     extractCategoryFromHash() // 初始化时提取分类名称
     await loadAllPlugins()
+    sortBy.value = "pkmerDownloadCount"
+    sortOrder.value = "asc"
     ele.value = document.querySelector(
         '.workspace-leaf-content[data-type="pkmer-downloader"]'
     ) as HTMLElement
@@ -369,7 +371,7 @@ const validPluginList = computed(() => {
 const readMore = () => {
     const startIndex = currentPage.value * perPageCount.value
     const endIndex = startIndex + perPageCount.value
-    const pluginsToAdd = filteredList.value?.slice(startIndex, endIndex)
+    const pluginsToAdd = displayedPlugins.value?.slice(startIndex, endIndex)
     currentPage.value++
     AllPluginList.value = [...AllPluginList.value, ...pluginsToAdd]
 }
@@ -388,7 +390,7 @@ const readMore = () => {
                 <div class="w-full lg:max-w-[60vw] mx-auto py-3 md:px-6">
                     <!-- toolbar-->
                     <div
-                        class="relative top-0 z-30 flex items-center w-full overflow-x-auto divide-x rounded dark:bg-muted-800 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
+                        class="flex-wrap relative top-0 z-30 flex items-center w-full overflow-x-auto divide-x rounded dark:bg-muted-800 border-muted-200 dark:border-muted-700 divide-muted-200 dark:divide-muted-700 dark:shadow-muted-900/30 md:overflow-x-visible">
                         <div class="widget-item">
                             <button
                                 :class="{
@@ -401,7 +403,7 @@ const readMore = () => {
                                 @click="sortByDownloadCount"
                                 class="flex items-center px-2 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                                 <span
-                                    class="flex items-center justify-center w-10 h-10 whitespace-pre-wrap text-muted-400 group-hover:text-primary-500">
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -514,7 +516,7 @@ const readMore = () => {
                                     @input="handleSetSearchText"
                                     :value="searchTextRef" />
                                 <div
-                                    class="absolute top-0 left-0 flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
+                                    class="absolute top-0 left-0 hidden md:flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -564,7 +566,7 @@ const readMore = () => {
                 <div class="flex items-center w-full overflow-hidden">
                     <!--Content-->
                     <div
-                        class="flex flex-col justify-between w-full h-full px-6 pt-4 pb-16">
+                        class="flex flex-col justify-between w-full h-full md:px-6 pt-4 pb-16">
                         <!--Search-->
                         <div
                             class="w-full max-w-[90vw] mx-auto space-y-4 text-center">

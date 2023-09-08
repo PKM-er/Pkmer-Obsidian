@@ -30,22 +30,22 @@ if (isUserLogin) downloadCount.value = await api.getDownloadCount()
 pkmerVer.value = props.app.plugins.manifests["pkmer"].version
 
 const isUpdate = computed(() => {
-    if (remoteVersion.value != pkmerVer.value) return "发现新版本:"+remoteVersion.value
-    if (remoteVersion.value == pkmerVer.value) return  "版本号:"+pkmerVer.value
+    if (remoteVersion.value != pkmerVer.value)
+        return "发现新版本:" + remoteVersion.value
+    if (remoteVersion.value == pkmerVer.value) return "版本号:" + pkmerVer.value
 })
 
 const handleUpdatePlugin = async () => {
-    if (remoteVersion.value == pkmerVer.value) return 
+    if (remoteVersion.value == pkmerVer.value) return
     new Notice("正在更新插件，请稍后...", 3000)
     const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
-        'obsidian-pkmer',
-        remoteVersion.value,
+        "obsidian-pkmer",
+        remoteVersion.value
     )
     if (!updateStatus) return
     handleRefreshPlugin()
 }
 
- 
 const handleRefreshPlugin = async () => {
     //@ts-ignore
     props.app.workspace.activeLeaf.rebuildView()
@@ -61,7 +61,8 @@ const handleOpenSettings = () => {
 
 <template>
     <div class="text-right pkmer-toolbar">
-        <span   @click="handleUpdatePlugin"
+        <span
+            @click="handleUpdatePlugin"
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
             {{ isUpdate }}
         </span>
@@ -91,9 +92,9 @@ const handleOpenSettings = () => {
                 <span class="font-bold">提示：</span>
                 <span
                     >当前是未登录状态，仅展示下载前20的热门内容，请<button
-                        class="inline-block px-3 py-1 m-1 font-sans text-xs rounded-lg"
+                        class="bg-yellow-600 w-20 h-6 inline-block px-1 py-1 m-1 font-sans text-xs rounded-lg"
                         @click="handleOpenSettings">
-                        点我登录</button
+                        点此登录</button
                     >后获取全部内容。</span
                 >
             </div>
