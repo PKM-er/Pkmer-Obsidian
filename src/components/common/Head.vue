@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 08:33:07
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-24 22:16:49
+ * @LastEditTime: 2023-09-09 10:51:21
  * @Description: 
 -->
 <script setup lang="ts">
@@ -32,7 +32,7 @@ pkmerVer.value = props.app.plugins.manifests["pkmer"].version
 const isUpdate = computed(() => {
     if (remoteVersion.value != pkmerVer.value)
         return "发现新版本:" + remoteVersion.value
-    if (remoteVersion.value == pkmerVer.value) return "版本号:" + pkmerVer.value
+    if (remoteVersion.value == pkmerVer.value) return "Ver:" + pkmerVer.value
 })
 
 const handleUpdatePlugin = async () => {
@@ -70,18 +70,18 @@ const handleOpenSettings = () => {
         <span
             v-show="isUserLogin"
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
-            剩余下载次数 {{ downloadCount }}
+            剩余次数 {{ downloadCount }}
         </span>
-        <button
+        <span
             @click="handleRefreshPlugin"
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-green-500 text-white shadow-xl shadow-primary-500/20">
             刷新
-        </button>
-        <button
+        </span>
+        <span
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-primary-500 text-white shadow-xl shadow-primary-500/20"
             @click="handleOpenSettings">
             设置
-        </button>
+        </span>
     </div>
     <div
         v-show="!isUserLogin"

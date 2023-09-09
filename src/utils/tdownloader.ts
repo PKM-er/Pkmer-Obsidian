@@ -96,11 +96,12 @@ export default class ThemeProcessor {
             try {
                 zip.forEach(async (relativePath: string, file: any) => {
                     const absolutePath = themeTargetFolderPath + relativePath;
-                    const content = await file.async('nodebuffer');
+                    const content = await file.async('string');
                     await adapter.write(absolutePath, content)
                 })
             } catch (e) {
                 new Notice(`主题${themeName}解压失败！得手动清除残留文件！`, 5000)
+                adapter.rmdir(themeTargetFolderPath, true)
                 throw Error(`主题${themeName}解压失败！`)
             }
 
@@ -148,7 +149,7 @@ export default class ThemeProcessor {
             try {
                 zip.forEach(async (relativePath: string, file: any) => {
                     const absolutePath = themeTargetFolderPath + relativePath;
-                    const content = await file.async('nodebuffer');
+                    const content = await file.async('string');
                     await adapter.write(absolutePath, content)
                 })
             } catch (e) {

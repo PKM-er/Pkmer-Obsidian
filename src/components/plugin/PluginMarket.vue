@@ -244,6 +244,10 @@ const showReadMoreButton = computed(() => {
 })
 
 const sortOrder = ref("") // 排序操作
+function sortByPkmerDownloadCount() {
+    sortBy.value = "pkmerDownloadCount"
+    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+}
 function sortByDownloadCount() {
     sortBy.value = "downloadCount"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
@@ -311,6 +315,16 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
             ResultPlugins = filteredList.value.filter(
                 (plugin) => plugin.isOutdated
             )
+        } else if (sortBy.value === "pkmerDownloadCount") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = filteredList.value.sort(
+                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
+                )
+            } else {
+                ResultPlugins = filteredList.value.sort(
+                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
+                )
+            }
         } else {
             ResultPlugins = filteredList.value?.slice(
                 0,
@@ -356,6 +370,16 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
                     b.name.localeCompare(a.name)
                 )
             }
+        } else if (sortBy.value === "pkmerDownloadCount") {
+            if (sortOrder.value === "asc") {
+                ResultPlugins = ResultPlugins.sort(
+                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
+                )
+            } else {
+                ResultPlugins = ResultPlugins.sort(
+                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
+                )
+            }
         }
     }
 
@@ -394,16 +418,14 @@ const readMore = () => {
                         <div class="widget-item">
                             <button
                                 :class="{
-                                    active:
-                                        sortBy == 'downloadCount' ||
-                                        sortBy == ''
+                                    active: sortBy == 'downloadCount'
                                 }"
                                 tooltip="按下载量"
                                 flow="down"
                                 @click="sortByDownloadCount"
                                 class="flex items-center px-2 font-sans transition-colors duration-300 group whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                                 <span
-                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap flex text-muted-400 group-hover:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -439,7 +461,7 @@ const readMore = () => {
                                 @click="sortByUpdateTime"
                                 class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                                 <span
-                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap flex text-muted-400 group-hover:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -464,7 +486,7 @@ const readMore = () => {
                                 @click="sortByFilename"
                                 class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                                 <span
-                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap flex text-muted-400 group-hover:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -483,13 +505,39 @@ const readMore = () => {
                         </div>
                         <div class="widget-item">
                             <button
+                                class="active items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700"
+                                :class="{
+                                    active: sortBy == 'pkmerDownloadCount'
+                                }"
+                                tooltip="按插件热度"
+                                flow="down"
+                                @click="sortByPkmerDownloadCount">
+                                <span
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap flex text-muted-400 group-hover:text-primary-500">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                        role="img"
+                                        width="1em"
+                                        height="1em"
+                                        viewBox="0 0 24 24"
+                                        data-icon="material-symbols:whatshot"
+                                        class="iconify w-6 h-6 iconify--material-symbols">
+                                        <path
+                                            fill="currentColor"
+                                            d="M12 22q-2.5 0-4.588-1.1T3.95 17.95l4.1-4.1l3 2.5L16 11.4V14h2V8h-6v2h2.6l-3.65 3.65l-3-2.5L2.9 16.2q-.425-.95-.662-2.013T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22Z"></path></svg
+                                ></span>
+                            </button>
+                        </div>
+                        <div class="widget-item">
+                            <button
                                 :class="{ active: sortBy == 'installed' }"
                                 tooltip="筛选已安装插件"
                                 flow="down"
                                 @click="sortByInstalled"
                                 class="items-center flex-1 px-2 font-sans transition-colors duration-300 group md:flex-auto md:flex whitespace-nowrap text-muted-800 dark:text-muted-100 hover:bg-muted-50 dark:hover:bg-muted-700">
                                 <span
-                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap md:flex text-muted-400 group-hover:text-primary-500">
+                                    class="items-center justify-center w-10 h-10 whitespace-pre-wrap flex text-muted-400 group-hover:text-primary-500">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         aria-hidden="true"
@@ -504,6 +552,9 @@ const readMore = () => {
                                             d="M4.5 11a8.5 8.5 0 1 1 8.188 8.494a6.47 6.47 0 0 1-.68 1.457c.327.033.658.049.992.049c5.523 0 10-4.477 10-10S18.523 1 13 1S3 5.477 3 11c0 .334.016.665.048.991a6.51 6.51 0 0 1 1.458-.68A8.65 8.65 0 0 1 4.5 11Zm8.493-5.352a.75.75 0 0 0-1.493.102v6l.007.102a.75.75 0 0 0 .743.648h4l.102-.007A.75.75 0 0 0 16.25 11H13V5.75l-.007-.102ZM1 17.5a5.5 5.5 0 0 1 5-5.477v5.77l-1.646-1.647a.5.5 0 0 0-.708.708l2.5 2.5a.5.5 0 0 0 .708 0l2.5-2.5a.5.5 0 0 0-.708-.708L7 17.793v-5.77A5.5 5.5 0 1 1 1 17.5Zm8.5 3A.5.5 0 0 0 9 20H4a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5Z" />
                                     </svg>
                                 </span>
+                                <span class="num">{{
+                                    countInstalledPlugins
+                                }}</span>
                             </button>
                         </div>
 
@@ -511,7 +562,7 @@ const readMore = () => {
                             <div class="relative group">
                                 <input
                                     type="text"
-                                    class="w-full h-8 pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
+                                    class="w-full h-8 pl-2 md:pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
                                     placeholder="Search plugins..."
                                     @input="handleSetSearchText"
                                     :value="searchTextRef" />
@@ -548,11 +599,6 @@ const readMore = () => {
         </div>
 
         <div class="text-right">
-            <button
-                @click="sortByInstalled"
-                class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
-                已装插件： {{ countInstalledPlugins }}
-            </button>
             <button
                 @click="sortByUpdated"
                 v-show="countUpdatedPlugins"
@@ -775,6 +821,16 @@ const readMore = () => {
 </template>
 
 <style>
+.num {
+    margin-left: -8px;
+    margin-top: -16px;
+    font-size: 9px;
+    color: #fff;
+    background: #ed4014;
+    text-align: center;
+    border-radius: 10px;
+    padding: 0 4px;
+}
 .noimg {
     display: flex;
     filter: saturate(70%) contrast(85%);
