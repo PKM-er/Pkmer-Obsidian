@@ -905,6 +905,9 @@ const readMore = () => {
 button.active span {
     color: rgb(208, 111, 78);
 }
+button.active .num {
+    color: rgb(239, 166, 142);
+}
 
 img[src=""],
 img:not([src]) {
