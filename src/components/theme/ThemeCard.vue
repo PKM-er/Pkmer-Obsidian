@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-09-09 12:19:27
+ * @LastEditTime: 2023-10-09 22:49:06
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -18,7 +18,7 @@ interface Props {
 const prop = defineProps<Props>()
 const isUserLogin = prop.isLogin
 
-defineEmits(["download-theme-update"])
+defineEmits(["download-update-theme"])
 function getUsernameFromRepo() {
     if (prop.themeInfo.authorAvatar && prop.themeInfo.authorAvatar.length > 0) {
         // let regex = /^([^\/]*)\//;
