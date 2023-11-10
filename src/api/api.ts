@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-25 23:58:28
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-18 17:25:28
+ * @LastEditTime: 2023-11-10 14:03:07
  * @Description: 
  */
 import { requestUrl } from "obsidian";
@@ -133,10 +133,22 @@ export class PkmerApi {
     }
 
     async getTop20Plugins(): Promise<ObsidianPluginInfo[]> {
-        const response = await this.fetchWithToken(BASE_API_URL + '/getTop20Plugins')
-        return await response.json() as ObsidianPluginInfo[];
-    }
-
+        const cachedData = localStorage.getItem('top20Plugins');
+        const cachedExpiry = localStorage.getItem('top20PluginsExpiry');
+        const currentTime = new Date().getTime();
+      
+        if (cachedData && cachedExpiry && currentTime < +cachedExpiry) {
+          return JSON.parse(cachedData) as ObsidianPluginInfo[];
+        } else {
+          const response = await this.fetchWithToken(BASE_API_URL + '/getTop20Plugins');
+          const data = await response.json() as ObsidianPluginInfo[];
+      
+          localStorage.setItem('top20Plugins', JSON.stringify(data));
+          localStorage.setItem('top20PluginsExpiry', String(currentTime + 3 * 24 * 60 * 60 * 1000));
+      
+          return data;
+        }
+      }
     async searchPlugins(keyword: string): Promise<ObsidianPluginInfo[]> {
         const response = await this.fetchWithToken(BASE_API_URL + '/searchPlugins' + '?keyword=' + keyword + '&limit=10', {
             method: 'GET',
@@ -145,23 +157,65 @@ export class PkmerApi {
     }
 
     async getPluginList(): Promise<ObsidianPluginInfo[]> {
-        const response = await this.fetchWithToken(BASE_API_URL + '/getAllPlugins', {
+        const cachedData = localStorage.getItem('pluginList');
+        const cachedExpiry = localStorage.getItem('pluginListExpiry');
+        const currentTime = new Date().getTime();
+      
+        if (cachedData && cachedExpiry && currentTime < +cachedExpiry) {
+          return JSON.parse(cachedData) as ObsidianPluginInfo[];
+        } else {
+          const response = await this.fetchWithToken(BASE_API_URL + '/getAllPlugins', {
             method: 'GET',
-        })
-        return await response.json() as ObsidianPluginInfo[];
-    }
-
-    async getTop20Themes(): Promise<ThemeInfo[]> {
-        const response = await this.fetchWithToken(BASE_API_URL + '/getTop20Themes')
-        return await response.json() as ThemeInfo[];
-    }
-    async getThemeList(): Promise<ThemeInfo[]> {
-        const response = await this.fetchWithToken(BASE_API_URL + '/getAllThemes', {
+          });
+          const data = await response.json() as ObsidianPluginInfo[];
+      
+          localStorage.setItem('pluginList', JSON.stringify(data));
+          localStorage.setItem('pluginListExpiry', String(currentTime + 4 * 60 * 60 * 1000)); // 4 hours
+      
+          return data;
+        }
+      }
+      async getTop20Themes(): Promise<ThemeInfo[]> {
+        const cachedData = localStorage.getItem('top20Themes');
+        const cachedExpiry = localStorage.getItem('top20ThemesExpiry');
+        const currentTime = new Date().getTime();
+      
+        if (cachedData && cachedExpiry && currentTime < +cachedExpiry) {
+          return JSON.parse(cachedData) as ThemeInfo[];
+        } else {
+          const response = await this.fetchWithToken(BASE_API_URL + '/getTop20Themes');
+          const data = await response.json() as ThemeInfo[];
+      
+          localStorage.setItem('top20Themes', JSON.stringify(data));
+          localStorage.setItem('top20ThemesExpiry', String(currentTime +  3 * 24 * 60 * 60 * 1000)); // Set the expiry time according to your requirements
+      
+          return data;
+        }
+      }
+      
+      async getThemeList(): Promise<ThemeInfo[]> {
+        const cachedData = localStorage.getItem('themeList');
+        const cachedExpiry = localStorage.getItem('themeListExpiry');
+        const currentTime = new Date().getTime();
+      
+        if (cachedData && cachedExpiry && currentTime < +cachedExpiry) {
+          return JSON.parse(cachedData) as ThemeInfo[];
+        } else {
+          const response = await this.fetchWithToken(BASE_API_URL + '/getAllThemes', {
             method: 'GET',
-        })
-        return await response.json() as ThemeInfo[];
-    }
+          });
+          const data = await response.json() as ThemeInfo[];
+      
+          localStorage.setItem('themeList', JSON.stringify(data));
+          localStorage.setItem('themeListExpiry', String(currentTime +4 * 60 * 60 * 1000)); // 4 hours
+      
+          return data;
+        }
+      }
 
+
+
+    
     async getThemeDownloadUrl(themeName: string, version: string): Promise<string> {
         const response = await this.fetchWithToken(BASE_API_URL + '/getThemeDownloadUrl/' + themeName + '/' + version, {
             method: 'GET',

@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-09-09 11:37:11
+ * @LastEditTime: 2023-11-10 16:20:52
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -20,7 +20,8 @@ const prop = defineProps<Props>()
 const isUserLogin = prop.isLogin
 
 const showImage = ref(false)
-
+const PluginStatus =ref('');
+const statusColor=ref('rgba(255, 51, 68, 0.8)');
 defineEmits(["download-update-plugin"])
 function getUsernameFromRepo() {
     if (
@@ -91,6 +92,47 @@ function diffDays(timestamp: string) {
         return `未知`
     }
 }
+const  getTooltip=()=>
+{
+    if(PluginStatus.value=='未启用')
+    return '当前插件未启用，点击启用';
+    if(PluginStatus.value=='已启用')
+    return '当前插件已启动，点击禁用';
+else
+return '未成功启用。请查看控制台错误信息。';
+}
+const enablePlugin=async(id: string)=>{
+    if(PluginStatus.value== "已启用")
+    {    //@ts-ignore
+        await prop.app.plugins.disablePluginAndSave(id);
+        PluginStatus.value= "未启用";
+         statusColor.value="rgba(255, 51, 68, 0.8)";
+      //@ts-ignore
+    }else
+    {
+      //@ts-ignore
+      if(await prop.app.plugins.enablePluginAndSave(id))
+      {
+      PluginStatus.value= "已启用";
+      statusColor.value="#2aa330";
+      }else
+      {
+        PluginStatus.value= "未成功";
+      }
+  
+    }
+
+}
+     //@ts-ignore
+if((Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) != -1) && prop.pluginInfo.isInstalled) {
+        PluginStatus.value= "已启用";
+        statusColor.value="#2aa330"
+  }
+     //@ts-ignore
+  if((Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) == -1) && prop.pluginInfo.isInstalled) {
+        PluginStatus.value= "未启用";
+        statusColor.value="rgba(255, 51, 68, 0.8)"
+  }
 //名称的首字母大写
 function getInitials(name: string) {
     let initials = name.match(/\b\w/g) || []
@@ -136,7 +178,7 @@ const handleOpenSettings = () => {
                 <div class="relative">
                     <!--Badge-->
                     <span
-                        class="absolute top-3 left-3 inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-primary-500 text-white shadow-xl shadow-primary-500/20">
+                        class="absolute z-1 top-3 left-3 inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-primary-500 text-white shadow-xl shadow-primary-500/20">
                         {{ tags[0] }}
                     </span>
 
@@ -373,28 +415,10 @@ const handleOpenSettings = () => {
                             </button>
                             <button
                                 v-else
+                                @click="enablePlugin(pluginInfo.id)"
+                                :tooltip="getTooltip()"
                                 class="inline-flex items-center h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    role="img"
-                                    width="1em"
-                                    height="1em"
-                                    viewBox="0 0 48 48"
-                                    data-v-5ade68da=""
-                                    data-icon="icon-park-outline:link-cloud-sucess"
-                                    class="block w-4 h-4 mx-auto iconify iconify--icon-park-outline">
-                                    <g
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="4">
-                                        <path
-                                            d="M12 33c-3.333 0-8-1.5-8-7.5c0-7 7-8.5 9-8.5c1-3.5 3-9 11-9c7 0 10 4 11 7.5c0 0 9 1 9 9.5c0 6-4 8-8 8"></path>
-                                        <path d="m18 33l6 5l8-10"></path>
-                                    </g>
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path :fill="statusColor" d="M8 4c.367 0 .721.048 1.063.145a3.943 3.943 0 0 1 1.762 1.031a3.944 3.944 0 0 1 1.03 1.762c.097.34.145.695.145 1.062c0 .367-.048.721-.145 1.063a3.94 3.94 0 0 1-1.03 1.765a4.017 4.017 0 0 1-1.762 1.031C8.72 11.953 8.367 12 8 12s-.721-.047-1.063-.14a4.056 4.056 0 0 1-1.765-1.032A4.055 4.055 0 0 1 4.14 9.062A3.992 3.992 0 0 1 4 8c0-.367.047-.721.14-1.063a4.02 4.02 0 0 1 .407-.953A4.089 4.089 0 0 1 5.98 4.546a3.94 3.94 0 0 1 .957-.401A3.89 3.89 0 0 1 8 4z"/></svg>
                                 已安装
                             </button>
                         </div>

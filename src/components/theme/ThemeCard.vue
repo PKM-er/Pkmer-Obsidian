@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-10-09 22:49:06
+ * @LastEditTime: 2023-11-10 14:32:40
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -71,7 +71,11 @@ function getDefaultAvata(name: string) {
     } else url = `https://cdn.pkmer.cn/covers/logo.png!nomark`
     return url
 } 
+const changeTheme=async(themeName: string)=>{
+      //@ts-ignore
+    await prop.app.customCss.setTheme(themeName);
 
+}
 const getRadomImage = () => {
     const url = `https://pkmer.cn/img/cover/${Math.floor(
         Math.random() * 11
@@ -307,6 +311,9 @@ const handleOpenSettings = () => {
                             </button>
                             <button
                                 v-else
+                                @click="changeTheme(themeInfo.name)"
+                                tooltip="主题已安装，应用当前主题"
+                                flow="down"
                                 class="inline-flex items-center h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -329,7 +336,7 @@ const handleOpenSettings = () => {
                                         <path d="m18 33l6 5l8-10"></path>
                                     </g>
                                 </svg>
-                                已安装
+                                应用
                             </button>
                         </div>
                     </div>
