@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-11-10 16:20:52
+ * @LastEditTime: 2023-12-06 10:29:55
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -228,7 +228,7 @@ const handleOpenSettings = () => {
                     <h3
                         data-pagefind-meta="title"
                         class="flex items-center text-lg font-medium leading-6 plugin_name font-heading text-muted-800 dark:text-white">
-                        {{ pluginInfo.name }}
+                        <a :href="pluginInfo.contentUrl?pluginInfo.contentUrl:pluginInfo.readme_zh?pluginInfo.readme_zh:'#'">{{ pluginInfo.name }}</a>
 
                         <img
                             class="ml-2 -mt-2"
