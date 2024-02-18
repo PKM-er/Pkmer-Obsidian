@@ -18,6 +18,7 @@ export default class PluginProcessor {
     private async getPluginUrl(pluginName: string, pluginVersion: string) {
         const currentTime = Date.now();
         const cachedPluginUrl = localStorage.getItem('pluginUrl');
+        console.log(cachedPluginUrl, "cachedPluginUrl");
         // 如果有缓存的地址，并且插件名称和版本号都与缓存一致
         if (cachedPluginUrl) {
             const cachedInfo = JSON.parse(cachedPluginUrl);

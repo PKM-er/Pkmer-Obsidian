@@ -50,7 +50,6 @@ const loadAllPlugins = async () => {
 
                     //@ts-ignore
                     const pluginManifests = props.app.plugins.manifests
-
                     plugin.isInstalled =
                         pluginManifests[plugin.id] !== undefined
                     plugin.isOutdated =
@@ -317,13 +316,37 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
             )
         } else if (sortBy.value === "pkmerDownloadCount") {
             if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
-                )
+                ResultPlugins = filteredList.value.sort((a, b) => {
+                    if (a.source === "community" && b.source !== "community") {
+                        // a.source 为 'community'，b.source 不为 'community'，a 排在 b 前面
+                        return -1
+                    } else if (
+                        a.source !== "community" &&
+                        b.source === "community"
+                    ) {
+                        // a.source 不为 'community'，b.source 为 'community'，b 排在 a 前面
+                        return 1
+                    } else {
+                        // a.source 和 b.source 都为 'community'，或都不是 'community'，根据 pkmerDownloadCount 排序
+                        return b.pkmerDownloadCount - a.pkmerDownloadCount
+                    }
+                })
             } else {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
-                )
+                ResultPlugins = filteredList.value.sort((a, b) => {
+                    if (a.source === "community" && b.source !== "community") {
+                        // a.source 为 'community'，b.source 不为 'community'，a 排在 b 前面
+                        return -1
+                    } else if (
+                        a.source !== "community" &&
+                        b.source === "community"
+                    ) {
+                        // a.source 不为 'community'，b.source 为 'community'，b 排在 a 前面
+                        return 1
+                    } else {
+                        // a.source 和 b.source 都为 'community'，或都不是 'community'，根据 pkmerDownloadCount 排序
+                        return a.pkmerDownloadCount - b.pkmerDownloadCount
+                    }
+                })
             }
         } else {
             ResultPlugins = filteredList.value?.slice(

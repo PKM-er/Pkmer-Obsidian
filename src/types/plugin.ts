@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-18 23:44:50
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-03 16:16:05
+ * @LastEditTime: 2024-02-18 10:20:59
  * @Description: 
  */
 export interface PluginInfo {
@@ -27,6 +27,7 @@ export interface PluginInfo {
     readme_zh: string | null;
     isInstalled: boolean | undefined;
     isOutdated: boolean | undefined;
+    source: 'official' | 'community';
     __entity: string;
 }
 
