@@ -22,6 +22,7 @@ const AllPluginList = ref()
 let perPageCount = ref(24)
 let currentPage = ref(1)
 const isDownload = ref(true)
+const filterDeviceOption = ref("default")
 const api = new PkmerApi(props.settings.token)
 const pluginProcessor = new PluginProcessor(props.app, props.settings)
 
@@ -222,8 +223,17 @@ const handleSetSearchText = (event: any) => {
 
 const filteredList = computed<PluginInfo[]>(() => {
     const searchText = searchTextRef.value.toLowerCase().trim() // 将搜索关键字转为小写
-    if (searchText.length < 1) return AllPluginList.value
-    return AllPluginList.value.filter(
+
+    let plugins = AllPluginList.value
+
+    if (filterDeviceOption.value === "mobile") {
+        plugins = plugins.filter((plugin: PluginInfo) => !plugin.isDesktopOnly)
+    } else if (filterDeviceOption.value === "desktop") {
+        plugins = plugins.filter((plugin: PluginInfo) => plugin.isDesktopOnly)
+    }
+
+    if (searchText.length < 1) return plugins
+    return plugins.filter(
         (plugin: PluginInfo) =>
             plugin.id.toLowerCase().includes(searchText) || // 插件ID中包含搜索关键字
             plugin.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
@@ -356,7 +366,7 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
         }
     } else {
         ResultPlugins = filteredList.value.filter((plugin) =>
-            plugin.tags?.toLowerCase().includes(activeCategory.value)
+            plugin.tags?.includes(activeCategory.value)
         ) // 插件标签中包含搜索关键字
 
         if (sortBy.value === "downloadCount") {
@@ -580,7 +590,23 @@ const readMore = () => {
                                 }}</span>
                             </button>
                         </div>
-
+                        <div
+                            class="widget-item"
+                            :tooltip="
+                                filterDeviceOption == 'mobile'
+                                    ? '支持移动端的插件'
+                                    : filterDeviceOption == 'desktop'
+                                    ? '仅支持桌面端的插件'
+                                    : '所有终端'
+                            ">
+                            <select
+                                v-model="filterDeviceOption"
+                                class="block border px-2 w-18 text-muted-800 dark:text-muted-100 bg-white dark:bg-muted-800 rounded-md shadow-sm focus:outline-none">
+                                <option value="default">默认</option>
+                                <option value="mobile">移动端</option>
+                                <option value="desktop">仅桌面端</option>
+                            </select>
+                        </div>
                         <div class="relative w-full">
                             <div class="relative group">
                                 <input
