@@ -1,3 +1,10 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-09-06 15:09:17
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2024-03-25 13:14:43
+ * @Description: 
+ */
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
@@ -14,7 +21,7 @@ export default defineConfig({
         }
     },
     build: {
-        minify: false,
+        minify: true,
         lib: {
             entry: './src/main.ts',
             name: 'main',

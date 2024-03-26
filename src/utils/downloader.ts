@@ -121,6 +121,10 @@ export default class PluginProcessor {
             new Notice(`插件${pluginId}安装成功！\n请在插件列表中启用`, 5000)
             //@ts-ignore
             await app.plugins.loadManifests();
+
+            setTimeout(() => {
+                dispatchEvent(new Event("reload-statusbar"));
+            }, 100);
             return true
         } catch (error) {
             console.log(error)
@@ -192,6 +196,9 @@ export default class PluginProcessor {
             new Notice(`插件${pluginId}更新成功！\n 请在插件列表中重新启用`)
             //@ts-ignore
             await app.plugins.loadManifests();
+            setTimeout(() => {
+                dispatchEvent(new Event("reload-statusbar"));
+            }, 100);
             return true
         } catch (error) {
             new Notice(`插件${pluginId}更新失败！${error}`)

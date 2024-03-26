@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 10:11:39
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-09-07 22:42:19
+ * @LastEditTime: 2024-03-26 09:03:27
  * @Description: 
 -->
 <script setup lang="ts">
@@ -15,10 +15,11 @@ import { App } from "obsidian"
 interface Props {
     settings: PkmerSettings
     app: App
+    filter:String
 }
 
 const props = defineProps<Props>()
-
+console.log(props.filter,"filter");
 const currentTab = ref("plugin")
 // 处理点击 Tab 的事件，切换当前显示的组件
 const switchTab = (tab: string) => {

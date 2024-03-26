@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 08:33:07
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-09-09 10:51:21
+ * @LastEditTime: 2024-03-25 14:18:10
  * @Description: 
 -->
 <script setup lang="ts">
@@ -43,10 +43,18 @@ const handleUpdatePlugin = async () => {
         remoteVersion.value
     )
     if (!updateStatus) return
-    handleRefreshPlugin()
+       //@ts-ignore
+       props.app.workspace.activeLeaf.rebuildView()
 }
 
 const handleRefreshPlugin = async () => {
+     // 清除缓存设置
+     if(isUserLogin){
+        localStorage.removeItem('pluginList');
+        localStorage.removeItem('pluginListExpiry');
+        localStorage.removeItem('themeList');
+        localStorage.removeItem('themeListExpiry');
+     } 
     //@ts-ignore
     props.app.workspace.activeLeaf.rebuildView()
 }

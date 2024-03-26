@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-12-06 10:29:55
+ * @LastEditTime: 2024-03-25 12:51:29
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -229,15 +229,15 @@ const handleOpenSettings = () => {
                         data-pagefind-meta="title"
                         class="flex items-center text-lg font-medium leading-6 plugin_name font-heading text-muted-800 dark:text-white">
                         <a :href="pluginInfo.contentUrl?pluginInfo.contentUrl:pluginInfo.readme_zh?pluginInfo.readme_zh:'#'">{{ pluginInfo.name }}</a>
+                        <span class="-mt-2 ml-2 px-2  rounded text-muted-100  bg-green-600 text-xs  ">{{pluginInfo.version}}</span>
 
-                        <img
-                            class="ml-2 -mt-2"
-                            alt="version"
-                            :src="`https://img.shields.io/badge/${pluginInfo.version}-brightgreen`" />
+                         
                         <span
                             class="-mt-2 text-orange-500 ml-2 text-lg font-serif font-bold italic"
                             >{{ formatNumber(pluginInfo.pkmerDownloadCount) }}
                         </span>
+
+				
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             aria-hidden="true"

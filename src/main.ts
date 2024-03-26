@@ -2,15 +2,17 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-26 16:57:16
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-07-31 17:08:25
+ * @LastEditTime: 2024-03-26 12:18:29
  * @Description: 
  */
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, setIcon, debounce  } from "obsidian";
 
 import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./views/PluginMarket";
 import { PkmerSettingTab } from "./settings";
 import PluginProcessor from "@/utils/downloader"
-import ThemeProcessor from "@/utils/tdownloader" 
+import ThemeProcessor from "@/utils/tdownloader"
+import PluginStatistics from "@/utils/pluginstatistics"
+import { filter } from "jszip";
 export interface PkmerSettings {
     token: string;
 }
@@ -20,6 +22,7 @@ const DEFAULT_SETTINGS: PkmerSettings = {
 }
 export default class PkmerPlugin extends Plugin {
     settings!: PkmerSettings;
+    private statusBarIconEl!: HTMLElement ;
 
     async onload() {
         await this.loadSettings();
@@ -27,15 +30,23 @@ export default class PkmerPlugin extends Plugin {
         this.registerCustomURI();
         this.registerCustomCommands();
         this.registerCustomRibbon();
-
-
+        this.addStatusBarIcon();
+       //await this.updateStatusBar();
         this.addSettingTab(new PkmerSettingTab(this.app, this));
-        this.registerView(DEFAULT_VIEW_TYPE, (leaf) => new PkmderDownloaderView(leaf, this));
+        this.registerView(DEFAULT_VIEW_TYPE, (leaf) => new PkmderDownloaderView(leaf, this,"opened"));
+        // 监听自定义事件
+        addEventListener("reload-statusbar", async () => {
+
+            addEventListener("reload-statusbar", this.reloadStatusBarHandler);
+
+        });
 
     }
-
+    reloadStatusBarHandler = async () => {
+        await this.updateStatusBar();
+    };
     onunload() {
-
+        removeEventListener("reload-statusbar", this.reloadStatusBarHandler);
     }
 
     async loadSettings() {
@@ -106,4 +117,47 @@ export default class PkmerPlugin extends Plugin {
             this.app.workspace.getLeaf().setViewState({ active: true, type: DEFAULT_VIEW_TYPE });
         });
     }
+    private addStatusBarIcon() {
+        this.statusBarIconEl = this.addStatusBarItem();
+        this.statusBarIconEl.addClass("pkmer-statusbar");
+        setIcon(this.statusBarIconEl, "rocket");
+           // 定义防抖函数
+        const debouncedClickHandler = debounce(() => {
+            dispatchEvent(new Event("reload-statusbar"));
+        }, 100);
+        // 注册点击事件，并使用防抖函数作为处理程序
+        this.registerDomEvent(this.statusBarIconEl, "click", () => {
+            debouncedClickHandler(); // 点击事件触发时调用防抖函数
+        });
+    }
+
+
+    private async updateStatusBar() {
+    
+        const pluginStatistics = new PluginStatistics(app, this.settings);
+        // 使用 Promise.all() 并行获取插件数量
+        const { installedCount, updatedCount } = await pluginStatistics.getPluginStatus();
+        this.statusBarIconEl.setText(`Installed: ${installedCount}, Updated: ${updatedCount}`);
+ 
+         debounce(() => {
+            this.app.workspace.getLeaf().setViewState({ active: true, type: DEFAULT_VIEW_TYPE ,state: { filter: "tags" } });
+
+        }, 500);
+         
+    }
+
+
+    // private registerStatusBarIcon() {
+    //     this.statusBarIconEl = this.addStatusBarItem();
+
+    //     if (!requireApiVersion('1.0.0')) {
+    //         this.statusBarIconEl.style.padding = '0';
+    //         this.statusBarIconEl.style.marginLeft = '-0.25rem';
+    //         this.statusBarIconEl.style.marginRight = '-0.25rem';
+    //     }
+    //     this.statusBarIconEl.addClass("pkmer-statusbar");
+    //     setIcon(this.statusBarIconEl, "cloud-download");
+
+    // }
+
 }

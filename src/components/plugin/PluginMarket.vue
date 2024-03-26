@@ -327,7 +327,16 @@ const displayedPlugins = computed<PluginInfo[]>(() => {
         } else if (sortBy.value === "pkmerDownloadCount") {
             if (sortOrder.value === "asc") {
                 ResultPlugins = filteredList.value.sort((a, b) => {
-                    if (a.source === "community" && b.source !== "community") {
+                    if (a.id === "obsidian-memos") {
+                        // a.id 为 'obsidian-memos'，a 排在 b 前面
+                        return -1
+                    } else if (b.id === "obsidian-memos") {
+                        // b.id 为 'obsidian-memos'，b 排在 a 前面
+                        return 1
+                    } else if (
+                        a.source === "community" &&
+                        b.source !== "community"
+                    ) {
                         // a.source 为 'community'，b.source 不为 'community'，a 排在 b 前面
                         return -1
                     } else if (
@@ -602,9 +611,21 @@ const readMore = () => {
                             <select
                                 v-model="filterDeviceOption"
                                 class="block border px-2 w-18 text-muted-800 dark:text-muted-100 bg-white dark:bg-muted-800 rounded-md shadow-sm focus:outline-none">
-                                <option value="default">默认</option>
-                                <option value="mobile">移动端</option>
-                                <option value="desktop">仅桌面端</option>
+                                <option
+                                    class="text-muted-800 dark:text-muted-100 bg-white dark:bg-muted-800"
+                                    value="default">
+                                    默认
+                                </option>
+                                <option
+                                    class="text-muted-800 dark:text-muted-100 bg-white dark:bg-muted-800"
+                                    value="mobile">
+                                    移动端
+                                </option>
+                                <option
+                                    class="text-muted-800 dark:text-muted-100 bg-white dark:bg-muted-800"
+                                    value="desktop">
+                                    仅桌面端
+                                </option>
                             </select>
                         </div>
                         <div class="relative w-full">
