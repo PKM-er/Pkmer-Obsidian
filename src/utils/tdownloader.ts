@@ -108,6 +108,9 @@ export default class ThemeProcessor {
             new Notice(`主题${themeName}安装并启用成功！\n`, 5000)
             //@ts-ignore
             await app.customCss.setTheme(themeName);
+            setTimeout(() => {
+                dispatchEvent(new Event("reload-statusbar"));
+            }, 100);
             return true
         } catch (error) {
             console.log(error)
@@ -160,6 +163,9 @@ export default class ThemeProcessor {
             new Notice(`主题${themeName}更新成功！\n 新主题已生效`)
             //@ts-ignore
             await app.customCss.setTheme(themeName);
+            setTimeout(() => {
+                dispatchEvent(new Event("reload-statusbar"));
+            }, 100);
             return true
         } catch (error) {
             new Notice(`主题${themeName}更新失败！${error}`)

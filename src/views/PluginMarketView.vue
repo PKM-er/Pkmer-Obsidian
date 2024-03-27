@@ -2,11 +2,11 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-31 10:11:39
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2024-03-26 09:03:27
+ * @LastEditTime: 2024-03-27 13:58:07
  * @Description: 
 -->
 <script setup lang="ts">
-import { ref } from "vue"
+import { onMounted, onUnmounted, ref } from "vue"
 import PluginMarket from "@/components/plugin/PluginMarket.vue"
 import ThemeMarket from "@/components/theme/ThemeMarket.vue"
 import type { PkmerSettings } from "@/main"
@@ -15,16 +15,29 @@ import { App } from "obsidian"
 interface Props {
     settings: PkmerSettings
     app: App
-    filter:String
 }
 
 const props = defineProps<Props>()
-console.log(props.filter,"filter");
 const currentTab = ref("plugin")
+const isOpenUpdateTab = ref()
+const parsedData = ref({ type: "", count: 0 })
 // 处理点击 Tab 的事件，切换当前显示的组件
 const switchTab = (tab: string) => {
     currentTab.value = tab
 }
+
+onMounted(() => {
+    isOpenUpdateTab.value = localStorage.getItem("pkmer-update-tab")
+
+    if (isOpenUpdateTab.value !== null && isOpenUpdateTab.value !== "") {
+        // 解析 JSON 字符串为 JavaScript 对象
+        parsedData.value = JSON.parse(isOpenUpdateTab.value)
+        if (parsedData.value.type == "tupdated") switchTab("theme")
+    }
+})
+onUnmounted(() => {
+    localStorage.removeItem("pkmer-update-tab")
+})
 </script>
 <template>
     <div class="w-full">
@@ -117,18 +130,35 @@ const switchTab = (tab: string) => {
                 :class="{ active: currentTab === 'plugin' }"
                 @click="switchTab('plugin')">
                 <span
-                    class="cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
+                    class="relative cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
                     插件市场
-                </span>
+
+                    <span
+                        v-show="
+                            parsedData.type == 'updated' && parsedData.count > 0
+                        "
+                        class="num bradge">
+                        {{ parsedData.count }}
+                    </span></span
+                >
             </li>
             <li
-                class="flex-auto text-center"
+                class="flex-auto text-center relative"
                 :class="{ active: currentTab === 'theme' }"
                 @click="switchTab('theme')">
                 <span
-                    class="cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
+                    class="relative cursor-pointer my-2 block border-x-0 border-b-2 border-t-0 border-transparent px-7 pb-3.5 pt-4 font-bold uppercase leading-tight hover:isolate dark:hover:bg-slate-900/30 hover:bg-neutral-100 focus:isolate focus:border-transparent">
                     主题市场
-                </span>
+
+                    <span
+                        v-show="
+                            parsedData.type == 'tupdated' &&
+                            parsedData.count > 0
+                        "
+                        class="num bradge">
+                        {{ parsedData.count }}
+                    </span></span
+                >
             </li>
         </ul>
 
@@ -140,7 +170,8 @@ const switchTab = (tab: string) => {
                             class="opacity-100 transition-opacity duration-150 ease-linear">
                             <PluginMarket
                                 :settings="props.settings"
-                                :app="props.app"></PluginMarket>
+                                :app="props.app"
+                                :tab="isOpenUpdateTab"></PluginMarket>
                         </div>
                     </template>
                     <template v-else-if="currentTab === 'theme'">
@@ -148,7 +179,8 @@ const switchTab = (tab: string) => {
                             class="opacity-100 transition-opacity duration-150 ease-linear">
                             <ThemeMarket
                                 :settings="props.settings"
-                                :app="props.app"></ThemeMarket>
+                                :app="props.app"
+                                :tab="isOpenUpdateTab"></ThemeMarket>
                         </div>
                     </template>
                 </template>
@@ -161,6 +193,12 @@ const switchTab = (tab: string) => {
     </div>
 </template>
 <style>
+.num.bradge {
+    color: white;
+    position: absolute;
+    margin-left: 2px;
+    margin-top: -5px;
+}
 .pkmer-tab-container {
     margin-top: 30px;
 }

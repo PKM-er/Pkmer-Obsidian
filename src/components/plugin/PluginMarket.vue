@@ -12,11 +12,13 @@ import { App, Notice, debounce } from "obsidian"
 interface Props {
     settings: PkmerSettings
     app: App
+    tab: string
 }
 
 const props = defineProps<Props>()
 
 const sortBy = ref("")
+const sortOrder = ref("") // 排序操作
 const showModal = ref(false)
 const AllPluginList = ref()
 let perPageCount = ref(24)
@@ -25,7 +27,7 @@ const isDownload = ref(true)
 const filterDeviceOption = ref("default")
 const api = new PkmerApi(props.settings.token)
 const pluginProcessor = new PluginProcessor(props.app, props.settings)
-
+const isClose = ref(false)
 const isUserLogin = await api.isUserLogin()
 
 const loadAllPlugins = async () => {
@@ -116,6 +118,10 @@ const countUpdatedPlugins = computed(() => {
     }
     return false
 })
+const closeNotification = () => {
+    isClose.value = true
+    sortByDownloadCount()
+}
 const searchTextRef = ref("")
 const activeCategory = ref("all")
 const selectPlugin = ref("")
@@ -191,6 +197,7 @@ const extractCategoryFromHash = () => {
 const pkmerSize = ref()
 const ele = ref<HTMLElement | null>(null)
 onMounted(async () => {
+    isClose.value = false
     extractCategoryFromHash() // 初始化时提取分类名称
     await loadAllPlugins()
     sortBy.value = "pkmerDownloadCount"
@@ -201,6 +208,12 @@ onMounted(async () => {
     ele.value && resizeObserver.observe(ele.value)
     window.addEventListener("resize", handleWindowResize)
     handleWindowResize()
+    // 解析 JSON 字符串为 JavaScript 对象
+    if (props.tab) {
+        const parsedData = JSON.parse(props.tab)
+        if (parsedData.type == "updated") sortByUpdated()
+        if (parsedData.type == "installed") sortByInstalled()
+    }
 })
 
 const handleWindowResize = () => {
@@ -209,6 +222,7 @@ const handleWindowResize = () => {
 onUnmounted(() => {
     ele.value && resizeObserver.unobserve(ele.value)
     window.removeEventListener("resize", handleWindowResize)
+    localStorage.removeItem("pkmer-update-tab")
 })
 
 const resizeObserver = new ResizeObserver(() => {
@@ -252,7 +266,6 @@ const showReadMoreButton = computed(() => {
     return currentPage.value < totalPageCount.value
 })
 
-const sortOrder = ref("") // 排序操作
 function sortByPkmerDownloadCount() {
     sortBy.value = "pkmerDownloadCount"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
@@ -671,9 +684,22 @@ const readMore = () => {
         <div class="text-right">
             <button
                 @click="sortByUpdated"
-                v-show="countUpdatedPlugins"
-                class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-green-600 text-white shadow-xl shadow-primary-500/20">
-                发现 {{ countUpdatedPlugins }} 个更新！
+                v-show="countUpdatedPlugins && !isClose"
+                class="inline-block w-full font-sans text-xs px-3 m-1 rounded-lg bg-green-600 text-white shadow-xl shadow-primary-500/20">
+                发现 {{ countUpdatedPlugins }} 个插件更新！【点我查看】
+                <button
+                    @click.stop="closeNotification"
+                    class="ml-2 px-3 shadow-none">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="1em"
+                        height="1em"
+                        viewBox="0 0 32 32">
+                        <path
+                            fill="white"
+                            d="M16 2C8.2 2 2 8.2 2 16s6.2 14 14 14s14-6.2 14-14S23.8 2 16 2m5.4 21L16 17.6L10.6 23L9 21.4l5.4-5.4L9 10.6L10.6 9l5.4 5.4L21.4 9l1.6 1.6l-5.4 5.4l5.4 5.4z" />
+                    </svg>
+                </button>
             </button>
         </div>
         <section class="w-full bg-muted-100 dark:bg-muted-1000">

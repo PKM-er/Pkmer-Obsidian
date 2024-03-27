@@ -12,6 +12,7 @@ import { App, Notice, debounce } from "obsidian"
 interface Props {
     settings: PkmerSettings
     app: App
+    tab: string
 }
 
 const props = defineProps<Props>()
@@ -21,12 +22,16 @@ const showModal = ref(false)
 const AllThemeList = ref<ThemeInfo[]>([])
 let perPageCount = ref(24)
 let currentPage = ref(1)
-
+const isClose = ref(false)
 const isDownload = ref(true)
 const api = new PkmerApi(props.settings.token)
 const themeProcessor = new ThemeProcessor(props.app, props.settings)
 
 const isUserLogin = await api.isUserLogin()
+const closeNotification = () => {
+    isClose.value = true
+    sortByDownloadCount()
+}
 const loadAllThemes = async () => {
     const pkmerDocs = await api.getPkmerDocs()
     if (isUserLogin) {
@@ -214,6 +219,12 @@ onMounted(async () => {
     window.addEventListener("resize", handleWindowResize)
     handleWindowResize()
     if (isUserLogin) downloadCount.value = await api.getDownloadCount()
+
+    if (props.tab) {
+        const parsedData = JSON.parse(props.tab)
+        if (parsedData.type == "tupdated") sortByUpdated()
+        if (parsedData.type == "tupdated") sortByInstalled()
+    }
 })
 const handleWindowResize = () => {
     pkmerSize.value = ele.value && ele.value?.offsetWidth
@@ -631,8 +642,21 @@ const readMore = () => {
             <button
                 @click="sortByUpdated"
                 v-show="countUpdatedTheme"
-                class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-green-600 text-white shadow-xl shadow-primary-500/20">
-                发现 {{ countUpdatedTheme }} 个更新！
+                class="inline-block w-full font-sans text-xs px-3 m-1 rounded-lg bg-green-600 text-white shadow-xl shadow-primary-500/20">
+                发现 {{ countUpdatedTheme }} 个主题更新！【点我查看】
+                <button
+                    @click.stop="closeNotification"
+                    class="ml-2 px-3 shadow-none">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="1em"
+                        height="1em"
+                        viewBox="0 0 32 32">
+                        <path
+                            fill="white"
+                            d="M16 2C8.2 2 2 8.2 2 16s6.2 14 14 14s14-6.2 14-14S23.8 2 16 2m5.4 21L16 17.6L10.6 23L9 21.4l5.4-5.4L9 10.6L10.6 9l5.4 5.4L21.4 9l1.6 1.6l-5.4 5.4l5.4 5.4z" />
+                    </svg>
+                </button>
             </button>
         </div>
         <section class="w-full bg-muted-100 dark:bg-muted-1000">

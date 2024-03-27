@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-18 23:44:50
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-08-03 11:17:59
+ * @LastEditTime: 2024-03-27 09:17:04
  * @Description: 
  */
 export interface ThemeInfo {
@@ -24,8 +24,8 @@ export interface ThemeInfo {
     downloadUrl: string;
     source: string | null;
     contentUrl: string | null;
-    isInstalled: boolean | null;
-    isOutdated: boolean | null;
+    isInstalled: boolean | undefined;
+    isOutdated: boolean | undefined;
     __entity: string| null;
 }
 
