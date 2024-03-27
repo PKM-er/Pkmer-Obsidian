@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2024-03-27 09:08:58
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2024-03-27 09:37:07
+ * @LastEditTime: 2024-03-27 14:37:08
  * @Description: 
  */
 import { PkmerSettings } from "@/main";
@@ -18,12 +18,14 @@ interface ThemeInfo {
 }
 
 export default class PluginStatistics {
+
     private api: PkmerApi;
     private isUserLogin: boolean;
     private allThemeList: ThemeInfo[];
 
     constructor(private app: App, private settings: PkmerSettings) {
-        this.api = new PkmerApi(settings.token);
+
+        this.api = new PkmerApi(this.settings.token)
         this.isUserLogin = false;
         this.allThemeList = [];
         this.loadAllThemes(); // 在构造函数中加载插件列表

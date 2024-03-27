@@ -1,4 +1,5 @@
 .pkmer-statusbar:hover {
+    cursor:pointer;
     box-shadow: none;
     opacity: var(--icon-opacity-hover);
     color: var(--icon-color-hover);

@@ -2,10 +2,10 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-26 16:57:16
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2024-03-27 14:21:05
+ * @LastEditTime: 2024-03-27 14:27:56
  * @Description:
  */
-import { Notice, Plugin, View, debounce } from "obsidian"
+import { Notice, Plugin, } from "obsidian"
 
 import { DEFAULT_VIEW_TYPE, PkmderDownloaderView } from "./views/PluginMarket"
 import { PkmerSettingTab } from "./settings"
@@ -13,7 +13,7 @@ import PluginProcessor from "@/utils/downloader"
 import ThemeProcessor from "@/utils/tdownloader"
 import PluginStatistics from "@/utils/pluginstatistics"
 import ThemeStatistics from "@/utils/themestatistics"
-import { filter } from "jszip"
+ 
 export interface PkmerSettings {
     token: string
 }

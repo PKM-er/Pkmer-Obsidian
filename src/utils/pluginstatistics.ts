@@ -1,3 +1,10 @@
+/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2024-03-27 14:22:09
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2024-03-27 14:36:53
+ * @Description: 
+ */
 import { PkmerSettings } from "@/main";
 import { App } from "obsidian";
 import { PkmerApi } from "@/api/api";
@@ -16,7 +23,7 @@ export default class PluginStatistics {
     private allPluginList: PluginInfo[];
 
     constructor(private app: App, private settings: PkmerSettings) {
-        this.api = new PkmerApi(settings.token);
+        this.api = new PkmerApi(this.settings.token)
         this.isUserLogin = false;
         this.allPluginList = [];
         this.loadAllPlugins(); // 在构造函数中加载插件列表
