@@ -205,6 +205,7 @@ onMounted(async () => {
     //     '.workspace-leaf-content[data-type="pkmer-downloader"]'
     // ) as HTMLElement
     app.workspace.on("resize", handleWindowResize)
+    //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
     // ele.value && resizeObserver.observe(ele.value)
     // window.addEventListener("resize", handleWindowResize)
@@ -218,6 +219,7 @@ onMounted(async () => {
 })
 
 const handleWindowResize = () => {
+    //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
 }
 onUnmounted(() => {
