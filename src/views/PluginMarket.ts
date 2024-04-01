@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-23 17:35:33
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2024-03-26 12:21:11
+ * @LastEditTime: 2024-04-01 11:34:47
  * @Description:
  */
 import { ItemView, WorkspaceLeaf } from "obsidian"
@@ -43,7 +43,7 @@ export class PkmderDownloaderView extends ItemView {
 
     async onOpen() {
         const { contentEl } = this
-
+        console.log("welcome Pkmer Market")
         const pluginMarketApp = createApp(PluginMarketView, {
             settings: this.settings,
             app: this.app,

@@ -2,13 +2,12 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-24 16:35:56
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2023-12-06 11:12:00
+ * @LastEditTime: 2024-04-01 18:17:35
  * @Description: 
  */
 import PkmerLoginModal from "./components/login/PkmerLoginModal";
 import PkmerPlugin from "./main";
 import { App, PluginSettingTab, Setting, Platform } from "obsidian";
-import { DEFAULT_VIEW_TYPE } from "./views/PluginMarket";
 export class PkmerSettingTab extends PluginSettingTab {
     plugin: PkmerPlugin;
 
@@ -74,7 +73,8 @@ export class PkmerSettingTab extends PluginSettingTab {
                     .onClick(() => {
                         app.setting.close();
                         setTimeout(() => {
-                            this.app.workspace.getLeaf().setViewState({ active: true, type: DEFAULT_VIEW_TYPE });
+
+                            this.plugin.openView("");
                         }, 100);
                     });
             });

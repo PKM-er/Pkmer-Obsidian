@@ -206,18 +206,18 @@ const extractCategoryFromHash = () => {
     }
 }
 const pkmerSize = ref()
-const ele = ref<HTMLElement | null>(null)
+
 onMounted(async () => {
     extractCategoryFromHash() // 初始化时提取分类名称
     await loadAllThemes()
     sortBy.value = "pkmerDownloadCount"
     sortOrder.value = "asc"
-    ele.value = document.querySelector(
-        '.workspace-leaf-content[data-type="pkmer-downloader"]'
-    ) as HTMLElement
-    ele.value && resizeObserver.observe(ele.value)
-    window.addEventListener("resize", handleWindowResize)
-    handleWindowResize()
+    // ele.value = document.querySelector(
+    //     '.workspace-leaf-content[data-type="pkmer-downloader"]'
+    // ) as HTMLElement
+    app.workspace.on("resize", handleWindowResize)
+    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
+
     if (isUserLogin) downloadCount.value = await api.getDownloadCount()
 
     if (props.tab) {
@@ -227,15 +227,11 @@ onMounted(async () => {
     }
 })
 const handleWindowResize = () => {
-    pkmerSize.value = ele.value && ele.value?.offsetWidth
+    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
 }
 
 onUnmounted(() => {
-    ele.value && resizeObserver.unobserve(ele.value)
     window.removeEventListener("resize", handleWindowResize)
-})
-const resizeObserver = new ResizeObserver(() => {
-    handleWindowResize()
 })
 
 const filteredList = computed<ThemeInfo[]>(() => {
