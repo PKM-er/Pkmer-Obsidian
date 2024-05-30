@@ -43,6 +43,10 @@ const loadAllPlugins = async () => {
                     )
                     if (matchingPkmerDoc) {
                         plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
+                        plugin.tags = matchingPkmerDoc.tags
+                        plugin.chineseDescription = matchingPkmerDoc.description
+                        plugin.authorAvatar = matchingPkmerDoc.authorAvatar
+                   
                     }
                     const matchingReadme = pkmerDocs.find((doc) =>
                         doc.slug.includes(plugin.id + "_readme")
@@ -74,6 +78,9 @@ const loadAllPlugins = async () => {
                 )
                 if (matchingPkmerDoc) {
                     plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
+                    plugin.tags = matchingPkmerDoc.tags
+                    plugin.chineseDescription = matchingPkmerDoc.description
+                    plugin.authorAvatar = matchingPkmerDoc.authorAvatar
                 }
                 const matchingReadme = pkmerDocs.find((doc) =>
                     doc.slug.includes(plugin.id + "_readme")
@@ -126,7 +133,7 @@ const searchTextRef = ref("")
 const activeCategory = ref("all")
 const selectPlugin = ref("")
 const selectPluginVersion = ref("")
-
+const selectPluginScource = ref("")
 const handleDownloadPlugin = async () => {
     showModal.value = false
     new Notice("正在下载插件，请稍后...", 3000)
@@ -173,11 +180,13 @@ const handleUpdateActiveCategory = (value: string) => {
 const handleShowPluginModal = (
     action: "download" | "update",
     pluginId: string,
-    version: string
+    version: string,
+    source: string
 ) => {
     showModal.value = true
     selectPlugin.value = pluginId
     selectPluginVersion.value = version
+    selectPluginScource.value = source
     if (action === "download") {
         isDownload.value = true
     } else {
@@ -880,6 +889,16 @@ const readMore = () => {
                         即将安装....{{ selectPlugin.toUpperCase() }}
                     </h3>
                     <div>
+                        <p class="mb-2">
+                            插件来源：
+                            <span class="bolder">
+                                {{
+                                    selectPluginScource === "official"
+                                        ? "Obsidian官方商城"
+                                        : "社区专供"
+                                }}
+                            </span>
+                        </p>
                         <p class="mb-4 text-base leading-relaxed">
                             注意，安装和更新操作不可逆，请确认后再操作。
                         </p>

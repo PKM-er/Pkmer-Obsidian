@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-02-23 17:17:12
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2024-03-25 12:51:29
+ * @LastEditTime: 2024-05-30 11:48:40
  * @FilePath: \pkmer-docs\src\components\Widget\WidgetCard.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -20,9 +20,10 @@ const prop = defineProps<Props>()
 const isUserLogin = prop.isLogin
 
 const showImage = ref(false)
-const PluginStatus =ref('');
-const statusColor=ref('rgba(255, 51, 68, 0.8)');
+const PluginStatus = ref("")
+const statusColor = ref("rgba(255, 51, 68, 0.8)")
 defineEmits(["download-update-plugin"])
+
 function getUsernameFromRepo() {
     if (
         prop.pluginInfo.authorAvatar &&
@@ -31,6 +32,7 @@ function getUsernameFromRepo() {
         // let regex = /^([^\/]*)\//;
         // let usernameMatch = repo.match(regex);
         // return usernameMatch ? usernameMatch[1] : null;
+
         return prop.pluginInfo.authorAvatar
     } else return getDefaultAvata(prop.pluginInfo.author)
 }
@@ -92,47 +94,44 @@ function diffDays(timestamp: string) {
         return `未知`
     }
 }
-const  getTooltip=()=>
-{
-    if(PluginStatus.value=='未启用')
-    return '当前插件未启用，点击启用';
-    if(PluginStatus.value=='已启用')
-    return '当前插件已启动，点击禁用';
-else
-return '未成功启用。请查看控制台错误信息。';
+const getTooltip = () => {
+    if (PluginStatus.value == "未启用") return "当前插件未启用，点击启用"
+    if (PluginStatus.value == "已启用") return "当前插件已启动，点击禁用"
+    else return "未成功启用。请查看控制台错误信息。"
 }
-const enablePlugin=async(id: string)=>{
-    if(PluginStatus.value== "已启用")
-    {    //@ts-ignore
-        await prop.app.plugins.disablePluginAndSave(id);
-        PluginStatus.value= "未启用";
-         statusColor.value="rgba(255, 51, 68, 0.8)";
-      //@ts-ignore
-    }else
-    {
-      //@ts-ignore
-      if(await prop.app.plugins.enablePluginAndSave(id))
-      {
-      PluginStatus.value= "已启用";
-      statusColor.value="#2aa330";
-      }else
-      {
-        PluginStatus.value= "未成功";
-      }
-  
+const enablePlugin = async (id: string) => {
+    if (PluginStatus.value == "已启用") {
+        //@ts-ignore
+        await prop.app.plugins.disablePluginAndSave(id)
+        PluginStatus.value = "未启用"
+        statusColor.value = "rgba(255, 51, 68, 0.8)"
+        //@ts-ignore
+    } else {
+        //@ts-ignore
+        if (await prop.app.plugins.enablePluginAndSave(id)) {
+            PluginStatus.value = "已启用"
+            statusColor.value = "#2aa330"
+        } else {
+            PluginStatus.value = "未成功"
+        }
     }
-
 }
-     //@ts-ignore
-if((Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) != -1) && prop.pluginInfo.isInstalled) {
-        PluginStatus.value= "已启用";
-        statusColor.value="#2aa330"
-  }
-     //@ts-ignore
-  if((Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) == -1) && prop.pluginInfo.isInstalled) {
-        PluginStatus.value= "未启用";
-        statusColor.value="rgba(255, 51, 68, 0.8)"
-  }
+//@ts-ignore
+if (
+    Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) != -1 &&
+    prop.pluginInfo.isInstalled
+) {
+    PluginStatus.value = "已启用"
+    statusColor.value = "#2aa330"
+}
+//@ts-ignore
+if (
+    Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) == -1 &&
+    prop.pluginInfo.isInstalled
+) {
+    PluginStatus.value = "未启用"
+    statusColor.value = "rgba(255, 51, 68, 0.8)"
+}
 //名称的首字母大写
 function getInitials(name: string) {
     let initials = name.match(/\b\w/g) || []
@@ -152,7 +151,7 @@ function getDefaultAvata(name: string) {
         }
     } else url = `https://cdn.pkmer.cn/covers/logo.png!nomark`
     return url
-} 
+}
 
 const getRadomImage = () => {
     const url = `https://pkmer.cn/img/cover/${Math.floor(
@@ -182,8 +181,99 @@ const handleOpenSettings = () => {
                         {{ tags[0] }}
                     </span>
 
-                    <view class="mark" v-show="pluginInfo.contentUrl">
-                        <span class="learn">Tips </span>
+                    <view
+                        tooltip="官方商城插件"
+                        class="text-white absolute right-2 top-2 z-10"
+                        v-show="pluginInfo.source == 'official'">
+                        <svg
+                            class="fill-current w-5 h-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                            role="img"
+                            width="1em"
+                            height="1em"
+                            viewBox="0 0 48 48"
+                            data-v-fc8a1590=""
+                            data-icon="arcticons:obsidian">
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M17.133 40.912c3.155-6.394 3.071-10.982 1.722-14.24c-1.229-3.014-3.527-4.913-5.333-6.095a2.3 2.3 0 0 1-.167.503L9.11 30.526c-.44.975-.237 2.12.512 2.885l6.784 6.98c.214.213.466.39.726.52Zm8.581-12.973c.847.083 1.675.27 2.494.567c2.587.968 4.942 3.146 6.887 7.343c.14-.242.279-.474.428-.698a114 114 0 0 0 3.415-5.388a1.3 1.3 0 0 0-.093-1.461a28.2 28.2 0 0 1-3.322-5.445c-.894-2.14-1.024-5.481-1.033-7.1c0-.615-.196-1.22-.577-1.704l-6.747-8.561l-.112-.14c.493 1.629.465 2.931.158 4.113c-.28 1.099-.8 2.094-1.35 3.146c-.185.354-.372.717-.548 1.089a13 13 0 0 0-1.47 5.398c-.094 2.252.362 5.072 1.86 8.84z"></path>
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M25.704 27.939c-1.498-3.77-1.954-6.59-1.86-8.841c.092-2.234.744-3.91 1.47-5.398l.558-1.09c.54-1.05 1.052-2.047 1.34-3.145a7.3 7.3 0 0 0-.158-4.113a2.606 2.606 0 0 0-3.667-.186l-8.022 7.212c-.45.403-.746.949-.838 1.545L13.55 20.4c0 .065-.019.121-.028.186c1.806 1.173 4.095 3.072 5.333 6.078c.242.595.447 1.219.595 1.898a18.6 18.6 0 0 1 6.254-.633z"></path>
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M29.91 43.406c1.732.475 3.472-.912 3.714-2.699c.198-1.695.7-3.34 1.48-4.858c-1.954-4.197-4.309-6.375-6.887-7.343c-2.745-1.023-5.733-.68-8.767.056c.68 3.08.28 7.11-2.308 12.35c.289.149.615.232.94.26l4.086.307c2.215.159 5.519 1.303 7.743 1.927Z"></path>
+                        </svg>
+                    </view>
+
+                    <view
+                        tooltip="社区专供插件"
+                        class="absolute right-2 top-2 z-10"
+                        v-show="pluginInfo.source == 'community'">
+                        <svg
+                            class="fill-current w-5 h-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            version="1.1"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                            xmlns:svgjs="http://svgjs.com/svgjs"
+                            viewBox="0 0 512 512"
+                            xml:space="preserve">
+                            <g>
+                                <path
+                                    d="M395.631 98.837C358.783 45.867 309.195 16.696 256 16.696S153.217 45.867 116.369 98.837c-35.565 51.124-55.151 118.797-55.151 190.554 0 113.54 87.379 205.913 194.783 205.913s194.783-92.373 194.783-205.913c-.001-71.756-19.588-139.43-55.153-190.554z"
+                                    style=""
+                                    fill="#ffc170"
+                                    class=""></path>
+                                <path
+                                    d="M256 495.304c107.403 0 194.783-92.373 194.783-205.913 0-71.757-19.586-139.43-55.151-190.554C358.783 45.867 309.195 16.696 256 16.696"
+                                    style=""
+                                    fill="#e1a05a"
+                                    data-original="#ffd6a0"
+                                    class=""></path>
+                                <path
+                                    d="M0 128h55.652v33.391H0z"
+                                    style=""
+                                    fill="#a0bdd4"
+                                    class=""></path>
+                                <path
+                                    d="M13.053 51.94h55.65v33.391h-55.65z"
+                                    style=""
+                                    transform="rotate(-160.527 40.878 68.636)"
+                                    fill="#a0bdd4"
+                                    class=""></path>
+                                <path
+                                    d="M456.348 128H512v33.391h-55.652z"
+                                    style=""
+                                    fill="#a0bdd4"
+                                    class=""></path>
+                                <path
+                                    d="M454.411 40.807h33.391v55.65h-33.391z"
+                                    style=""
+                                    transform="rotate(-109.469 471.111 68.636)"
+                                    fill="#a0bdd4"
+                                    class=""></path>
+                                <path
+                                    d="m187.719 277.315 14.949-29.896-47.598-21.154-93.659 51.085c-.124 4-.194 8.013-.194 12.041 0 8.564.505 17.005 1.471 25.298l93.892-51.214 31.139 13.84zM450.63 278.997l-105.587-52.794-89.463 44.731-22.369-9.942-14.948 29.896 38.155 16.958 88.625-44.31 104.166 52.083a218.592 218.592 0 0 0 1.573-26.228c.001-3.476-.059-6.938-.152-10.394z"
+                                    style=""
+                                    fill="#f8f8f8"
+                                    class=""></path>
+                                <path
+                                    d="m450.63 278.997-105.587-52.794-89.463 44.731.839 36.913 88.624-44.31 104.166 52.083a218.592 218.592 0 0 0 1.573-26.228 382.07 382.07 0 0 0-.152-10.395z"
+                                    style=""
+                                    fill="#fef5ea"
+                                    class=""></path>
+                            </g>
+                        </svg>
                     </view>
                     <!--Featured image-->
                     <span
@@ -228,16 +318,26 @@ const handleOpenSettings = () => {
                     <h3
                         data-pagefind-meta="title"
                         class="flex items-center text-lg font-medium leading-6 plugin_name font-heading text-muted-800 dark:text-white">
-                        <a :href="pluginInfo.contentUrl?pluginInfo.contentUrl:pluginInfo.readme_zh?pluginInfo.readme_zh:'#'">{{ pluginInfo.name }}</a>
-                        <span class="-mt-2 ml-2 px-2  rounded text-muted-100  bg-green-600 text-xs  ">{{pluginInfo.version}}</span>
+                        <a
+                            :href="
+                                pluginInfo.contentUrl
+                                    ? pluginInfo.contentUrl
+                                    : pluginInfo.readme_zh
+                                    ? pluginInfo.readme_zh
+                                    : '#'
+                            "
+                            >{{ pluginInfo.name }}</a
+                        >
+                        <span
+                            class="-mt-2 ml-2 px-2 rounded text-muted-100 bg-green-600 text-xs"
+                            >{{ pluginInfo.version }}</span
+                        >
 
-                         
                         <span
                             class="-mt-2 text-orange-500 ml-2 text-lg font-serif font-bold italic"
                             >{{ formatNumber(pluginInfo.pkmerDownloadCount) }}
                         </span>
 
-				
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             aria-hidden="true"
@@ -361,7 +461,8 @@ const handleOpenSettings = () => {
                                         'download-update-plugin',
                                         'download',
                                         pluginInfo.id,
-                                        pluginInfo.version
+                                        pluginInfo.version,
+                                        pluginInfo.source
                                     )
                                 ">
                                 <svg
@@ -394,7 +495,8 @@ const handleOpenSettings = () => {
                                         'download-update-plugin',
                                         'update',
                                         pluginInfo.id,
-                                        pluginInfo.version
+                                        pluginInfo.version,
+                                        pluginInfo.source
                                     )
                                 ">
                                 <svg
@@ -418,7 +520,15 @@ const handleOpenSettings = () => {
                                 @click="enablePlugin(pluginInfo.id)"
                                 :tooltip="getTooltip()"
                                 class="inline-flex items-center h-8 px-2 py-1 text-white transition-colors duration-300 border-0 rounded shadow-xl whitespace-nowrap bg-primary-500 hover:bg-primary-600 shadow-primary-500/20 tw-accessibility">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path :fill="statusColor" d="M8 4c.367 0 .721.048 1.063.145a3.943 3.943 0 0 1 1.762 1.031a3.944 3.944 0 0 1 1.03 1.762c.097.34.145.695.145 1.062c0 .367-.048.721-.145 1.063a3.94 3.94 0 0 1-1.03 1.765a4.017 4.017 0 0 1-1.762 1.031C8.72 11.953 8.367 12 8 12s-.721-.047-1.063-.14a4.056 4.056 0 0 1-1.765-1.032A4.055 4.055 0 0 1 4.14 9.062A3.992 3.992 0 0 1 4 8c0-.367.047-.721.14-1.063a4.02 4.02 0 0 1 .407-.953A4.089 4.089 0 0 1 5.98 4.546a3.94 3.94 0 0 1 .957-.401A3.89 3.89 0 0 1 8 4z"/></svg>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        :fill="statusColor"
+                                        d="M8 4c.367 0 .721.048 1.063.145a3.943 3.943 0 0 1 1.762 1.031a3.944 3.944 0 0 1 1.03 1.762c.097.34.145.695.145 1.062c0 .367-.048.721-.145 1.063a3.94 3.94 0 0 1-1.03 1.765a4.017 4.017 0 0 1-1.762 1.031C8.72 11.953 8.367 12 8 12s-.721-.047-1.063-.14a4.056 4.056 0 0 1-1.765-1.032A4.055 4.055 0 0 1 4.14 9.062A3.992 3.992 0 0 1 4 8c0-.367.047-.721.14-1.063a4.02 4.02 0 0 1 .407-.953A4.089 4.089 0 0 1 5.98 4.546a3.94 3.94 0 0 1 .957-.401A3.89 3.89 0 0 1 8 4z" />
+                                </svg>
                                 已安装
                             </button>
                         </div>

@@ -2,7 +2,7 @@
  * @Author: cumany cuman@qq.com
  * @Date: 2023-07-25 23:58:28
  * @LastEditors: cumany cuman@qq.com
- * @LastEditTime: 2024-03-25 15:15:45
+ * @LastEditTime: 2024-05-30 12:28:18
  * @Description: 
  */
 import { requestUrl } from "obsidian";
@@ -60,6 +60,7 @@ export interface PkmerDocsInfo {
     title: string;
     description: string,
     author: string;
+    authorAvatar: string;
     type: string;
     tags: string[];
     modified: number;
@@ -107,13 +108,18 @@ export class PkmerApi {
             return false;
     };
 
-    async getPkmerDocs(): Promise<({ slug: string, uid: number })[]> {
+    async getPkmerDocs(): Promise<({ slug: string, uid: number,authorAvatar:string,description:string,tags:string })[]> {
         const response = await requestUrl("https://pkmer.cn/getPost.json")
+     
         const pkmerDocsInfo = JSON.parse(response.text) as PkmerDocsInfo[];
+
         return pkmerDocsInfo.map((item) => {
             return {
                 slug: item.slug.split('/').pop() as string,
-                uid: item.uid
+                uid: item.uid,
+                authorAvatar: item.authorAvatar,
+                description: item.description,
+                tags: Array.isArray(item.tags) ? item.tags.join(', ') : item.tags
             };
         });
     }
