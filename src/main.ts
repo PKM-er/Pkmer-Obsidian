@@ -32,7 +32,6 @@ export default class PkmerPlugin extends Plugin {
         this.registerCustomCommands()
         this.registerCustomRibbon()
         this.addStatusBarIcon()
-        await this.reloadStatusBarHandler();
         this.addSettingTab(new PkmerSettingTab(this.app, this))
         this.registerView(
             DEFAULT_VIEW_TYPE,
@@ -136,18 +135,16 @@ export default class PkmerPlugin extends Plugin {
         this.statusBarIconEl = this.addStatusBarItem()
         this.statusBarIconEl.addClass("pkmer-statusbar")
         this.statusBarIconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`
-
+        this.statusBarIconEl.setAttribute("aria-label", "PKMer插件市场");
 
         // 注册点击事件，并使用防抖函数作为处理程序
         this.registerDomEvent(this.statusBarIconEl, "click", () => {
-
-
+            // 用户点击状态栏时才检查更新状态
             this.updateStatusBar("statusbar")
         })
     }
 
     private async updateStatusBar(event: string) {
-
         const pluginStatistics = new PluginStatistics(app, this.settings)
         const themeStatistics = new ThemeStatistics(app, this.settings)
         // 使用 Promise.all() 并行获取插件数量
@@ -155,7 +152,6 @@ export default class PkmerPlugin extends Plugin {
         const { tinstalledCount, tupdatedCount } = await themeStatistics.getThemeStatus();
 
         if (updatedCount > 0 || tupdatedCount > 0) {
-
             this.statusBarIconEl.setAttribute("aria-label-position", "top");
             this.statusBarIconEl.setAttribute("aria-label", "Updated Info: Plugins: " + updatedCount + "/" + installedCount + ", Themes: " + tupdatedCount + "/" + tinstalledCount);
             this.statusBarIconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
@@ -186,8 +182,6 @@ export default class PkmerPlugin extends Plugin {
             if (event === "statusbar")
                 this.openView('');
         }
-
-
     }
     openView(state: string) {
         let pkmerDownloaderFound = false;
@@ -224,7 +218,4 @@ export default class PkmerPlugin extends Plugin {
 
         }
     }
-
-
-
 }

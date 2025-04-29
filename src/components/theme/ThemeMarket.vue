@@ -18,6 +18,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const sortBy = ref("")
+const sortOrder = ref("desc")
 const showModal = ref(false)
 const AllThemeList = ref<ThemeInfo[]>([])
 let perPageCount = ref(24)
@@ -27,19 +28,33 @@ const isDownload = ref(true)
 const api = new PkmerApi(props.settings.token)
 const themeProcessor = new ThemeProcessor(props.app, props.settings)
 
+// 添加分页变量
+const totalThemes = ref(0)
+const totalPages = ref(1)
+const isLoading = ref(false)
+
 const isUserLogin = await api.isUserLogin()
 const closeNotification = () => {
     isClose.value = true
     sortByDownloadCount()
 }
 const loadAllThemes = async () => {
+    isLoading.value = true;
     const pkmerDocs = await api.getPkmerDocs()
     if (isUserLogin) {
         try {
-            AllThemeList.value = await api.getThemeList()
-            AllThemeList.value = AllThemeList.value.sort(
-                (a, b) => b.downloadCount - a.downloadCount
-            )
+            // 使用带分页和排序的API替代全量请求
+            const { themes, total, totalPages: pages } = await api.getThemeListPaginated(
+                currentPage.value, 
+                perPageCount.value, 
+                sortBy.value || "downloadCount", 
+                sortOrder.value?.toUpperCase() || "DESC"
+            );
+            
+            AllThemeList.value = themes;
+            totalThemes.value = total;
+            totalPages.value = pages;
+            
             if (Array.isArray(AllThemeList.value)) {
                 AllThemeList.value.forEach((theme) => {
                     //把主题名称中的空格替换为下划线
@@ -94,6 +109,7 @@ const loadAllThemes = async () => {
             AllThemeList.value = []
         }
     }
+    isLoading.value = false;
 }
 
 const countInstalledTheme = computed(() => {
@@ -127,10 +143,69 @@ const selectTheme = ref("")
 const selectThemeVersion = ref("")
 const downloadCount = ref(0)
 
+// 添加分页处理函数
+const handlePageChange = async (page: number) => {
+    currentPage.value = page;
+    await loadAllThemes();
+}
+
+// 添加搜索功能
+const handleSearch = async () => {
+    isLoading.value = true;
+    currentPage.value = 1; // 搜索时重置到第一页
+    
+    try {
+        if (searchTextRef.value.trim()) {
+            // 使用后端搜索API
+            const { themes, total, totalPages: pages } = await api.searchThemesPaginated(
+                searchTextRef.value,
+                currentPage.value,
+                perPageCount.value,
+                sortBy.value || "downloadCount",
+                sortOrder.value?.toUpperCase() || "DESC"
+            );
+            
+            AllThemeList.value = themes;
+            totalThemes.value = total;
+            totalPages.value = pages;
+            
+            // 处理主题额外信息
+            if (Array.isArray(AllThemeList.value)) {
+                const pkmerDocs = await api.getPkmerDocs();
+                AllThemeList.value.forEach((theme) => {
+                    const matchingPkmerDoc = pkmerDocs.find(
+                        (doc) =>
+                            doc.slug ==
+                            theme.name.replace(/\s+/g, "-").toLowerCase()
+                    );
+                    if (matchingPkmerDoc) {
+                        theme.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`;
+                    }
+                    
+                    //@ts-ignore
+                    const themeManifests = props.app.customCss.themes;
+                    theme.isInstalled = themeManifests[theme.name] !== undefined;
+                    theme.isOutdated = 
+                        theme.isInstalled &&
+                        themeManifests[theme.name].version !== theme.version;
+                });
+            }
+        } else {
+            await loadAllThemes();
+        }
+    } catch (error) {
+        console.error("Error searching themes:", error);
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+// 修改搜索输入处理函数
 const handleSetSearchText = (event: any) => {
     debounce(() => {
-        searchTextRef.value = event.target.value
-    }, 800)()
+        searchTextRef.value = event.target.value;
+        handleSearch(); // 当输入变化时触发搜索
+    }, 800)();
 }
 
 const cancelModal = () => {
@@ -138,7 +213,22 @@ const cancelModal = () => {
 }
 
 const handleUpdateActiveCategory = (value: string) => {
-    activeCategory.value = value
+    activeCategory.value = value;
+    currentPage.value = 1; // 重置页码
+    
+    if (value === "all") {
+        // 所有分类使用API加载
+        loadAllThemes();
+    } else {
+        // 特定分类先加载所有数据，然后在前端过滤
+        // 注意：如果后端API支持按分类过滤，应该使用API
+        loadAllThemes().then(() => {
+            // 前端过滤特定分类
+            AllThemeList.value = AllThemeList.value.filter((theme) => 
+                theme.tags?.includes(value)
+            );
+        });
+    }
 }
 
 const handleShowThemeModal = (
@@ -199,7 +289,7 @@ const hideModal = () => {
 // console.log(props.pluginList);
 // 从location.hash提取分类名称并赋值给activeCategory
 const extractCategoryFromHash = () => {
-    const hash = window.location.hash.slice(1) // 获取类似于“widget/widgetMarket#倒计时”的字符串，去掉前面的#
+    const hash = window.location.hash.slice(1) // 获取类似于"widget/widgetMarket#倒计时"的字符串，去掉前面的#
     if (hash) {
         const category = decodeURIComponent(hash)
         activeCategory.value = category
@@ -208,25 +298,33 @@ const extractCategoryFromHash = () => {
 const pkmerSize = ref()
 
 onMounted(async () => {
-    extractCategoryFromHash() // 初始化时提取分类名称
-    await loadAllThemes()
-    sortBy.value = "pkmerDownloadCount"
-    sortOrder.value = "asc"
-    // ele.value = document.querySelector(
-    //     '.workspace-leaf-content[data-type="pkmer-downloader"]'
-    // ) as HTMLElement
-    app.workspace.on("resize", handleWindowResize)
+    isClose.value = false;
+    extractCategoryFromHash(); // 初始化时提取分类名称
+    
+    // 设置默认排序
+    sortBy.value = "downloadCount";
+    sortOrder.value = "desc";
+    
+    app.workspace.on("resize", handleWindowResize);
     //@ts-ignore
-    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
+    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width;
 
-    if (isUserLogin) downloadCount.value = await api.getDownloadCount()
+    if (isUserLogin) downloadCount.value = await api.getDownloadCount();
 
     if (props.tab) {
-        const parsedData = JSON.parse(props.tab)
-        if (parsedData.type == "tupdated") sortByUpdated()
-        if (parsedData.type == "tupdated") sortByInstalled()
+        const parsedData = JSON.parse(props.tab);
+        if (parsedData.type == "tupdated") {
+            await sortByUpdated();
+        }
+        if (parsedData.type == "tinstalled") {
+            await sortByInstalled();
+        }
+    } else {
+        // 组件挂载后加载数据
+        await loadAllThemes();
     }
-})
+});
+
 const handleWindowResize = () => {
     //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
@@ -237,24 +335,23 @@ onUnmounted(() => {
 })
 
 const filteredList = computed<ThemeInfo[]>(() => {
-    const searchText = searchTextRef.value.toLowerCase().trim() // 将搜索关键字转为小写
-    if (searchText.length < 1) return AllThemeList.value
-    return AllThemeList.value.filter(
-        (theme: ThemeInfo) =>
-            theme.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
-            theme.author.toLowerCase().includes(searchText) || // 插件作者中包含搜索关键字
-            theme.chineseDescription?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
-            theme.tags?.toLowerCase().includes(searchText)
-    ) // 插件标签中包含搜索关键字
-})
+    // 移动端/桌面端过滤逻辑可以在这里添加，如有需要
+    return AllThemeList.value || [];
+});
 
-const totalPageCount = computed(() => {
-    return Math.ceil(filteredList.value?.length / perPageCount.value)
-})
+const computedTotalPages = computed(() => {
+    if (activeCategory.value === "all") {
+        return totalPages.value;
+    } else {
+        // 对于分类，可能仍需要前端计算
+        const filteredByCategory = filteredList.value.filter((theme) => 
+            theme.tags?.includes(activeCategory.value)
+        );
+        return Math.ceil(filteredByCategory.length / perPageCount.value);
+    }
+});
 
-const showReadMoreButton = computed(() => {
-    return currentPage.value < totalPageCount.value
-})
+ 
 
 //是否显示"Read More"按钮
 
@@ -274,149 +371,58 @@ const showReadMoreButton = computed(() => {
 // 	return [bestList[randomIndex1], bestList[randomIndex2]];
 // });
 
-const sortOrder = ref("") // 排序操作
+ 
 function sortByPkmerDownloadCount() {
     sortBy.value = "pkmerDownloadCount"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
 function sortByDownloadCount() {
     sortBy.value = "downloadCount"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+    sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc"
+    currentPage.value = 1; // 重置到第一页
+    loadAllThemes(); // 使用新的排序重新加载数据
 }
 // 点击按更新时间排序按钮
 function sortByUpdateTime() {
-    sortBy.value = "updateTime"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+    sortBy.value = "updatedTime"
+    sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc"
+    currentPage.value = 1; // 重置到第一页
+    loadAllThemes(); // 使用新的排序重新加载数据
 }
 function sortByFilename() {
     sortBy.value = "fileName"
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
 }
 function sortByInstalled() {
-    sortBy.value = "installed"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+    sortBy.value = "downloadCount"
+    sortOrder.value = "desc"
+    currentPage.value = 1
+    loadAllThemes();
+    // 前端过滤已安装主题
+    AllThemeList.value = AllThemeList.value.filter(
+        (theme) => theme.isInstalled
+    );
 }
-function sortByUpdated() {
-    sortBy.value = "updated"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+async function sortByUpdated() {
+    sortBy.value = "downloadCount"
+    sortOrder.value = "desc"
+    currentPage.value = 1
+    loadAllThemes();
+    // 前端过滤需要更新的主题
+    AllThemeList.value = AllThemeList.value.filter(
+        (theme) => theme.isOutdated
+    );
 }
 const displayedThemes = computed<ThemeInfo[]>(() => {
-    let ResultThemes = []
-    if (activeCategory.value == "all") {
-        if (sortBy.value === "downloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = filteredList.value.sort(
-                    (a, b) => a.downloadCount - b.downloadCount
-                )
-            } else {
-                ResultThemes = filteredList.value.sort(
-                    (a, b) => b.downloadCount - a.downloadCount
-                )
-            }
-        } else if (sortBy.value === "updateTime") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = filteredList.value.sort(
-                    (a, b) =>
-                        new Date(a.updatedTime).getTime() -
-                        new Date(b.updatedTime).getTime()
-                )
-            } else {
-                ResultThemes = filteredList.value.sort(
-                    (a, b) =>
-                        new Date(b.updatedTime).getTime() -
-                        new Date(a.updatedTime).getTime()
-                )
-            }
-        } else if (sortBy.value === "fileName") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = filteredList.value.sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                )
-            } else {
-                ResultThemes = filteredList.value.sort((a, b) =>
-                    b.name.localeCompare(a.name)
-                )
-            }
-        } else if (sortBy.value === "pkmerDownloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = filteredList.value.sort(
-                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
-                )
-            } else {
-                ResultThemes = filteredList.value.sort(
-                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
-                )
-            }
-        } else if (sortBy.value === "installed") {
-            ResultThemes = filteredList.value.filter(
-                (theme) => theme.isInstalled
-            )
-        } else if (sortBy.value === "updated") {
-            ResultThemes = filteredList.value.filter(
-                (theme) => theme.isOutdated
-            )
-        } else {
-            ResultThemes = filteredList.value?.slice(
-                0,
-                currentPage.value * perPageCount.value
-            )
-        }
+    if (activeCategory.value === "all") {
+        return filteredList.value;
     } else {
-        ResultThemes = filteredList.value.filter(
-            (theme) =>
-                theme.tags?.toLowerCase().includes(activeCategory.value) ||
-                theme.modes?.toLowerCase().includes(activeCategory.value)
-        ) // 插件标签中包含搜索关键字
-
-        if (sortBy.value === "downloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = ResultThemes.sort(
-                    (a, b) => a.downloadCount - b.downloadCount
-                )
-            } else {
-                ResultThemes = ResultThemes.sort(
-                    (a, b) => b.downloadCount - a.downloadCount
-                )
-            }
-        } else if (sortBy.value === "updateTime") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = ResultThemes.sort(
-                    (a, b) =>
-                        new Date(a.updatedTime).getTime() -
-                        new Date(b.updatedTime).getTime()
-                )
-            } else {
-                ResultThemes = ResultThemes.sort(
-                    (a, b) =>
-                        new Date(b.updatedTime).getTime() -
-                        new Date(a.updatedTime).getTime()
-                )
-            }
-        } else if (sortBy.value === "fileName") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = ResultThemes.sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                )
-            } else {
-                ResultThemes = ResultThemes.sort((a, b) =>
-                    b.name.localeCompare(a.name)
-                )
-            }
-        } else if (sortBy.value === "pkmerDownloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultThemes = ResultThemes.sort(
-                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
-                )
-            } else {
-                ResultThemes = ResultThemes.sort(
-                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
-                )
-            }
-        }
+        // 分类筛选仍需要在前端进行
+        return filteredList.value.filter((theme) => 
+            theme.tags?.includes(activeCategory.value)
+        );
     }
-
-    return ResultThemes?.slice(0, currentPage.value * perPageCount.value)
-})
+});
 const validThemeList = computed(() => {
     if (Array.isArray(filteredList.value)) {
         return filteredList.value
@@ -424,13 +430,7 @@ const validThemeList = computed(() => {
         return []
     }
 })
-const readMore = () => {
-    const startIndex = currentPage.value * perPageCount.value
-    const endIndex = startIndex + perPageCount.value
-    const themesToAdd = displayedThemes.value?.slice(startIndex, endIndex)
-    currentPage.value++
-    AllThemeList.value = [...AllThemeList.value, ...themesToAdd]
-}
+ 
 
 // 加载更多插件
 
@@ -723,16 +723,42 @@ const readMore = () => {
                             </div>
 
                             <!--Articles grid-->
-                            <div
-                                class="w-full flex items-center justify-center p-6 -m-3">
-                                <div class="w-full max-w-[210px] pt-16">
-                                    <button
-                                        v-if="showReadMoreButton"
-                                        @click="readMore"
-                                        class="w-full inline-flex items-center justify-center gap-2 font-sans font-semibold bg-white dark:bg-muted-700 text-muted-800 dark:text-white border border-muted-300 dark:border-muted-600 relative px-6 py-4 rounded-lg tw-accessibility hover:shadow-xl hover:shadow-muted-400/20 transition-all duration-300">
-                                        <div>Load More</div>
-                                    </button>
+                            <div class="flex items-center justify-center w-full p-6 -m-3">
+                                <!-- 分页导航 -->
+                                <div class="flex items-center justify-center w-full mb-4">
+                                    <div class="flex space-x-2">
+                                        <button 
+                                            v-if="currentPage > 1"
+                                            @click="handlePageChange(currentPage - 1)" 
+                                            class="px-3 py-1 border rounded hover:bg-gray-100 dark:hover:bg-muted-700">
+                                            上一页
+                                        </button>
+                                        
+                                        <span class="flex items-center px-3 py-1">
+                                            第 {{ currentPage }} 页 / 共 {{ computedTotalPages }} 页
+                                        </span>
+                                        
+                                        <button 
+                                            v-if="currentPage < computedTotalPages"
+                                            @click="handlePageChange(currentPage + 1)" 
+                                            class="px-3 py-1 border rounded hover:bg-gray-100 dark:hover:bg-muted-700">
+                                            下一页
+                                        </button>
+                                    </div>
                                 </div>
+                                
+                                <!-- <div class="w-full max-w-[210px] pt-16" v-if="showReadMoreButton">
+                                    <button
+                                        @click="readMore"
+                                        class="relative inline-flex items-center justify-center w-full gap-2 px-6 py-4 font-sans font-semibold transition-all duration-300 border rounded-lg dark:bg-muted-700 text-muted-800 dark:text-white border-muted-300 dark:border-muted-600 tw-accessibility hover:shadow-xl hover:shadow-muted-400/20">
+                                        <div>加载更多</div>
+                                    </button>
+                                </div> -->
+                            </div>
+
+                            <!-- 加载指示器 -->
+                            <div v-if="isLoading" class="flex justify-center items-center py-10">
+                                <div class="w-12 h-12 border-4 border-t-4 border-gray-200 rounded-full animate-spin dark:border-gray-700 dark:border-t-primary-500"></div>
                             </div>
                         </div>
                     </div>

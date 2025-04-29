@@ -30,12 +30,32 @@ const pluginProcessor = new PluginProcessor(props.app, props.settings)
 const isClose = ref(false)
 const isUserLogin = await api.isUserLogin()
 
-const loadAllPlugins = async () => {
-    const pkmerDocs = await api.getPkmerDocs()
+// 添加分页变量
+const totalPlugins = ref(0)
+const totalPages = ref(1)
+const isLoading = ref(false)
 
+// 添加插件标签变量
+const pluginTags = ref<{tag: string, count: number}[]>([])
+
+const loadAllPlugins = async () => {
+    isLoading.value = true;
+    const pkmerDocs = await api.getPkmerDocs()
+    
     if (isUserLogin) {
         try {
-            AllPluginList.value = await api.getPluginList()
+            // 使用带分页和排序的API替代全量请求
+            const { plugins, total, totalPages: pages } = await api.getPluginListPaginated(
+                currentPage.value, 
+                perPageCount.value, 
+                sortBy.value || "downloadCount", 
+                sortOrder.value?.toUpperCase() || "DESC"
+            );
+            
+            AllPluginList.value = plugins;
+            totalPlugins.value = total;
+            totalPages.value = pages;
+            
             if (Array.isArray(AllPluginList.value)) {
                 AllPluginList.value.forEach((plugin) => {
                     const matchingPkmerDoc = pkmerDocs.find(
@@ -46,7 +66,6 @@ const loadAllPlugins = async () => {
                         plugin.tags = matchingPkmerDoc.tags
                         plugin.chineseDescription = matchingPkmerDoc.description
                         plugin.authorAvatar = matchingPkmerDoc.authorAvatar
-                   
                     }
                     const matchingReadme = pkmerDocs.find((doc) =>
                         doc.slug.includes(plugin.id + "_readme")
@@ -98,6 +117,7 @@ const loadAllPlugins = async () => {
             AllPluginList.value = []
         }
     }
+    isLoading.value = false;
 }
 
 const countInstalledPlugins = computed(() => {
@@ -174,7 +194,22 @@ const cancelModal = () => {
 }
 
 const handleUpdateActiveCategory = (value: string) => {
-    activeCategory.value = value
+    activeCategory.value = value;
+    currentPage.value = 1; // 重置页码
+    
+    if (value === "all") {
+        // 所有分类使用API加载
+        loadAllPlugins();
+    } else {
+        // 特定分类先加载所有数据，然后在前端过滤
+        // 注意：如果后端API支持按分类过滤，应该使用API
+        loadAllPlugins().then(() => {
+            // 前端过滤特定分类
+            AllPluginList.value = AllPluginList.value.filter((plugin: PluginInfo) => 
+                plugin.tags?.includes(value)
+            );
+        });
+    }
 }
 
 const handleShowPluginModal = (
@@ -197,7 +232,7 @@ const handleShowPluginModal = (
 // console.log(props.pluginList);
 // 从location.hash提取分类名称并赋值给activeCategory
 const extractCategoryFromHash = () => {
-    const hash = window.location.hash.slice(1) // 获取类似于“widget/widgetMarket#倒计时”的字符串，去掉前面的#
+    const hash = window.location.hash.slice(1) // 获取类似于"widget/widgetMarket#倒计时"的字符串，去掉前面的#
     if (hash) {
         const category = decodeURIComponent(hash)
         activeCategory.value = category
@@ -205,27 +240,35 @@ const extractCategoryFromHash = () => {
 }
 const pkmerSize = ref()
 onMounted(async () => {
-    isClose.value = false
-    extractCategoryFromHash() // 初始化时提取分类名称
-    await loadAllPlugins()
-    sortBy.value = "pkmerDownloadCount"
-    sortOrder.value = "asc"
-    // ele.value = document.querySelector(
-    //     '.workspace-leaf-content[data-type="pkmer-downloader"]'
-    // ) as HTMLElement
-    app.workspace.on("resize", handleWindowResize)
+    isClose.value = false;
+    extractCategoryFromHash(); // 初始化时提取分类名称
+    
+    // 设置默认排序
+    sortBy.value = "downloadCount";
+    sortOrder.value = "desc";
+    
+    app.workspace.on("resize", handleWindowResize);
     //@ts-ignore
-    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
-    // ele.value && resizeObserver.observe(ele.value)
-    // window.addEventListener("resize", handleWindowResize)
-    // handleWindowResize()
+    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width;
+    
+    // 获取插件标签
+    pluginTags.value = await api.getPluginTags();
+    
     // 解析 JSON 字符串为 JavaScript 对象
     if (props.tab) {
-        const parsedData = JSON.parse(props.tab)
-        if (parsedData.type == "updated") sortByUpdated()
-        if (parsedData.type == "installed") sortByInstalled()
+        const parsedData = JSON.parse(props.tab);
+        if (parsedData.type == "updated") {
+            sortBy.value = "updateTime";
+            await loadAllPlugins();
+        }
+        if (parsedData.type == "installed") {
+            await sortByInstalled();
+        }
+    } else {
+        // 组件挂载后加载数据
+        await loadAllPlugins();
     }
-})
+});
 
 const handleWindowResize = () => {
     //@ts-ignore
@@ -243,228 +286,236 @@ onUnmounted(() => {
 
 const handleSetSearchText = (event: any) => {
     debounce(() => {
-        searchTextRef.value = event.target.value
-    }, 800)()
+        searchTextRef.value = event.target.value;
+        handleSearch(); // 当输入变化时触发搜索
+    }, 800)();
 }
 
-const filteredList = computed<PluginInfo[]>(() => {
-    const searchText = searchTextRef.value.toLowerCase().trim() // 将搜索关键字转为小写
-
-    let plugins = AllPluginList.value
-
+const filteredList = computed(() => {
+    // 移动端/桌面端过滤逻辑仍需要在前端处理
     if (filterDeviceOption.value === "mobile") {
-        plugins = plugins.filter((plugin: PluginInfo) => !plugin.isDesktopOnly)
+        return AllPluginList.value?.filter((plugin: PluginInfo) => !plugin.isDesktopOnly) || [];
     } else if (filterDeviceOption.value === "desktop") {
-        plugins = plugins.filter((plugin: PluginInfo) => plugin.isDesktopOnly)
+        return AllPluginList.value?.filter((plugin: PluginInfo) => plugin.isDesktopOnly) || [];
     }
+    return AllPluginList.value || [];
+});
 
-    if (searchText.length < 1) return plugins
-    return plugins.filter(
-        (plugin: PluginInfo) =>
-            plugin.id.toLowerCase().includes(searchText) || // 插件ID中包含搜索关键字
-            plugin.name.toLowerCase().includes(searchText) || // 插件名称中包含搜索关键字
-            plugin.author.toLowerCase().includes(searchText) || // 插件作者中包含搜索关键字
-            plugin.description?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
-            plugin.chineseDescription?.toLowerCase().includes(searchText) || // 插件描述中包含搜索关键字
-            plugin.tags?.toLowerCase().includes(searchText)
-    ) // 插件标签中包含搜索关键字
-})
+const computedTotalPages = computed(() => {
+    if (activeCategory.value === "all") {
+        return totalPages.value;
+    } else {
+        // 对于分类，可能仍需要前端计算
+        const filteredByCategory = filteredList.value.filter((plugin: PluginInfo) => 
+            plugin.tags?.includes(activeCategory.value)
+        );
+        return Math.ceil(filteredByCategory.length / perPageCount.value);
+    }
+});
 
-const totalPageCount = computed(() => {
-    return Math.ceil(filteredList.value?.length / perPageCount.value)
-})
 
-const showReadMoreButton = computed(() => {
-    return currentPage.value < totalPageCount.value
-})
 
 function sortByPkmerDownloadCount() {
-    sortBy.value = "pkmerDownloadCount"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+    sortBy.value = "pkmerDownloadCount";
+    sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
+    currentPage.value = 1; // 重置到第一页
+    loadAllPlugins(); // 使用新的排序重新加载数据
 }
+
 function sortByDownloadCount() {
-    sortBy.value = "downloadCount"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+    sortBy.value = "downloadCount";
+    sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
+    currentPage.value = 1; // 重置到第一页
+    loadAllPlugins(); // 使用新的排序重新加载数据
 }
+
 // 点击按更新时间排序按钮
 function sortByUpdateTime() {
-    sortBy.value = "updateTime"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
-}
-function sortByFilename() {
-    sortBy.value = "fileName"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+    sortBy.value = "pluginUpdatedTime"; // 修改为与后端API对应的字段名
+    sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
+    currentPage.value = 1; // 重置到第一页
+    loadAllPlugins(); // 使用新的排序重新加载数据
 }
 
-function sortByInstalled() {
-    sortBy.value = "installed"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+function sortByFilename() {
+    sortBy.value = "name"; // 确保与后端API对应的字段名一致
+    sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
+    currentPage.value = 1; // 重置到第一页
+    loadAllPlugins(); // 使用新的排序重新加载数据
 }
-function sortByUpdated() {
-    sortBy.value = "updated"
-    sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc"
+
+// 修改已安装插件筛选函数
+async function sortByInstalled() {
+    // 清除排序参数，因为这是前端过滤
+    sortBy.value = "installed";
+    sortOrder.value = "desc";
+    currentPage.value = 1;
+    activeCategory.value = "all"; // 重置标签筛选
+    
+    try {
+        // 获取已安装插件的 ID 列表
+        const installedPluginIds = Object.keys(props.app.plugins.manifests);
+        
+        // 使用 API 获取已安装插件
+        const { plugins, total, totalPages: pages } = await api.getInstalledPluginsPaginated(
+            installedPluginIds,
+            currentPage.value,
+            perPageCount.value,
+            sortBy.value,
+            sortOrder.value?.toUpperCase()
+        );
+        
+        // 更新插件列表和分页信息
+        AllPluginList.value = plugins;
+        totalPlugins.value = total;
+        totalPages.value = pages;
+        
+        // 处理插件额外信息
+        if (Array.isArray(AllPluginList.value)) {
+            AllPluginList.value.forEach((plugin) => {
+                //@ts-ignore
+                const pluginManifests = props.app.plugins.manifests;
+                plugin.isInstalled = pluginManifests[plugin.id] !== undefined;
+                plugin.isOutdated = 
+                    plugin.isInstalled &&
+                    pluginManifests[plugin.id].version !== plugin.version;
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching installed plugins:", error);
+    }
 }
-const displayedPlugins = computed<PluginInfo[]>(() => {
-    let ResultPlugins = []
-    if (activeCategory.value == "all") {
-        if (sortBy.value === "downloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) => a.downloadCount - b.downloadCount
-                )
-            } else {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) => b.downloadCount - a.downloadCount
-                )
-            }
-        } else if (sortBy.value === "updateTime") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) =>
-                        new Date(a.pluginUpdatedTime).getTime() -
-                        new Date(b.pluginUpdatedTime).getTime()
-                )
-            } else {
-                ResultPlugins = filteredList.value.sort(
-                    (a, b) =>
-                        new Date(b.pluginUpdatedTime).getTime() -
-                        new Date(a.pluginUpdatedTime).getTime()
-                )
-            }
-        } else if (sortBy.value === "fileName") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                )
-            } else {
-                ResultPlugins = filteredList.value.sort((a, b) =>
-                    b.name.localeCompare(a.name)
-                )
-            }
-        } else if (sortBy.value === "installed") {
-            ResultPlugins = filteredList.value.filter(
-                (plugin) => plugin.isInstalled
-            )
-        } else if (sortBy.value === "updated") {
-            ResultPlugins = filteredList.value.filter(
-                (plugin) => plugin.isOutdated
-            )
-        } else if (sortBy.value === "pkmerDownloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = filteredList.value.sort((a, b) => {
-                    if (a.id === "obsidian-memos") {
-                        // a.id 为 'obsidian-memos'，a 排在 b 前面
-                        return -1
-                    } else if (b.id === "obsidian-memos") {
-                        // b.id 为 'obsidian-memos'，b 排在 a 前面
-                        return 1
-                    } else if (
-                        a.source === "community" &&
-                        b.source !== "community"
-                    ) {
-                        // a.source 为 'community'，b.source 不为 'community'，a 排在 b 前面
-                        return -1
-                    } else if (
-                        a.source !== "community" &&
-                        b.source === "community"
-                    ) {
-                        // a.source 不为 'community'，b.source 为 'community'，b 排在 a 前面
-                        return 1
-                    } else {
-                        // a.source 和 b.source 都为 'community'，或都不是 'community'，根据 pkmerDownloadCount 排序
-                        return b.pkmerDownloadCount - a.pkmerDownloadCount
+
+// 修改需要更新的插件筛选函数
+async function sortByUpdated() {
+    sortBy.value = "downloadCount";
+    sortOrder.value = "desc";
+    currentPage.value = 1;
+    
+    try {
+        // 获取已安装插件的 ID 列表
+        const installedPluginIds = Object.keys(props.app.plugins.manifests);
+        
+        // 使用 API 获取已安装插件
+        const { plugins} = await api.getInstalledPluginsPaginated(
+            installedPluginIds,
+            currentPage.value,
+            perPageCount.value,
+            sortBy.value,
+            sortOrder.value?.toUpperCase()
+        );
+        
+        // 在前端过滤出需要更新的插件
+        const outdatedPlugins = plugins.filter(plugin => {
+            //@ts-ignore
+            const manifest = props.app.plugins.manifests[plugin.id];
+            return manifest && manifest.version !== plugin.version;
+        });
+        
+        // 更新插件列表和分页信息
+        AllPluginList.value = outdatedPlugins;
+        totalPlugins.value = outdatedPlugins.length;
+        totalPages.value = Math.ceil(outdatedPlugins.length / perPageCount.value);
+        
+        // 处理插件额外信息
+        if (Array.isArray(AllPluginList.value)) {
+            AllPluginList.value.forEach((plugin) => {
+                //@ts-ignore
+                const pluginManifests = props.app.plugins.manifests;
+                plugin.isInstalled = pluginManifests[plugin.id] !== undefined;
+                plugin.isOutdated = 
+                    plugin.isInstalled &&
+                    pluginManifests[plugin.id].version !== plugin.version;
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching outdated plugins:", error);
+    }
+}
+
+const displayedPlugins = computed(() => {
+    if (activeCategory.value === "all") {
+        return filteredList.value;
+    } else {
+        // 分类筛选仍需要在前端进行
+        return filteredList.value.filter((plugin: PluginInfo) => 
+            plugin.tags?.includes(activeCategory.value)
+        );
+    }
+});
+const validPluginList = computed(() => {
+    if (Array.isArray(AllPluginList.value)) {
+        return AllPluginList.value;
+    } else {
+        return [];
+    }
+});
+
+
+// 添加分页处理函数
+const handlePageChange = async (page: number) => {
+    currentPage.value = page;
+    await loadAllPlugins();
+}
+
+// 修改搜索功能
+const handleSearch = async () => {
+    isLoading.value = true;
+    currentPage.value = 1; // 搜索时重置到第一页
+    activeCategory.value = "all"; // 搜索时重置标签筛选
+    
+    try {
+        if (searchTextRef.value.trim()) {
+            // 使用后端搜索API
+            const { plugins, total, totalPages: pages } = await api.searchPluginsPaginated(
+                searchTextRef.value,
+                currentPage.value,
+                perPageCount.value,
+                sortBy.value || "downloadCount",
+                sortOrder.value?.toUpperCase() || "DESC"
+            );
+            
+            AllPluginList.value = plugins;
+            totalPlugins.value = total;
+            totalPages.value = pages;
+            
+            // 处理插件额外信息
+            if (Array.isArray(AllPluginList.value)) {
+                const pkmerDocs = await api.getPkmerDocs();
+                AllPluginList.value.forEach((plugin) => {
+                    const matchingPkmerDoc = pkmerDocs.find(
+                        (doc) => doc.slug == plugin.id
+                    );
+                    if (matchingPkmerDoc) {
+                        plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`;
+                        plugin.tags = matchingPkmerDoc.tags;
+                        plugin.chineseDescription = matchingPkmerDoc.description;
+                        plugin.authorAvatar = matchingPkmerDoc.authorAvatar;
                     }
-                })
-            } else {
-                ResultPlugins = filteredList.value.sort((a, b) => {
-                    if (a.source === "community" && b.source !== "community") {
-                        // a.source 为 'community'，b.source 不为 'community'，a 排在 b 前面
-                        return -1
-                    } else if (
-                        a.source !== "community" &&
-                        b.source === "community"
-                    ) {
-                        // a.source 不为 'community'，b.source 为 'community'，b 排在 a 前面
-                        return 1
-                    } else {
-                        // a.source 和 b.source 都为 'community'，或都不是 'community'，根据 pkmerDownloadCount 排序
-                        return a.pkmerDownloadCount - b.pkmerDownloadCount
+                    
+                    const matchingReadme = pkmerDocs.find((doc) =>
+                        doc.slug.includes(plugin.id + "_readme")
+                    );
+                    if (matchingReadme) {
+                        plugin.readme_zh = `https://pkmer.cn/show/${matchingReadme.uid}`;
                     }
-                })
+
+                    //@ts-ignore
+                    const pluginManifests = props.app.plugins.manifests;
+                    plugin.isInstalled = pluginManifests[plugin.id] !== undefined;
+                    plugin.isOutdated = 
+                        plugin.isInstalled &&
+                        pluginManifests[plugin.id].version !== plugin.version;
+                });
             }
         } else {
-            ResultPlugins = filteredList.value?.slice(
-                0,
-                currentPage.value * perPageCount.value
-            )
+            await loadAllPlugins();
         }
-    } else {
-        ResultPlugins = filteredList.value.filter((plugin) =>
-            plugin.tags?.includes(activeCategory.value)
-        ) // 插件标签中包含搜索关键字
-
-        if (sortBy.value === "downloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort(
-                    (a, b) => a.downloadCount - b.downloadCount
-                )
-            } else {
-                ResultPlugins = ResultPlugins.sort(
-                    (a, b) => b.downloadCount - a.downloadCount
-                )
-            }
-        } else if (sortBy.value === "updateTime") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort(
-                    (a: PluginInfo, b: PluginInfo) =>
-                        new Date(a.pluginUpdatedTime).getTime() -
-                        new Date(b.pluginUpdatedTime).getTime()
-                )
-            } else {
-                ResultPlugins = ResultPlugins.sort(
-                    (a, b) =>
-                        new Date(b.pluginUpdatedTime).getTime() -
-                        new Date(a.pluginUpdatedTime).getTime()
-                )
-            }
-        } else if (sortBy.value === "fileName") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                )
-            } else {
-                ResultPlugins = ResultPlugins.sort((a, b) =>
-                    b.name.localeCompare(a.name)
-                )
-            }
-        } else if (sortBy.value === "pkmerDownloadCount") {
-            if (sortOrder.value === "asc") {
-                ResultPlugins = ResultPlugins.sort(
-                    (a, b) => a.pkmerDownloadCount - b.pkmerDownloadCount
-                )
-            } else {
-                ResultPlugins = ResultPlugins.sort(
-                    (a, b) => b.pkmerDownloadCount - a.pkmerDownloadCount
-                )
-            }
-        }
+    } catch (error) {
+        console.error("Error searching plugins:", error);
+    } finally {
+        isLoading.value = false;
     }
-
-    return ResultPlugins?.slice(0, currentPage.value * perPageCount.value)
-})
-const validPluginList = computed(() => {
-    if (Array.isArray(filteredList.value)) {
-        return filteredList.value
-    } else {
-        return []
-    }
-})
-const readMore = () => {
-    const startIndex = currentPage.value * perPageCount.value
-    const endIndex = startIndex + perPageCount.value
-    const pluginsToAdd = displayedPlugins.value?.slice(startIndex, endIndex)
-    currentPage.value++
-    AllPluginList.value = [...AllPluginList.value, ...pluginsToAdd]
 }
 </script>
 
@@ -522,7 +573,7 @@ const readMore = () => {
                         </div>
                         <div class="widget-item">
                             <button
-                                :class="{ active: sortBy == 'updateTime' }"
+                                :class="{ active: sortBy == 'pluginUpdatedTime' }"
                                 tooltip="按更新时间"
                                 flow="down"
                                 @click="sortByUpdateTime"
@@ -547,7 +598,7 @@ const readMore = () => {
 
                         <div class="widget-item">
                             <button
-                                :class="{ active: sortBy == 'fileName' }"
+                                :class="{ active: sortBy == 'name' }"
                                 tooltip="按文件名排序"
                                 flow="down"
                                 @click="sortByFilename"
@@ -737,16 +788,16 @@ const readMore = () => {
                         <!--Blog content-->
 
                         <div class="flex flex-col gap-12 py-12">
-                            <!--Articles grid-->
+                            <!-- 加载指示器 -->
+                            <div v-if="isLoading" class="flex justify-center items-center py-10">
+                                <div class="w-12 h-12 border-4 border-t-4 border-gray-200 rounded-full animate-spin dark:border-gray-700 dark:border-t-primary-500"></div>
+                            </div>
 
-                            <!--Article-->
-                            <div
-                                class="grid gap-6 -m-3 ptablet:grid-cols-2 ltablet:grid-cols-3 lg:grid-cols-3"
+                            <!-- 插件列表 -->
+                            <div v-else class="grid gap-6 -m-3 ptablet:grid-cols-2 ltablet:grid-cols-3 lg:grid-cols-3"
                                 :class="{
-                                    '!grid-cols-1':
-                                        pkmerSize <= 768 && pkmerSize > 0,
-                                    '!grid-cols-2':
-                                        pkmerSize > 768 && pkmerSize < 1024,
+                                    '!grid-cols-1': pkmerSize <= 768 && pkmerSize > 0,
+                                    '!grid-cols-2': pkmerSize > 768 && pkmerSize < 1024,
                                     '!grid-cols-3': pkmerSize > 1024
                                 }">
                                 <div
@@ -768,14 +819,36 @@ const readMore = () => {
                             <!--Articles grid-->
                             <div
                                 class="flex items-center justify-center w-full p-6 -m-3">
-                                <div class="w-full max-w-[210px] pt-16">
+                                <!-- 分页导航 -->
+                                <div class="flex items-center justify-center w-full mb-4">
+                                    <div class="flex space-x-2">
+                                        <button 
+                                            v-if="currentPage > 1"
+                                            @click="handlePageChange(currentPage - 1)" 
+                                            class="px-3 py-1 border rounded hover:bg-gray-100 dark:hover:bg-muted-700">
+                                            上一页
+                                        </button>
+                                        
+                                        <span class="flex items-center px-3 py-1">
+                                            第 {{ currentPage }} 页 / 共 {{ computedTotalPages }} 页
+                                        </span>
+                                        
+                                        <button 
+                                            v-if="currentPage < computedTotalPages"
+                                            @click="handlePageChange(currentPage + 1)" 
+                                            class="px-3 py-1 border rounded hover:bg-gray-100 dark:hover:bg-muted-700">
+                                            下一页
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- <div class="w-full max-w-[210px] pt-16" v-if="showReadMoreButton">
                                     <button
-                                        v-if="showReadMoreButton"
                                         @click="readMore"
                                         class="relative inline-flex items-center justify-center w-full gap-2 px-6 py-4 font-sans font-semibold transition-all duration-300 border rounded-lg dark:bg-muted-700 text-muted-800 dark:text-white border-muted-300 dark:border-muted-600 tw-accessibility hover:shadow-xl hover:shadow-muted-400/20">
-                                        <div>Load More</div>
+                                        <div>加载更多</div>
                                     </button>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>

@@ -22,16 +22,19 @@ export default class PluginStatistics {
     private api: PkmerApi;
     private isUserLogin: boolean;
     private allThemeList: ThemeInfo[];
+    private isLoaded: boolean;
 
     constructor(private app: App, private settings: PkmerSettings) {
 
         this.api = new PkmerApi(this.settings.token)
         this.isUserLogin = false;
         this.allThemeList = [];
-        this.loadAllThemes(); // 在构造函数中加载插件列表
+        this.isLoaded = false;
+        // 移除构造函数中的自动加载
     }
 
     private async loadAllThemes() {
+        if (this.isLoaded) return; // 如果已经加载过，则不再重复加载
 
         try {
             this.isUserLogin = await this.api.isUserLogin();
@@ -39,6 +42,7 @@ export default class PluginStatistics {
                 const themes = await this.api.getThemeList();
                 this.allThemeList = Array.isArray(themes) ? themes : [];
                 await this.updateThemeStatus();
+                this.isLoaded = true;
             }
         } catch (error) {
             console.error("Error loading themes:", error)
@@ -54,7 +58,6 @@ export default class PluginStatistics {
                 theme.isInstalled &&
                 themeManifests[theme.name].version !== theme.version
         });
-
     }
 
     async getThemeStatus(): Promise<{ tinstalledCount: number; tupdatedCount: number }> {

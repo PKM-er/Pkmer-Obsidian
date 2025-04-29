@@ -21,21 +21,25 @@ export default class PluginStatistics {
     private api: PkmerApi;
     private isUserLogin: boolean;
     private allPluginList: PluginInfo[];
+    private isLoaded: boolean;
 
     constructor(private app: App, private settings: PkmerSettings) {
         this.api = new PkmerApi(this.settings.token)
         this.isUserLogin = false;
         this.allPluginList = [];
-        this.loadAllPlugins(); // 在构造函数中加载插件列表
+        this.isLoaded = false;
     }
 
     private async loadAllPlugins() {
+        if (this.isLoaded) return; // 如果已经加载过，则不再重复加载
+        
         try {
             this.isUserLogin = await this.api.isUserLogin();
             if (this.isUserLogin) {
                 const plugins = await this.api.getPluginList();
                 this.allPluginList = Array.isArray(plugins) ? plugins : [];
                 await this.updatePluginStatus();
+                this.isLoaded = true;
             }
         } catch (error) {
             console.error("Error loading plugins:", error);
@@ -44,13 +48,11 @@ export default class PluginStatistics {
     }
 
     private async updatePluginStatus() {
-
         const pluginManifests = this.app.plugins.manifests;
         this.allPluginList.forEach((plugin) => {
             plugin.isInstalled = !!pluginManifests[plugin.id];
             plugin.isOutdated = plugin.isInstalled && pluginManifests[plugin.id].version !== plugin.version;
         });
-
     }
 
     async getPluginStatus(): Promise<{ installedCount: number; updatedCount: number }> {

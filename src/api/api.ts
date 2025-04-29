@@ -190,6 +190,43 @@ export class PkmerApi {
             throw error;
         }
     }
+
+    // 新增分页获取插件方法
+    async getPluginListPaginated(page: number = 1, pageSize: number = 24, sortBy: string = "downloadCount", sortOrder: string = "DESC"): Promise<{plugins: ObsidianPluginInfo[], total: number, totalPages: number}> {
+        try {
+            const response = await this.fetchWithToken(`${BASE_API_URL}/getPluginsPaginated?page=${page}&limit=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
+                method: 'GET',
+            });
+            const result = await response.json();
+            return {
+                plugins: result.data,
+                total: result.meta.total,
+                totalPages: result.meta.totalPages
+            };
+        } catch (error) {
+            console.error('Error fetching paginated plugin list:', error);
+            throw error;
+        }
+    }
+
+    // 新增搜索带分页功能的方法
+    async searchPluginsPaginated(searchText: string, page: number = 1, pageSize: number = 24, sortBy: string = "downloadCount", sortOrder: string = "DESC"): Promise<{plugins: ObsidianPluginInfo[], total: number, totalPages: number}> {
+        try {
+            const response = await this.fetchWithToken(`${BASE_API_URL}/searchPluginsPaginated?searchText=${encodeURIComponent(searchText)}&page=${page}&limit=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
+                method: 'GET',
+            });
+            const result = await response.json();
+            return {
+                plugins: result.data,
+                total: result.meta.total,
+                totalPages: result.meta.totalPages
+            };
+        } catch (error) {
+            console.error('Error searching plugins with pagination:', error);
+            throw error;
+        }
+    }
+
     async getTop20Themes(): Promise<ThemeInfo[]> {
         const cachedData = localStorage.getItem('top20Themes');
         const cachedExpiry = localStorage.getItem('top20ThemesExpiry');
@@ -233,8 +270,41 @@ export class PkmerApi {
         }
     }
 
+    // 新增分页获取主题方法
+    async getThemeListPaginated(page: number = 1, pageSize: number = 24, sortBy: string = "downloadCount", sortOrder: string = "DESC"): Promise<{themes: ThemeInfo[], total: number, totalPages: number}> {
+        try {
+            const response = await this.fetchWithToken(`${BASE_API_URL}/getThemesPaginated?page=${page}&limit=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
+                method: 'GET',
+            });
+            const result = await response.json();
+            return {
+                themes: result.data,
+                total: result.meta.total,
+                totalPages: result.meta.totalPages
+            };
+        } catch (error) {
+            console.error('Error fetching paginated theme list:', error);
+            throw error;
+        }
+    }
 
-
+    // 新增搜索主题带分页功能的方法
+    async searchThemesPaginated(searchText: string, page: number = 1, pageSize: number = 24, sortBy: string = "downloadCount", sortOrder: string = "DESC"): Promise<{themes: ThemeInfo[], total: number, totalPages: number}> {
+        try {
+            const response = await this.fetchWithToken(`${BASE_API_URL}/searchThemesPaginated?searchText=${encodeURIComponent(searchText)}&page=${page}&limit=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
+                method: 'GET',
+            });
+            const result = await response.json();
+            return {
+                themes: result.data,
+                total: result.meta.total,
+                totalPages: result.meta.totalPages
+            };
+        } catch (error) {
+            console.error('Error searching themes with pagination:', error);
+            throw error;
+        }
+    }
 
     async getThemeDownloadUrl(themeName: string, version: string): Promise<string> {
         const response = await this.fetchWithToken(BASE_API_URL + '/getThemeDownloadUrl/' + themeName + '/' + version, {
@@ -254,5 +324,49 @@ export class PkmerApi {
     //     })
     //     return await response.json() as ObsidianPluginInfo;
     // }
+
+    // 新增获取插件标签的方法
+    async getPluginTags(): Promise<{tag: string, count: number}[]> {
+        try {
+            const response = await this.fetchWithToken(`${BASE_API_URL}/getPluginTags`, {
+                method: 'GET',
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching plugin tags:', error);
+            return [];
+        }
+    }
+
+    // 新增获取已安装插件的方法
+    async getInstalledPluginsPaginated(
+        pluginIds: string[],
+        page: number = 1,
+        pageSize: number = 24,
+        sortBy: string = "downloadCount",
+        sortOrder: string = "DESC"
+    ): Promise<{plugins: ObsidianPluginInfo[], total: number, totalPages: number}> {
+        try {
+            const response = await this.fetchWithToken(
+                `${BASE_API_URL}/getInstalledPluginsPaginated?page=${page}&limit=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ pluginIds })
+                }
+            );
+            const result = await response.json();
+            return {
+                plugins: result.data,
+                total: result.meta.total,
+                totalPages: result.meta.totalPages
+            };
+        } catch (error) {
+            console.error('Error fetching installed plugins:', error);
+            throw error;
+        }
+    }
 
 }

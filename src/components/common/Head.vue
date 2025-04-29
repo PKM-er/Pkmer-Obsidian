@@ -77,6 +77,7 @@ const handleOpenSettings = () => {
 
         <span
             v-show="isUserLogin"
+            :tooltip="downloadCount <= 5 ? '请在Pkmer个人中心绑定微信后可获取更多次数' : null"
             class="inline-block font-sans text-xs py-1.5 px-3 m-1 rounded-lg bg-yellow-600 text-white shadow-xl shadow-primary-500/20">
             剩余次数 {{ downloadCount }}
         </span>
