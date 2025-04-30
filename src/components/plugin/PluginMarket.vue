@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue"
+import { computed, onMounted, onUnmounted, ref, watch } from "vue"
 import Toolbar from "@/components/plugin/Toolbar.vue"
 import PluginCard from "@/components/plugin/PluginCard.vue"
+import ThemeCard from "@/components/theme/ThemeCard.vue"
 import { PkmerApi } from "@/api/api"
 import { PkmerSettings } from "@/main"
 import Head from "@/components/common/Head.vue"
 import type { PluginInfo } from "@/types/plugin"
+ 
 import PluginProcessor from "@/utils/downloader"
+import ThemeProcessor from "@/utils/tdownloader"
 import { App, Notice, debounce } from "obsidian"
 
 interface Props {
     settings: PkmerSettings
     app: App
     tab: string
+    currentTab?: string  // 添加当前标签参数
 }
 
 const props = defineProps<Props>()
@@ -37,6 +41,19 @@ const isLoading = ref(false)
 
 // 添加插件标签变量
 const pluginTags = ref<{tag: string, count: number}[]>([])
+
+// 添加插件统计信息的状态变量
+const installedPluginsCount = ref(0);
+const outdatedPluginsCount = ref(0);
+
+// 修改计算属性为直接使用状态变量
+const countInstalledPlugins = computed(() => {
+    return installedPluginsCount.value;
+});
+
+const countUpdatedPlugins = computed(() => {
+    return outdatedPluginsCount.value;
+});
 
 const loadAllPlugins = async () => {
     isLoading.value = true;
@@ -120,31 +137,6 @@ const loadAllPlugins = async () => {
     isLoading.value = false;
 }
 
-const countInstalledPlugins = computed(() => {
-    // 使用 filter 方法筛选 isInstalled 为 true 的记录
-    if (AllPluginList.value) {
-        let installedPlugins = AllPluginList.value.filter(
-            (plugin: { isInstalled: boolean }) => plugin.isInstalled === true
-        )
-
-        // 统计筛选后记录的数量
-        let count = installedPlugins.length
-        return count
-    }
-})
-const countUpdatedPlugins = computed(() => {
-    // 使用 filter 方法筛选 isInstalled 为 true 的记录
-    if (AllPluginList.value) {
-        let updatedPlugins = AllPluginList.value.filter(
-            (plugin: { isOutdated: boolean }) => plugin.isOutdated === true
-        )
-
-        // 统计筛选后记录的数量
-        let count = updatedPlugins.length
-        return count
-    }
-    return false
-})
 const closeNotification = () => {
     isClose.value = true
     sortByDownloadCount()
@@ -154,40 +146,84 @@ const activeCategory = ref("all")
 const selectPlugin = ref("")
 const selectPluginVersion = ref("")
 const selectPluginScource = ref("")
+
+// 添加重新加载状态栏的方法
+const reloadStatusBarHandler = async () => {
+    try {
+        // 获取已安装插件的 ID 列表
+        const installedPluginIds = Object.keys(props.app.plugins.manifests);
+        
+        // 设置已安装插件数量
+        installedPluginsCount.value = installedPluginIds.length;
+        
+        if (installedPluginIds.length > 0) {
+            // 获取已安装插件的详细信息
+            const { plugins } = await api.getInstalledPluginsPaginated(
+                installedPluginIds,
+                1,
+                installedPluginIds.length, // 获取所有已安装插件
+                "downloadCount",
+                "DESC"
+            );
+            
+            // 计算需要更新的插件数量
+            const outdatedPlugins = plugins.filter(plugin => {
+                //@ts-ignore
+                const manifest = props.app.plugins.manifests[plugin.id];
+                return manifest && manifest.version !== plugin.version;
+            });
+            
+            outdatedPluginsCount.value = outdatedPlugins.length;
+        } else {
+            outdatedPluginsCount.value = 0;
+        }
+    } catch (error) {
+        console.error("Error loading plugin status:", error);
+    }
+};
+
+// 修改下载插件方法，添加状态更新
 const handleDownloadPlugin = async () => {
-    showModal.value = false
-    new Notice("正在下载插件，请稍后...", 3000)
+    showModal.value = false;
+    new Notice("正在下载插件，请稍后...", 3000);
     const downloadStatus = await pluginProcessor.downloadPluginToPluginFolder(
         selectPlugin.value,
         selectPluginVersion.value
-    )
+    );
 
-    if (!downloadStatus) return
+    if (!downloadStatus) return;
 
     AllPluginList.value = AllPluginList.value.map((plugin: any) => {
         if (plugin.id == selectPlugin.value) {
-            plugin.isInstalled = true
+            plugin.isInstalled = true;
         }
-        return plugin
-    })
-}
+        return plugin;
+    });
+    
+    // 更新插件状态数据
+    await reloadStatusBarHandler();
+};
 
+// 修改更新插件方法，添加状态更新
 const handleUpdatePlugin = async () => {
-    showModal.value = false
-    new Notice("正在更新插件，请稍后...", 3000)
+    showModal.value = false;
+    new Notice("正在更新插件，请稍后...", 3000);
     const updateStatus = await pluginProcessor.updatePluginToExistPluginFolder(
         selectPlugin.value,
         selectPluginVersion.value
-    )
-    if (!updateStatus) return
+    );
+    if (!updateStatus) return;
 
     AllPluginList.value = AllPluginList.value.map((plugin: any) => {
         if (plugin.id == selectPlugin.value) {
-            plugin.isOutdated = false
+            plugin.isOutdated = false;
         }
-        return plugin
-    })
-}
+        return plugin;
+    });
+    
+    // 更新插件状态数据
+    await reloadStatusBarHandler();
+};
 
 const cancelModal = () => {
     showModal.value = false
@@ -247,12 +283,20 @@ onMounted(async () => {
     sortBy.value = "downloadCount";
     sortOrder.value = "desc";
     
+    // 设置当前标签
+    if (props.currentTab) {
+        currentTab.value = props.currentTab;
+    }
+    
     app.workspace.on("resize", handleWindowResize);
     //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width;
     
     // 获取插件标签
     pluginTags.value = await api.getPluginTags();
+    
+    // 加载插件状态数据
+    await reloadStatusBarHandler();
     
     // 解析 JSON 字符串为 JavaScript 对象
     if (props.tab) {
@@ -266,7 +310,11 @@ onMounted(async () => {
         }
     } else {
         // 组件挂载后加载数据
-        await loadAllPlugins();
+        if (currentTab.value === 'theme') {
+            await loadAllThemes();
+        } else {
+            await loadAllPlugins();
+        }
     }
 });
 
@@ -517,6 +565,184 @@ const handleSearch = async () => {
         isLoading.value = false;
     }
 }
+
+// 添加当前标签变量
+const currentTab = ref('plugin');
+
+ 
+
+// 添加加载主题的函数
+const loadAllThemes = async () => {
+    isLoading.value = true;
+    const pkmerDocs = await api.getPkmerDocs();
+    
+    if (isUserLogin) {
+        try {
+
+            
+            // 使用带分页和排序的API加载主题
+            const { themes, total, totalPages: pages } = await api.getThemeListPaginated(
+                currentPage.value, 
+                perPageCount.value, 
+                sortBy.value || "downloadCount", 
+                sortOrder.value?.toUpperCase() || "DESC"
+            );
+            
+            AllPluginList.value = themes;
+            totalPlugins.value = total;
+            totalPages.value = pages;
+            
+            if (Array.isArray(AllPluginList.value)) {
+                AllPluginList.value.forEach((theme) => {
+                    //把主题名称中的空格替换为下划线
+                    const matchingPkmerDoc = pkmerDocs.find(
+                        (doc) =>
+                            doc.slug ==
+                            theme.name.replace(/\s+/g, "-").toLowerCase()
+                    );
+
+                    if (matchingPkmerDoc) {
+                        theme.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`;
+                        theme.tags = matchingPkmerDoc.tags;
+                        theme.chineseDescription = matchingPkmerDoc.description;
+                        theme.authorAvatar = matchingPkmerDoc.authorAvatar;
+                    }
+
+                    //@ts-ignore
+                    const themeManifests = props.app.customCss.themes;
+
+                    theme.isInstalled = themeManifests[theme.name] !== undefined;
+                    theme.isOutdated =
+                        theme.isInstalled &&
+                        themeManifests[theme.name].version !== theme.version;
+                });
+            } else {
+                AllPluginList.value = [];
+            }
+        } catch (error) {
+            console.error("Error loading themes:", error);
+        }
+    } else {
+        AllPluginList.value = await api.getTop20Themes();
+        if (Array.isArray(AllPluginList.value)) {
+            AllPluginList.value.forEach((theme) => {
+                //把主题名称中的空格替换为下划线
+                const matchingPkmerDoc = pkmerDocs.find(
+                    (doc) =>
+                        doc.slug ==
+                        theme.name.replace(/\s+/g, "-").toLowerCase()
+                );
+
+                if (matchingPkmerDoc) {
+                    theme.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`;
+                    theme.tags = matchingPkmerDoc.tags;
+                    theme.chineseDescription = matchingPkmerDoc.description;
+                    theme.authorAvatar = matchingPkmerDoc.authorAvatar;
+                }
+
+                //@ts-ignore
+                const themeManifests = props.app.customCss.themes;
+
+                theme.isInstalled = themeManifests[theme.name] !== undefined;
+                theme.isOutdated =
+                    theme.isInstalled &&
+                    themeManifests[theme.name].version !== theme.version;
+            });
+        } else {
+            AllPluginList.value = [];
+        }
+    }
+    isLoading.value = false;
+};
+
+// 监听 props.currentTab 变化
+watch(() => props.currentTab, (newTab) => {
+    if (newTab) {
+        currentTab.value = newTab;
+        
+        // 只有在标签从插件切换到主题时才需要加载主题数据
+        if (newTab === 'theme' && AllPluginList.value?.length === 0) {
+            loadThemeData();
+        }
+    }
+}, { immediate: true });
+
+// 添加加载主题数据的函数
+async function loadThemeData() {
+    if (currentTab.value !== 'theme') return;
+    
+    isLoading.value = true;
+    try {
+        // 获取主题数据的逻辑
+        await loadAllThemes();
+    } catch (error) {
+        console.error("Error loading theme data:", error);
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+// 引入主题下载处理器
+const themeProcessor = new ThemeProcessor(props.app, props.settings)
+
+// 添加主题模态框处理函数
+const selectThemeName = ref("");
+const selectThemeVersion = ref("");
+
+const handleShowThemeModal = (
+    action: "download" | "update",
+    themeName: string,
+    version: string
+) => {
+    showModal.value = true;
+    selectThemeName.value = themeName;
+    selectThemeVersion.value = version;
+    if (action === "download") {
+        isDownload.value = true;
+    } else {
+        isDownload.value = false;
+    }
+};
+
+// 添加下载主题方法
+const handleDownloadTheme = async () => {
+    showModal.value = false;
+    new Notice("正在下载主题，请稍后...", 3000);
+    
+    const downloadStatus = await themeProcessor.downloadThemeToThemeFolder(
+        selectThemeName.value,
+        selectThemeVersion.value
+    );
+
+    if (!downloadStatus) return;
+
+    // 使用类型断言
+    (AllPluginList.value as any[]).forEach((theme) => {
+        if (theme.name === selectThemeName.value) {
+            theme.isInstalled = true;
+        }
+    });
+};
+
+// 添加更新主题方法
+const handleUpdateTheme = async () => {
+    showModal.value = false;
+    new Notice("正在更新主题，请稍后...", 3000);
+    
+    const updateStatus = await themeProcessor.updateThemeToExistThemeFolder(
+        selectThemeName.value,
+        selectThemeVersion.value
+    );
+
+    if (!updateStatus) return;
+
+    // 使用类型断言
+    (AllPluginList.value as any[]).forEach((theme) => {
+        if (theme.name === selectThemeName.value) {
+            theme.isOutdated = false;
+        }
+    });
+};
 </script>
 
 <template>
@@ -801,17 +1027,24 @@ const handleSearch = async () => {
                                     '!grid-cols-3': pkmerSize > 1024
                                 }">
                                 <div
-                                    v-for="plugin in displayedPlugins"
-                                    :key="plugin.id">
+                                    v-for="item in displayedPlugins"
+                                    :key="currentTab === 'theme' ? item.name : item.id">
                                     <PluginCard
+                                        v-if="currentTab === 'plugin'"
                                         :app="props.app"
-                                        :plugin-info="plugin"
+                                        :plugin-info="item"
                                         :isLogin="isUserLogin"
                                         @download-update-plugin="
                                             handleShowPluginModal
                                         ">
                                     </PluginCard>
-                                    <!-- 显示其他插件信息 -->
+                                    <ThemeCard
+                                        v-else-if="currentTab === 'theme'"
+                                        :app="props.app"
+                                        :theme-info="item"
+                                        :isLogin="isUserLogin"
+                                        @download-update-theme="handleShowThemeModal">
+                                    </ThemeCard>
                                 </div>
                                 <!--Article-->
                             </div>
@@ -981,18 +1214,34 @@ const handleSearch = async () => {
                         class="flex-wrap block -mx-4 -mt-4 space-y-6 md:flex sm:-m-4 md:-mb-10 md:space-y-0">
                         <div class="flex md:p-4 md:w-1/2">
                             <div class="flex-grow">
-                                <h2
-                                    v-if="isDownload"
-                                    @click="handleDownloadPlugin"
-                                    class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
-                                    确 认
-                                </h2>
-                                <h2
-                                    v-else
-                                    @click="handleUpdatePlugin"
-                                    class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
-                                    更 新
-                                </h2>
+                                <template v-if="currentTab === 'plugin'">
+                                    <h2
+                                        v-if="isDownload"
+                                        @click="handleDownloadPlugin"
+                                        class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                        确 认
+                                    </h2>
+                                    <h2
+                                        v-else
+                                        @click="handleUpdatePlugin"
+                                        class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                        更 新
+                                    </h2>
+                                </template>
+                                <template v-else-if="currentTab === 'theme'">
+                                    <h2
+                                        v-if="isDownload"
+                                        @click="handleDownloadTheme"
+                                        class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                        确 认
+                                    </h2>
+                                    <h2
+                                        v-else
+                                        @click="handleUpdateTheme"
+                                        class="block py-4 my-1 font-sans text-base font-medium text-center text-green-500 transition-all duration-300 border rounded-lg cursor-pointer dark:hover:bg-green-300/20 hover:bg-green-100 border-green-700/25">
+                                        更 新
+                                    </h2>
+                                </template>
                             </div>
                         </div>
                         <div class="flex md:p-4 md:w-1/2">

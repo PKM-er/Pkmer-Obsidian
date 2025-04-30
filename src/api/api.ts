@@ -163,33 +163,33 @@ export class PkmerApi {
         return await response.json() as ObsidianPluginInfo[];
     }
 
-    async getPluginList(cacheExpiryTimeInMs: number = 1 * 60 * 60 * 1000): Promise<ObsidianPluginInfo[]> {
-        const cachedData = localStorage.getItem('pluginList');
-        const cachedExpiry = localStorage.getItem('pluginListExpiry');
-        const currentTime = new Date().getTime();
+    // async getPluginList(cacheExpiryTimeInMs: number = 1 * 60 * 60 * 1000): Promise<ObsidianPluginInfo[]> {
+    //     const cachedData = localStorage.getItem('pluginList');
+    //     const cachedExpiry = localStorage.getItem('pluginListExpiry');
+    //     const currentTime = new Date().getTime();
 
-        if (cachedData && cachedExpiry) {
-            const expiryTime = parseInt(cachedExpiry);
-            if (currentTime < expiryTime) {
-                return JSON.parse(cachedData) as ObsidianPluginInfo[];
-            }
-        }
+    //     if (cachedData && cachedExpiry) {
+    //         const expiryTime = parseInt(cachedExpiry);
+    //         if (currentTime < expiryTime) {
+    //             return JSON.parse(cachedData) as ObsidianPluginInfo[];
+    //         }
+    //     }
 
-        try {
-            const response = await this.fetchWithToken(BASE_API_URL + '/getAllPlugins', {
-                method: 'GET',
-            });
-            const data = await response.json() as ObsidianPluginInfo[];
+    //     try {
+    //         const response = await this.fetchWithToken(BASE_API_URL + '/getAllPlugins', {
+    //             method: 'GET',
+    //         });
+    //         const data = await response.json() as ObsidianPluginInfo[];
 
-            localStorage.setItem('pluginList', JSON.stringify(data));
-            localStorage.setItem('pluginListExpiry', String(currentTime + cacheExpiryTimeInMs));
+    //         localStorage.setItem('pluginList', JSON.stringify(data));
+    //         localStorage.setItem('pluginListExpiry', String(currentTime + cacheExpiryTimeInMs));
 
-            return data;
-        } catch (error) {
-            console.error('Error fetching plugin list:', error);
-            throw error;
-        }
-    }
+    //         return data;
+    //     } catch (error) {
+    //         console.error('Error fetching plugin list:', error);
+    //         throw error;
+    //     }
+    // }
 
     // 新增分页获取插件方法
     async getPluginListPaginated(page: number = 1, pageSize: number = 24, sortBy: string = "downloadCount", sortOrder: string = "DESC"): Promise<{plugins: ObsidianPluginInfo[], total: number, totalPages: number}> {
@@ -346,9 +346,12 @@ export class PkmerApi {
         sortBy: string = "downloadCount",
         sortOrder: string = "DESC"
     ): Promise<{plugins: ObsidianPluginInfo[], total: number, totalPages: number}> {
+        if (!pluginIds?.length) {
+            throw new Error("插件ID列表不能为空");
+        }
         try {
             const response = await this.fetchWithToken(
-                `${BASE_API_URL}/getInstalledPluginsPaginated?page=${page}&limit=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+                `${BASE_API_URL}/getInstalledPluginsPaginated?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
                 {
                     method: 'POST',
                     headers: {
@@ -358,10 +361,14 @@ export class PkmerApi {
                 }
             );
             const result = await response.json();
+             
+            if (!response.ok) {
+                throw new Error(result.message || '请求失败');
+            }
             return {
-                plugins: result.data,
-                total: result.meta.total,
-                totalPages: result.meta.totalPages
+                plugins: result?.data,
+                total: result.meta?.total||0,
+                totalPages: result.meta?.totalPages||1
             };
         } catch (error) {
             console.error('Error fetching installed plugins:', error);

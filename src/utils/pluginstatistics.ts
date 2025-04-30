@@ -9,58 +9,49 @@ import { PkmerSettings } from "@/main";
 import { App } from "obsidian";
 import { PkmerApi } from "@/api/api";
 
-interface PluginInfo {
-    id: string;
-    name: string;
-    version: string;
-    isInstalled: boolean;
-    isOutdated: boolean;
-}
-
 export default class PluginStatistics {
     private api: PkmerApi;
     private isUserLogin: boolean;
-    private allPluginList: PluginInfo[];
-    private isLoaded: boolean;
 
     constructor(private app: App, private settings: PkmerSettings) {
         this.api = new PkmerApi(this.settings.token)
         this.isUserLogin = false;
-        this.allPluginList = [];
-        this.isLoaded = false;
-    }
-
-    private async loadAllPlugins() {
-        if (this.isLoaded) return; // 如果已经加载过，则不再重复加载
-        
-        try {
-            this.isUserLogin = await this.api.isUserLogin();
-            if (this.isUserLogin) {
-                const plugins = await this.api.getPluginList();
-                this.allPluginList = Array.isArray(plugins) ? plugins : [];
-                await this.updatePluginStatus();
-                this.isLoaded = true;
-            }
-        } catch (error) {
-            console.error("Error loading plugins:", error);
-            throw new Error("Failed to load plugins");
-        }
-    }
-
-    private async updatePluginStatus() {
-        const pluginManifests = this.app.plugins.manifests;
-        this.allPluginList.forEach((plugin) => {
-            plugin.isInstalled = !!pluginManifests[plugin.id];
-            plugin.isOutdated = plugin.isInstalled && pluginManifests[plugin.id].version !== plugin.version;
-        });
     }
 
     async getPluginStatus(): Promise<{ installedCount: number; updatedCount: number }> {
-        await this.loadAllPlugins(); // 确保插件列表已加载
-
-        const installedCount = this.allPluginList.filter((plugin) => plugin.isInstalled).length;
-        const updatedCount = this.allPluginList.filter((plugin) => plugin.isOutdated).length;
-
-        return { installedCount, updatedCount };
+        try {
+            this.isUserLogin = await this.api.isUserLogin();
+            if (!this.isUserLogin) {
+                return { installedCount: 0, updatedCount: 0 };
+            }
+            
+            // 获取已安装插件的 ID 列表
+            const installedPluginIds = Object.keys(this.app.plugins.manifests);
+            const installedCount = installedPluginIds.length;
+            
+            if (installedCount === 0) {
+                return { installedCount: 0, updatedCount: 0 };
+            }
+            
+            // 使用新的 API 获取已安装插件信息
+            const { plugins } = await this.api.getInstalledPluginsPaginated(
+                installedPluginIds,
+                1,
+                installedCount,  // 获取所有已安装插件
+                "downloadCount",
+                "DESC"
+            );
+            
+            // 计算需要更新的插件数量
+            const updatedCount = plugins.filter(plugin => {
+                const manifest = this.app.plugins.manifests[plugin.id];
+                return manifest && manifest.version !== plugin.version;
+            }).length;
+            
+            return { installedCount, updatedCount };
+        } catch (error) {
+            console.error("Error getting plugin status:", error);
+            return { installedCount: 0, updatedCount: 0 };
+        }
     }
 }

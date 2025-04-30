@@ -32,6 +32,7 @@ export default class PkmerPlugin extends Plugin {
         this.registerCustomCommands()
         this.registerCustomRibbon()
         this.addStatusBarIcon()
+        await this.reloadStatusBarHandler();
         this.addSettingTab(new PkmerSettingTab(this.app, this))
         this.registerView(
             DEFAULT_VIEW_TYPE,

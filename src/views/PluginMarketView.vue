@@ -171,7 +171,8 @@ onUnmounted(() => {
                             <PluginMarket
                                 :settings="props.settings"
                                 :app="props.app"
-                                :tab="isOpenUpdateTab"></PluginMarket>
+                                :tab="isOpenUpdateTab"
+                                :current-tab="currentTab"></PluginMarket>
                         </div>
                     </template>
                     <template v-else-if="currentTab === 'theme'">
@@ -180,7 +181,8 @@ onUnmounted(() => {
                             <ThemeMarket
                                 :settings="props.settings"
                                 :app="props.app"
-                                :tab="isOpenUpdateTab"></ThemeMarket>
+                                :tab="isOpenUpdateTab"
+                                :current-tab="currentTab"></ThemeMarket>
                         </div>
                     </template>
                 </template>
