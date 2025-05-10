@@ -90,24 +90,48 @@ export class PkmerApi {
         return currentTimestamp > token.exp;
     }
 
+   
     async isUserLogin(): Promise<boolean> {
         const token = this.token;
-        if (token) {
-            const strings = token.split(".");
-            const decryptedToken = JSON.parse(decodeURIComponent(escape(window.atob(strings[1].replace(/-/g, "+").replace(/_/g, "/")))));
+        if (!token) {
+            // No token present
+            return false;
+        }
+        try {
+            const parts = token.split(".");
+            // A valid JWT must have 3 parts, but we are interested in the payload (second part)
+            if (parts.length < 2 || !parts[1]) {
+                console.error("Pkmer Token is malformed: does not contain enough parts.");
+                return false; // Not a valid JWT structure
+            }
+            const payloadBase64Url = parts[1];
+            // Replace Base64 URL specific characters
+            const payloadBase64 = payloadBase64Url.replace(/-/g, "+").replace(/_/g, "/");
+            
+            // Pad with '=' if necessary for atob
+            const decodedPayloadJson = window.atob(payloadBase64);
+            if (!decodedPayloadJson) {
+                console.error("Pkmer Token is malformed: payload could not be base64 decoded.");
+                return false;
+            }
+            
+            const decryptedToken = JSON.parse(decodeURIComponent(escape(decodedPayloadJson)));
             if (this.isTokenExpired(decryptedToken)) {
-                // JWT 已过期，重新登录获取新的 token
                 console.log("Pkmer Token has expired. Please log in again to get a new token.");
                 return false;
             } else {
-                // JWT 未过期，可以继续进行其他操作
-                // console.log("Token is valid. Proceed with the operation.");
+                // Token is present, appears structurally valid, and is not expired
                 return true;
             }
-        } else
-            return false;
-    };
-
+        } catch (error) {
+            // This will catch errors from:
+            // - window.atob if payloadBase64 is not valid base64
+            // - JSON.parse if decodedPayloadJson is not valid JSON
+            // - Other unexpected errors during the process
+            console.error("Error processing Pkmer Token (likely malformed or corrupted):", error);
+            return false; // Treat any error during parsing/decoding as not logged in
+        }
+    }
     async getPkmerDocs(): Promise<({ slug: string, uid: number,authorAvatar:string,description:string,tags:string })[]> {
         const response = await requestUrl("https://pkmer.cn/getPost.json")
      

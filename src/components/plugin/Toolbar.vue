@@ -6,10 +6,11 @@
  * @Description: 
 -->
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { ref } from "vue"
 import type { PluginInfo } from "@/types/plugin"
 interface Props {
     pluginList: PluginInfo[]
+    pluginTags:string[]
     activeCategory: string
 }
 
@@ -17,25 +18,25 @@ const props = defineProps<Props>()
 
 defineEmits(["update-active-category"])
 const showCategories = ref(false)
-const categories = computed(() => {
-    let tagsArray: string[] = []
-    if (Array.isArray(props.pluginList)) {
-        props.pluginList.forEach((obj) => {
-            if (obj.tags && typeof obj.tags === "string") {
-                let tags = obj.tags.split(",").map((tag) => tag.trim())
-                tags = tags.filter((tag) => tag !== "") // 过滤掉空字符串
-                if (tags.length > 0) {
-                    tagsArray.push(tags[0])
-                }
-            }
-        })
-    }
-    return tagsArray
-})
+// const categories = computed(() => {
+//     let tagsArray: string[] = []
+//     if (Array.isArray(props.pluginList)) {
+//         props.pluginList.forEach((obj) => {
+//             if (obj.tags && typeof obj.tags === "string") {
+//                 let tags = obj.tags.split(",").map((tag) => tag.trim())
+//                 tags = tags.filter((tag) => tag !== "") // 过滤掉空字符串
+//                 if (tags.length > 0) {
+//                     tagsArray.push(tags[0])
+//                 }
+//             }
+//         })
+//     }
+//     return tagsArray
+// })
 
-const uniqueCategories = computed(() => {
-    return Array.from(new Set(categories.value))
-})
+// const uniqueCategories = computed(() => {
+//     return Array.from(new Set(categories.value))
+// })
 const IsShowCategories = () => {
     showCategories.value = !showCategories.value
 }
@@ -62,7 +63,7 @@ const IsShowCategories = () => {
             v-show="showCategories">
             <div
                 class="plugin-item"
-                v-for="category in uniqueCategories"
+                v-for="category in props.pluginTags"
                 :key="category">
                 <button
                     class="h-6 inline-flex items-center border-2 shadow-md justify-center flex-1 px-4 py-2 font-sans text-sm transition-colors duration-300 rounded-lg bg-muted-200 dark:bg-muted-800 text-muted-500 hover:bg-muted-300 dark:hover:bg-muted-700 dark:hover:text-muted-200 tw-accessibility"

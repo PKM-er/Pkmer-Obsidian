@@ -39,7 +39,7 @@ export class PkmerSettingTab extends PluginSettingTab {
             .setDesc("Default token for pkmer downloader")
             .addText((text) =>
                 text
-                    .setPlaceholder('登录获取token')
+                    .setPlaceholder('输入token')
                     .setValue(this.plugin.settings.token)
                     .setDisabled(false)
                     .onChange(async (value) => {

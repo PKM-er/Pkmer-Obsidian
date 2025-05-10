@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue"
+import type { Ref } from 'vue';
 import Toolbar from "@/components/plugin/Toolbar.vue"
 import PluginCard from "@/components/plugin/PluginCard.vue"
 import ThemeCard from "@/components/theme/ThemeCard.vue"
@@ -32,15 +33,17 @@ const filterDeviceOption = ref("default")
 const api = new PkmerApi(props.settings.token)
 const pluginProcessor = new PluginProcessor(props.app, props.settings)
 const isClose = ref(false)
-const isUserLogin = await api.isUserLogin()
+ 
+const isUserLogin = ref(false) // Reactive login status
 
+const apiError = ref<string | null>(null);
 // 添加分页变量
 const totalPlugins = ref(0)
 const totalPages = ref(1)
 const isLoading = ref(false)
 
 // 添加插件标签变量
-const pluginTags = ref<{tag: string, count: number}[]>([])
+const pluginTags: Ref<string[]> = ref([]);
 
 // 添加插件统计信息的状态变量
 const installedPluginsCount = ref(0);
@@ -55,87 +58,90 @@ const countUpdatedPlugins = computed(() => {
     return outdatedPluginsCount.value;
 });
 
+const handleApiError = (error: any, contextMessage: string) => {
+    console.error(`${contextMessage}:`, error);
+    isLoading.value = false; 
+    // Check for 401 or specific auth error indicators
+    const isAuthError = error.statusCode === 401|| error.message === "Unauthorized"  || error.name === "UnauthorizedError" || (error.response && error.response.status === 401);
+    if (isAuthError) {
+        apiError.value = "验证失败。您的令牌可能无效或过期。请重新在 PKMer 插件设置中更新您的令牌。";
+        new Notice(apiError.value, 10000); // Longer notice for auth errors
+        isUserLogin.value = false; // Critical: update login status
+        // Reset data that might be user-specific or fetched based on auth
+        AllPluginList.value = [];
+        pluginTags.value = [];
+        totalPlugins.value = 0;
+        totalPages.value = 1;
+        // Keep local counts if possible, or reset if they depend on API
+        // installedPluginsCount.value = 0; // Or recalculate from local if possible
+        outdatedPluginsCount.value = 0; 
+    } else {
+        let detail = error.message || "An unknown error occurred.";
+        if (error.response && error.response.data && typeof error.response.data.message === 'string') {
+            detail = error.response.data.message;
+        }
+        apiError.value = `${contextMessage}. Please try again later. Details: ${detail}`;
+        new Notice(apiError.value, 7000);
+    }
+};
+
+
+// --- Core Logic Methods ---
 const loadAllPlugins = async () => {
     isLoading.value = true;
-    const pkmerDocs = await api.getPkmerDocs()
-    
-    if (isUserLogin) {
-        try {
-            // 使用带分页和排序的API替代全量请求
+    apiError.value = null; // Clear previous specific error for this action
+    try {
+        const pkmerDocs = await api.getPkmerDocs(); // Use api.value
+        
+        if (isUserLogin.value) {
             const { plugins, total, totalPages: pages } = await api.getPluginListPaginated(
                 currentPage.value, 
                 perPageCount.value, 
                 sortBy.value || "downloadCount", 
                 sortOrder.value?.toUpperCase() || "DESC"
             );
-            
-            AllPluginList.value = plugins;
-            totalPlugins.value = total;
-            totalPages.value = pages;
-            
-            if (Array.isArray(AllPluginList.value)) {
-                AllPluginList.value.forEach((plugin) => {
-                    const matchingPkmerDoc = pkmerDocs.find(
-                        (doc) => doc.slug == plugin.id
-                    )
-                    if (matchingPkmerDoc) {
-                        plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
-                        plugin.tags = matchingPkmerDoc.tags
-                        plugin.chineseDescription = matchingPkmerDoc.description
-                        plugin.authorAvatar = matchingPkmerDoc.authorAvatar
-                    }
-                    const matchingReadme = pkmerDocs.find((doc) =>
-                        doc.slug.includes(plugin.id + "_readme")
-                    )
-                    if (matchingReadme) {
-                        plugin.readme_zh = `https://pkmer.cn/show/${matchingReadme.uid}`
-                    }
-
-                    //@ts-ignore
-                    const pluginManifests = props.app.plugins.manifests
-                    plugin.isInstalled =
-                        pluginManifests[plugin.id] !== undefined
-                    plugin.isOutdated =
-                        plugin.isInstalled &&
-                        pluginManifests[plugin.id].version !== plugin.version
-                })
-            } else {
-                AllPluginList.value = []
-            }
-        } catch (error) {
-            console.error("Error loading plugins:", error)
+            AllPluginList.value = plugins || [];
+            totalPlugins.value = total || 0;
+            totalPages.value = pages || 1;
+        } else {
+            // Non-logged-in path
+            AllPluginList.value = await api.getTop20Plugins() || [];
+            totalPlugins.value = AllPluginList.value.length; // Or get from API if it provides total
+            totalPages.value = Math.ceil(totalPlugins.value / perPageCount.value) || 1;
         }
-    } else {
-        AllPluginList.value = await api.getTop20Plugins()
+
+        // Common processing logic for plugins
         if (Array.isArray(AllPluginList.value)) {
             AllPluginList.value.forEach((plugin) => {
-                const matchingPkmerDoc = pkmerDocs.find(
-                    (doc) => doc.slug == plugin.id
-                )
+                const matchingPkmerDoc = pkmerDocs.find(doc => doc.slug == plugin.id);
                 if (matchingPkmerDoc) {
-                    plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`
-                    plugin.tags = matchingPkmerDoc.tags
-                    plugin.chineseDescription = matchingPkmerDoc.description
-                    plugin.authorAvatar = matchingPkmerDoc.authorAvatar
+                    plugin.contentUrl = `https://pkmer.cn/show/${matchingPkmerDoc.uid}`;
+                    plugin.tags = matchingPkmerDoc.tags;
+                    plugin.chineseDescription = matchingPkmerDoc.description;
+                    plugin.authorAvatar = matchingPkmerDoc.authorAvatar;
                 }
-                const matchingReadme = pkmerDocs.find((doc) =>
-                    doc.slug.includes(plugin.id + "_readme")
-                )
-                if (matchingReadme) {
-                    plugin.readme_zh = `https://pkmer.cn/show/${matchingReadme.uid}`
-                }
+                const matchingReadme = pkmerDocs.find(doc => doc.slug.includes(plugin.id + "_readme"));
+                if (matchingReadme) plugin.readme_zh = `https://pkmer.cn/show/${matchingReadme.uid}`;
 
                 //@ts-ignore
-                const manifest = props.app.plugins.manifests[plugin.id]
-                plugin.isInstalled = manifest !== undefined
-                plugin.isOutdated = manifest?.version !== plugin.version
-            })
+                const pluginManifests = props.app.plugins.manifests;
+                plugin.isInstalled = pluginManifests[plugin.id] !== undefined;
+                plugin.isOutdated = plugin.isInstalled && pluginManifests[plugin.id].version !== plugin.version;
+            });
         } else {
-            AllPluginList.value = []
+            AllPluginList.value = []; // Ensure it's an array
         }
+    } catch (error: any) {
+        handleApiError(error, "Error:");
+        AllPluginList.value = []; // Ensure reset on error
+        totalPlugins.value = 0;
+        totalPages.value = 1;
+    } finally {
+        isLoading.value = false;
     }
-    isLoading.value = false;
-}
+};
+
+
 
 const closeNotification = () => {
     isClose.value = true
@@ -148,39 +154,43 @@ const selectPluginVersion = ref("")
 const selectPluginScource = ref("")
 
 // 添加重新加载状态栏的方法
+
 const reloadStatusBarHandler = async () => {
+    apiError.value = null;
+    // Always update local installed count
+    //@ts-ignore
+    const localInstalledIds = Object.keys(props.app.plugins.manifests);
+    installedPluginsCount.value = localInstalledIds.length;
+
+    if (!isUserLogin.value) { // If not logged in, cannot accurately determine outdated plugins from server
+        outdatedPluginsCount.value = 0;
+        // Optionally, notify user login is needed for update checks
+        // new Notice("Login to PKMer to check for plugin updates.", 3000);
+        return;
+    }
+
     try {
-        // 获取已安装插件的 ID 列表
-        const installedPluginIds = Object.keys(props.app.plugins.manifests);
-        
-        // 设置已安装插件数量
-        installedPluginsCount.value = installedPluginIds.length;
-        
-        if (installedPluginIds.length > 0) {
-            // 获取已安装插件的详细信息
+        if (localInstalledIds.length > 0) {
             const { plugins } = await api.getInstalledPluginsPaginated(
-                installedPluginIds,
-                1,
-                installedPluginIds.length, // 获取所有已安装插件
-                "downloadCount",
-                "DESC"
+                localInstalledIds, 1, localInstalledIds.length, "downloadCount", "DESC"
             );
             
-            // 计算需要更新的插件数量
-            const outdatedPlugins = plugins.filter(plugin => {
+            const outdatedPlugins = plugins.filter((plugin: any) => {
                 //@ts-ignore
                 const manifest = props.app.plugins.manifests[plugin.id];
                 return manifest && manifest.version !== plugin.version;
             });
-            
             outdatedPluginsCount.value = outdatedPlugins.length;
         } else {
             outdatedPluginsCount.value = 0;
         }
-    } catch (error) {
-        console.error("Error loading plugin status:", error);
+    } catch (error: any) {
+        handleApiError(error, "Error loading plugin update status");
+        outdatedPluginsCount.value = 0; // Reset on error
     }
 };
+
+
 
 // 修改下载插件方法，添加状态更新
 const handleDownloadPlugin = async () => {
@@ -275,35 +285,77 @@ const extractCategoryFromHash = () => {
     }
 }
 const pkmerSize = ref()
+const loadPluginTags = async () => {
+    if (!isUserLogin.value) {
+        pluginTags.value = [];
+        return;
+    }
+	try {
+        apiError.value = null;
+		const response = await api.getPluginTags();
+		const responseData = response || [];
+		if (!Array.isArray(responseData)) {
+            pluginTags.value = []; 
+            return;
+        }
+		pluginTags.value = responseData.map((item: any) => item.tag);
+	} catch (error: any) {
+		handleApiError(error, 'Failed to load plugin tags');
+        pluginTags.value = [];
+	}
+};
 onMounted(async () => {
+    apiError.value = null; // Clear any global error on mount
+    try {
+        isUserLogin.value = await api.isUserLogin();
+        if (!isUserLogin.value && props.settings.token) { // Has token but API says not logged in
+            const msg = "PKMer 登录验证失败。您的令牌可能无效或过期。请重新登录获取";
+            apiError.value = msg; // Display as persistent error
+            new Notice(msg, 10000);
+        } else if (!isUserLogin.value && !props.settings.token) { // No token
+            new Notice("未登录 PKMer，某些功能不可用，请在设置中设置您的Token，以便完全访问。", 7000);
+        }
+    } catch (err: any) {
+        // This catch is for api.value.isUserLogin() itself failing (e.g. network, or 401 on this specific call)
+        console.error("Error during initial login check:", err);
+        isUserLogin.value = false; // Assume not logged in if check fails
+        const isAuthError = err.status === 401 || err.name === "UnauthorizedError" || (err.response && err.response.status === 401);
+        if (isAuthError) {
+            apiError.value = "验证错误： 无法通过 PKMer 验证登录状态。您的令牌可能无效。";
+        } else {
+            apiError.value = "网络错误： 无法连接到 PKMer 以验证登录状态。";
+        }
+        new Notice(apiError.value!, 10000);
+    }
+
     isClose.value = false;
-    extractCategoryFromHash(); // 初始化时提取分类名称
+    extractCategoryFromHash(); 
     
-    // 设置默认排序
     sortBy.value = "downloadCount";
     sortOrder.value = "desc";
     
-    // 设置当前标签
-    if (props.currentTab) {
-        currentTab.value = props.currentTab;
-    }
+    if (props.currentTab) currentTab.value = props.currentTab;
     
     app.workspace.on("resize", handleWindowResize);
     //@ts-ignore
-    pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width;
+    pkmerSize.value = props.app.workspace.activeLeaf?.view?.leaf?.width || 0;
     
-    // 获取插件标签
-    pluginTags.value = await api.getPluginTags();
-    
-    // 加载插件状态数据
-    await reloadStatusBarHandler();
-    
-    // 解析 JSON 字符串为 JavaScript 对象
+    if (isUserLogin.value) { // Only load these if initial login check was successful AND positive
+        await loadPluginTags();
+        await reloadStatusBarHandler(); // Load initial counts
+    } else {
+        // For non-logged-in users, some data won't be available
+        pluginTags.value = [];
+         //@ts-ignore
+        installedPluginsCount.value = Object.keys(props.app.plugins.manifests).length; // Local count
+        outdatedPluginsCount.value = 0; // Cannot determine without API
+    }
+        
     if (props.tab) {
         const parsedData = JSON.parse(props.tab);
         if (parsedData.type == "updated") {
-            sortBy.value = "updateTime";
-            await loadAllPlugins();
+            sortBy.value = "updateTime"; // This might need to map to 'pluginUpdatedTime' for API
+            await loadAllPlugins(); 
         }
         if (parsedData.type == "installed") {
             await sortByInstalled();
@@ -1005,6 +1057,7 @@ const handleUpdateTheme = async () => {
                             <Toolbar
                                 :active-category.sync="activeCategory"
                                 :pluginList="validPluginList"
+                                :pluginTags="pluginTags"
                                 @update-active-category="
                                     handleUpdateActiveCategory
                                 ">
