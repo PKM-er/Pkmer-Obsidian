@@ -51,7 +51,7 @@ export default class PluginProcessor {
     }
 
     private async getPluginDownloadUrl(pluginId: string, version: string): Promise<string> {
-        const downloadUrl = await this.api.getDownloadUrl(pluginId, version)
+        const downloadUrl = await this.api.getDownloadUrlByVersion(pluginId, version)
         if (downloadUrl.startsWith('http')) {
             return downloadUrl
         } else {
@@ -118,7 +118,7 @@ export default class PluginProcessor {
                 throw Error(`插件${pluginId}解压失败！`)
             }
 
-            new Notice(`插件${pluginId}安装成功！\n请在插件列表中启用`, 5000)
+            new Notice(`插件${pluginId}(${version})安装成功！\n请在插件列表中启用`, 5000)
             //@ts-ignore
             await app.plugins.loadManifests();
 
@@ -127,7 +127,7 @@ export default class PluginProcessor {
             }, 100);
             return true
         } catch (error) {
-            console.log(error)
+            console.log(downloadUrl,error)
             new Notice(`插件${pluginId}安装失败！${error}`, 5000)
             return false
         }
@@ -193,7 +193,7 @@ export default class PluginProcessor {
                 throw Error(`插件${pluginId}解压失败！`)
             }
 
-            new Notice(`插件${pluginId}更新成功！\n 请在插件列表中重新启用`)
+            new Notice(`插件${pluginId}(${version})更新成功！\n 请在插件列表中重新启用`)
             //@ts-ignore
             await app.plugins.loadManifests();
             setTimeout(() => {

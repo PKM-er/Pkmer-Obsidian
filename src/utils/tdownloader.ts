@@ -50,7 +50,7 @@ export default class ThemeProcessor {
     }
 
     private async getThemeDownloadUrl(themeName: string, version: string): Promise<string> {
-        const downloadUrl = await this.api.getThemeDownloadUrl(themeName, version)
+        const downloadUrl = await this.api.getThemeDownloadUrlByVersion(themeName, version)
         if (downloadUrl.startsWith('http')) {
             return downloadUrl
         } else {
@@ -105,7 +105,7 @@ export default class ThemeProcessor {
                 throw Error(`主题${themeName}解压失败！`)
             }
 
-            new Notice(`主题${themeName}安装并启用成功！\n`, 5000)
+            new Notice(`主题${themeName}(${version})安装并启用成功！\n`, 5000)
             //@ts-ignore
             await app.customCss.setTheme(themeName);
             setTimeout(() => {
@@ -113,7 +113,7 @@ export default class ThemeProcessor {
             }, 100);
             return true
         } catch (error) {
-            console.log(error)
+            console.log(downloadUrl,error)
             new Notice(`主题${themeName}安装失败！${error}`, 5000)
             return false
         }
@@ -160,7 +160,7 @@ export default class ThemeProcessor {
                 throw Error(`主题${themeName}解压失败！`)
             }
 
-            new Notice(`主题${themeName}更新成功！\n 新主题已生效`)
+            new Notice(`主题${themeName}(${version})更新成功！\n 新主题已生效`)
             //@ts-ignore
             await app.customCss.setTheme(themeName);
             setTimeout(() => {

@@ -21,7 +21,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
+const pluginVersions = ref<string[]>([]); // 版本号列表
+const originVersion = ref('');
 const sortBy = ref("")
 const sortOrder = ref("") // 排序操作
 const showModal = ref(false)
@@ -257,6 +258,19 @@ const handleUpdateActiveCategory = (value: string) => {
         });
     }
 }
+// 获取插件版本号列表
+const fetchPluginVersions = async (pluginName: string) => {
+ 
+ try {
+     // 假设 api.plugins.getPluginVersions 是获取版本号列表的接口
+     const versions = await api.getPluginVersions(pluginName);
+     pluginVersions.value = versions;
+     selectPluginVersion.value= versions[0]; // 默认选择第一个版本
+ } catch (error) {
+     console.error(`Failed to fetch versions for plugin ${pluginName}:`, error);
+     pluginVersions.value = [];
+ }
+};
 
 const handleShowPluginModal = (
     action: "download" | "update",
@@ -267,7 +281,11 @@ const handleShowPluginModal = (
     showModal.value = true
     selectPlugin.value = pluginId
     selectPluginVersion.value = version
+    originVersion.value=version
     selectPluginScource.value = source
+    if (selectPlugin.value) {
+			fetchPluginVersions(selectPlugin.value);
+		}
     if (action === "download") {
         isDownload.value = true
     } else {
@@ -1182,7 +1200,7 @@ const handleUpdateTheme = async () => {
 
             <!-- content -->
 
-            <section class="body-font">
+            <section class="body-font"  @click.stop>
                 <div class="container px-5 py-4 mx-auto">
                     <h3
                         class="mb-6 text-2xl font-medium text-center title-font">
@@ -1258,11 +1276,22 @@ const handleUpdateTheme = async () => {
                                 }}
                             </span>
                         </p>
-                        <p class="mb-4 text-base leading-relaxed">
+                        <p class="mb-2 text-base leading-relaxed">
                             注意，安装和更新操作不可逆，请确认后再操作。
                         </p>
                     </div>
-
+			<!-- 新增版本选择下拉框 -->
+            <div class="mb-4">
+								<label for="version-select"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">选择版本号（默认最新版本）：</label>
+								<select id="version-select" v-model="selectPluginVersion"  @click.stop
+									class="mt-1 block w-full px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm text-gray-900 dark:text-gray-100">
+									 
+									<option v-for="version in pluginVersions" :key="version" :value="version">
+                                        {{ version }} {{ version === originVersion ? '（最新版本）' : '' }}
+									</option>
+								</select>
+			</div>
                     <div
                         class="flex-wrap block -mx-4 -mt-4 space-y-6 md:flex sm:-m-4 md:-mb-10 md:space-y-0">
                         <div class="flex md:p-4 md:w-1/2">

@@ -158,6 +158,84 @@ export class PkmerApi {
         return await response.text() as string;
     }
 
+
+
+    async getDownloadUrlByVersion(pluginId: string, version: string): Promise<string> {
+        if (pluginId == "obsidian-pkmer") return 'https://pkmer.cn/_release/obsidian-pkmer.zip' + `?v=${version}`;
+        try {
+            const response = await this.fetchWithToken(
+                BASE_API_URL + `/getPluginDownloadUrl/${pluginId}/${version}?useVersion=true`
+            );
+          
+            return response.text() ;
+        } catch (error) {
+            console.error(`Failed to fetch download URL for plugin ${pluginId} version ${version}:`, error);
+            throw error; // 或者根据需求返回空字符串：return '';
+        }
+    };
+    
+    async getPluginVersions(pluginId: string): Promise<string[]> {
+        try {
+            // 使用 fetchWithToken 获取响应
+            const response = await this.fetchWithToken(`https://api.pkmer.cn/api/v1/download/${pluginId}/versions`);
+            // 检查响应是否成功
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            // 解析响应为 JSON
+            const jsonResponse = await response.json();
+       
+            // 假设 response 的结构是 { data: string[], meta: { page: number, limit: number, total: number, totalPages: number } }
+            const urls = jsonResponse.data || jsonResponse; // 如果没有 data 字段，直接使用 jsonResponse
+           
+            // 从 URL 中提取版本号
+            const versions = urls
+                .map((url: string) => {
+                    return url
+                        .replace(`https://download.pkmer.cn/obsidian-plugins/${pluginId}-`, '')
+                        .replace('.zip', '');
+                })
+                .filter((version: string) => version !== ''); // 过滤掉无法解析的版本号
+            return versions;
+        } catch (error) {
+            console.error(`Failed to fetch versions for plugin ${pluginId}:`, error);
+            throw error; // 或者根据需求返回空数组：return [];
+        }
+    }
+
+    async getThemeDownloadUrlByVersion (themeId: string, version: string): Promise<string>  {
+        try {
+            const response = await this.fetchWithToken(
+                BASE_API_URL + `/getThemeDownloadUrl/${themeId}/${version}?useVersion=true`
+            );
+           
+            return response.text() ;
+        } catch (error) {
+            console.error(`Failed to fetch download URL for theme ${themeId} version ${version}:`, error);
+            throw error; // 或者根据需求返回空字符串：return '';
+        }
+      };
+      
+      async  getThemeVersions(themeId: string): Promise<string[]>  {
+        try {
+            const response = await this.fetchWithToken(`https://api.pkmer.cn/api/v1/download/${themeId}/themeversions`);
+            // 假设 response 的结构是 { data: string[], meta: { page: number, limit: number, total: number, totalPages: number } }
+            const jsonResponse = await response.json();
+            const urls = jsonResponse.data || jsonResponse; // 如果没有 data 字段，直接使用 jsonResponse
+            // 从 URL 中提取版本号
+            const versions = urls
+                .map((url: string) => {
+                    return url
+                        .replace(`https://download.pkmer.cn/obsidian-themes/${themeId}-`, '')
+                        .replace('.zip', '');
+                })
+                .filter((version: string) => version !== ''); // 过滤掉无法解析的版本号
+            return versions;
+        } catch (error) {
+            console.error(`Failed to fetch versions for theme ${themeId}:`, error);
+            throw error; // 或者根据需求返回空数组：return [];
+        }
+      };
     async getDownloadCount(): Promise<number> {
         const response = await this.fetchWithToken(BASE_API_URL + '/getPluginDownloadCount')
         return parseInt(await response.text()) + 1 as unknown as number;
