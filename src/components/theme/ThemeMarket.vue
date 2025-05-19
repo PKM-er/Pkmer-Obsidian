@@ -147,7 +147,13 @@ const fetchThemeVersions = async (themeName: string) => {
  
 	 const versions = await api.getThemeVersions(themeName);
 	 themeVersions.value = versions;
-     selectThemeVersion.value= versions[0]; // 默认选择第一个版本
+  
+     if (!selectThemeVersion.value || !versions.includes(selectThemeVersion.value)) {
+			// 如果为空或不在列表中，默认选择第一个版本（如果 versions 不为空）
+			if (versions.length > 0) {
+				selectThemeVersion.value = versions[0];
+			}
+		}
  } catch (error) {
 	 console.error(`Failed to fetch versions for theme ${themeName}:`, error);
 	themeVersions.value = [];

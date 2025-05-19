@@ -265,7 +265,13 @@ const fetchPluginVersions = async (pluginName: string) => {
      // 假设 api.plugins.getPluginVersions 是获取版本号列表的接口
      const versions = await api.getPluginVersions(pluginName);
      pluginVersions.value = versions;
-     selectPluginVersion.value= versions[0]; // 默认选择第一个版本
+     if (!selectPluginVersion.value || !versions.includes(selectPluginVersion.value)) {
+			// 如果为空或不在列表中，默认选择第一个版本（如果 versions 不为空）
+			if (versions.length > 0) {
+				selectPluginVersion.value = versions[0];
+			}
+		}
+
  } catch (error) {
      console.error(`Failed to fetch versions for plugin ${pluginName}:`, error);
      pluginVersions.value = [];
