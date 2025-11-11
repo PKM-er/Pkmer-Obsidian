@@ -50,6 +50,9 @@ const pluginTags: Ref<string[]> = ref([]);
 const installedPluginsCount = ref(0);
 const outdatedPluginsCount = ref(0);
 
+// 添加懒加载标志
+const needsLoad = ref(true);
+
 // 修改计算属性为直接使用状态变量
 const countInstalledPlugins = computed(() => {
     return installedPluginsCount.value;
@@ -88,9 +91,21 @@ const handleApiError = (error: any, contextMessage: string) => {
 
 
 // --- Core Logic Methods ---
+// 懒加载数据
+const loadDataIfNeeded = async () => {
+    if (needsLoad.value) {
+        await loadAllPlugins();
+    }
+};
+
+// 手动刷新数据
 const loadAllPlugins = async () => {
     isLoading.value = true;
     apiError.value = null; // Clear previous specific error for this action
+
+    // 标记已加载，避免重复加载
+    needsLoad.value = false;
+
     try {
         const pkmerDocs = await api.getPkmerDocs(); // Use api.value
         
@@ -172,10 +187,11 @@ const reloadStatusBarHandler = async () => {
 
     try {
         if (localInstalledIds.length > 0) {
+            // 使用较大的pageSize获取所有插件，确保与sortByUpdated一致
             const { plugins } = await api.getInstalledPluginsPaginated(
-                localInstalledIds, 1, localInstalledIds.length, "downloadCount", "DESC"
+                localInstalledIds, 1, 10000, "downloadCount", "DESC"
             );
-            
+
             const outdatedPlugins = plugins.filter((plugin: any) => {
                 //@ts-ignore
                 const manifest = props.app.plugins.manifests[plugin.id];
@@ -240,19 +256,22 @@ const cancelModal = () => {
     showModal.value = false
 }
 
-const handleUpdateActiveCategory = (value: string) => {
+const handleUpdateActiveCategory = async (value: string) => {
     activeCategory.value = value;
     currentPage.value = 1; // 重置页码
-    
+
+    // 确保数据已加载
+    await loadDataIfNeeded();
+
     if (value === "all") {
         // 所有分类使用API加载
-        loadAllPlugins();
+        await loadAllPlugins();
     } else {
         // 特定分类先加载所有数据，然后在前端过滤
         // 注意：如果后端API支持按分类过滤，应该使用API
-        loadAllPlugins().then(() => {
+        await loadAllPlugins().then(() => {
             // 前端过滤特定分类
-            AllPluginList.value = AllPluginList.value.filter((plugin: PluginInfo) => 
+            AllPluginList.value = AllPluginList.value.filter((plugin: PluginInfo) =>
                 plugin.tags?.includes(value)
             );
         });
@@ -359,39 +378,42 @@ onMounted(async () => {
     sortOrder.value = "desc";
     
     if (props.currentTab) currentTab.value = props.currentTab;
-    
+
     app.workspace.on("resize", handleWindowResize);
     //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf?.view?.leaf?.width || 0;
-    
-    if (isUserLogin.value) { // Only load these if initial login check was successful AND positive
-        await loadPluginTags();
-        await reloadStatusBarHandler(); // Load initial counts
+
+    // 只加载本地数据，不发起网络请求
+    if (isUserLogin.value) {
+        // 对于已登录用户，先加载标签（不阻塞）
+        loadPluginTags().catch(error => {
+            console.warn('加载插件标签失败:', error);
+        });
+        // 延迟加载状态栏信息
+        reloadStatusBarHandler().catch(error => {
+            console.warn('加载状态栏信息失败:', error);
+        });
     } else {
         // For non-logged-in users, some data won't be available
         pluginTags.value = [];
-         //@ts-ignore
+        //@ts-ignore
         installedPluginsCount.value = Object.keys(props.app.plugins.manifests).length; // Local count
         outdatedPluginsCount.value = 0; // Cannot determine without API
     }
-        
+
     if (props.tab) {
         const parsedData = JSON.parse(props.tab);
         if (parsedData.type == "updated") {
             sortBy.value = "updateTime"; // This might need to map to 'pluginUpdatedTime' for API
-            await loadAllPlugins(); 
+            // 延迟加载数据
+            needsLoad.value = true;
         }
         if (parsedData.type == "installed") {
-            await sortByInstalled();
-        }
-    } else {
-        // 组件挂载后加载数据
-        if (currentTab.value === 'theme') {
-            await loadAllThemes();
-        } else {
-            await loadAllPlugins();
+            // 延迟加载数据
+            needsLoad.value = true;
         }
     }
+    // 不再自动加载数据，等待用户主动触发
 });
 
 const handleWindowResize = () => {
@@ -408,13 +430,14 @@ onUnmounted(() => {
 //     handleWindowResize()
 // })
 
-const handleSetSearchText = (event: any) => {
-    debounce(() => {
-        searchTextRef.value = event.target.value;
-        handleSearch(); // 当输入变化时触发搜索
-    }, 800)();
-}
 
+const debouncedSearch = debounce(() => {
+    handleSearch();
+}, 800);
+// 监听 searchTextRef 变化，触发防抖搜索
+watch(searchTextRef, () => {
+    debouncedSearch();
+});
 const filteredList = computed(() => {
     // 移动端/桌面端过滤逻辑仍需要在前端处理
     if (filterDeviceOption.value === "mobile") {
@@ -439,32 +462,40 @@ const computedTotalPages = computed(() => {
 
 
 
-function sortByPkmerDownloadCount() {
+async function sortByPkmerDownloadCount() {
     sortBy.value = "pkmerDownloadCount";
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
+    // 确保数据已加载
+    await loadDataIfNeeded();
     loadAllPlugins(); // 使用新的排序重新加载数据
 }
 
-function sortByDownloadCount() {
+async function sortByDownloadCount() {
     sortBy.value = "downloadCount";
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
+    // 确保数据已加载
+    await loadDataIfNeeded();
     loadAllPlugins(); // 使用新的排序重新加载数据
 }
 
 // 点击按更新时间排序按钮
-function sortByUpdateTime() {
+async function sortByUpdateTime() {
     sortBy.value = "pluginUpdatedTime"; // 修改为与后端API对应的字段名
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
+    // 确保数据已加载
+    await loadDataIfNeeded();
     loadAllPlugins(); // 使用新的排序重新加载数据
 }
 
-function sortByFilename() {
+async function sortByFilename() {
     sortBy.value = "name"; // 确保与后端API对应的字段名一致
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
+    // 确保数据已加载
+    await loadDataIfNeeded();
     loadAllPlugins(); // 使用新的排序重新加载数据
 }
 
@@ -475,38 +506,61 @@ async function sortByInstalled() {
     sortOrder.value = "desc";
     currentPage.value = 1;
     activeCategory.value = "all"; // 重置标签筛选
-    
+
     try {
         // 获取已安装插件的 ID 列表
         const installedPluginIds = Object.keys(props.app.plugins.manifests);
-        
-        // 使用 API 获取已安装插件
-        const { plugins, total, totalPages: pages } = await api.getInstalledPluginsPaginated(
+
+        if (installedPluginIds.length === 0) {
+            AllPluginList.value = [];
+            totalPlugins.value = 0;
+            totalPages.value = 1;
+            installedPluginsCount.value = 0;
+            outdatedPluginsCount.value = 0;
+            return;
+        }
+
+        // 使用 API 获取所有已安装插件（不分页）
+        const { plugins, total } = await api.getInstalledPluginsPaginated(
             installedPluginIds,
-            currentPage.value,
-            perPageCount.value,
+            1, // 总是从第一页开始
+            10000, // 使用较大的值确保获取所有插件
             sortBy.value,
             sortOrder.value?.toUpperCase()
         );
-        
+
         // 更新插件列表和分页信息
         AllPluginList.value = plugins;
         totalPlugins.value = total;
-        totalPages.value = pages;
-        
+        totalPages.value = Math.ceil(total / perPageCount.value);
+
+        // 更新状态栏统计信息（与列表保持一致）
+        installedPluginsCount.value = total;
+        const outdatedPlugins = plugins.filter(plugin => {
+            //@ts-ignore
+            const manifest = props.app.plugins.manifests[plugin.id];
+            return manifest && manifest.version !== plugin.version;
+        });
+        outdatedPluginsCount.value = outdatedPlugins.length;
+
         // 处理插件额外信息
         if (Array.isArray(AllPluginList.value)) {
             AllPluginList.value.forEach((plugin) => {
                 //@ts-ignore
                 const pluginManifests = props.app.plugins.manifests;
                 plugin.isInstalled = pluginManifests[plugin.id] !== undefined;
-                plugin.isOutdated = 
+                plugin.isOutdated =
                     plugin.isInstalled &&
                     pluginManifests[plugin.id].version !== plugin.version;
             });
         }
     } catch (error) {
         console.error("Error fetching installed plugins:", error);
+        AllPluginList.value = [];
+        totalPlugins.value = 0;
+        totalPages.value = 1;
+        installedPluginsCount.value = 0;
+        outdatedPluginsCount.value = 0;
     }
 }
 
@@ -515,45 +569,59 @@ async function sortByUpdated() {
     sortBy.value = "downloadCount";
     sortOrder.value = "desc";
     currentPage.value = 1;
-    
+
     try {
         // 获取已安装插件的 ID 列表
         const installedPluginIds = Object.keys(props.app.plugins.manifests);
-        
-        // 使用 API 获取已安装插件
+
+        if (installedPluginIds.length === 0) {
+            AllPluginList.value = [];
+            totalPlugins.value = 0;
+            totalPages.value = 1;
+            return;
+        }
+
+        // 使用 API 获取所有已安装插件（不分页，以获取完整列表）
+        // 这样可以确保状态栏和列表显示的数量一致
         const { plugins} = await api.getInstalledPluginsPaginated(
             installedPluginIds,
-            currentPage.value,
-            perPageCount.value,
+            1, // 总是从第一页开始
+            10000, // 使用较大的值确保获取所有插件
             sortBy.value,
             sortOrder.value?.toUpperCase()
         );
-        
+
         // 在前端过滤出需要更新的插件
         const outdatedPlugins = plugins.filter(plugin => {
             //@ts-ignore
             const manifest = props.app.plugins.manifests[plugin.id];
             return manifest && manifest.version !== plugin.version;
         });
-        
+
+        // 更新状态栏的过时插件数量（与列表保持一致）
+        outdatedPluginsCount.value = outdatedPlugins.length;
+
         // 更新插件列表和分页信息
         AllPluginList.value = outdatedPlugins;
         totalPlugins.value = outdatedPlugins.length;
         totalPages.value = Math.ceil(outdatedPlugins.length / perPageCount.value);
-        
+
         // 处理插件额外信息
         if (Array.isArray(AllPluginList.value)) {
             AllPluginList.value.forEach((plugin) => {
                 //@ts-ignore
                 const pluginManifests = props.app.plugins.manifests;
                 plugin.isInstalled = pluginManifests[plugin.id] !== undefined;
-                plugin.isOutdated = 
+                plugin.isOutdated =
                     plugin.isInstalled &&
                     pluginManifests[plugin.id].version !== plugin.version;
             });
         }
     } catch (error) {
         console.error("Error fetching outdated plugins:", error);
+        AllPluginList.value = [];
+        totalPlugins.value = 0;
+        totalPages.value = 1;
     }
 }
 
@@ -579,6 +647,8 @@ const validPluginList = computed(() => {
 // 添加分页处理函数
 const handlePageChange = async (page: number) => {
     currentPage.value = page;
+    // 确保数据已加载
+    await loadDataIfNeeded();
     await loadAllPlugins();
 }
 
@@ -605,7 +675,12 @@ const handleSearch = async () => {
             
             // 处理插件额外信息
             if (Array.isArray(AllPluginList.value)) {
-                const pkmerDocs = await api.getPkmerDocs();
+                // 使用超时避免网络卡顿
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('请求超时')), 10000);
+                });
+                const pkmerDocsPromise = api.getPkmerDocs();
+                const pkmerDocs = await Promise.race([pkmerDocsPromise, timeoutPromise]) as Awaited<ReturnType<PkmerApi['getPkmerDocs']>>;
                 AllPluginList.value.forEach((plugin) => {
                     const matchingPkmerDoc = pkmerDocs.find(
                         (doc) => doc.slug == plugin.id
@@ -633,6 +708,8 @@ const handleSearch = async () => {
                 });
             }
         } else {
+            // 确保数据已加载
+            await loadDataIfNeeded();
             await loadAllPlugins();
         }
     } catch (error) {
@@ -1012,8 +1089,7 @@ const handleUpdateTheme = async () => {
                                     type="text"
                                     class="w-full h-8 pl-2 md:pl-16 pr-5 font-sans text-base leading-5 transition-all duration-300 text-muted-600 focus:border-muted-300 focus:shadow-lg focus:shadow-muted-300/50 dark:focus:shadow-muted-800/50 placeholder:text-muted-300 dark:placeholder:text-muted-500 dark:bg-muted-800 dark:text-muted-200 dark:border-muted-700 dark:focus:border-muted-600 tw-accessibility"
                                     placeholder="Search plugins..."
-                                    @input="handleSetSearchText"
-                                    :value="searchTextRef" />
+                                    v-model="searchTextRef" />
                                 <div
                                     class="absolute top-0 left-0 hidden md:flex items-center justify-center w-16 h-8 transition-colors duration-300 text-muted-400 group-focus-within:text-primary-500">
                                     <svg
@@ -1103,6 +1179,29 @@ const handleUpdateTheme = async () => {
                                     '!grid-cols-2': pkmerSize > 768 && pkmerSize < 1024,
                                     '!grid-cols-3': pkmerSize > 1024
                                 }">
+                                <!-- 空状态：未加载且无数据时显示加载按钮 -->
+                                <div
+                                    v-if="needsLoad && (!displayedPlugins || displayedPlugins.length === 0)"
+                                    class="col-span-full flex flex-col items-center justify-center py-20">
+                                    <div class="text-muted-400 dark:text-muted-500 mb-4 text-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-muted-600 dark:text-muted-300 mb-4 text-center">插件市场尚未加载</p>
+                                    <button
+                                        @click="loadAllPlugins"
+                                        class="inline-flex items-center justify-center gap-2 font-sans font-semibold bg-primary-500 text-white relative px-6 py-3 rounded-lg tw-accessibility hover:bg-primary-600 transition-all duration-300">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw">
+                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                            <path d="M21 3v5h-5"/>
+                                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                            <path d="M3 21v-5h5"/>
+                                        </svg>
+                                        <span>点击加载插件列表</span>
+                                    </button>
+                                </div>
+
                                 <div
                                     v-for="item in displayedPlugins"
                                     :key="currentTab === 'theme' ? item.name : item.id">

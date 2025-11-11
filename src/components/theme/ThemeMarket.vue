@@ -28,14 +28,32 @@ const isDownload = ref(true)
 const api = new PkmerApi(props.settings.token)
 const themeProcessor = new ThemeProcessor(props.app, props.settings)
 
-const isUserLogin = await api.isUserLogin()
+const isUserLogin = ref(false) // 改为响应式
+const needsLoad = ref(true); // 添加懒加载标志
 const closeNotification = () => {
     isClose.value = true
     sortByDownloadCount()
 }
+// 懒加载数据
+const loadDataIfNeeded = async () => {
+    if (needsLoad.value) {
+        await loadAllThemes();
+    }
+};
+
+// 手动刷新数据
 const loadAllThemes = async () => {
-    const pkmerDocs = await api.getPkmerDocs()
-    if (isUserLogin) {
+    // 标记已加载，避免重复加载
+    needsLoad.value = false;
+
+    // 使用超时避免网络卡顿
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('请求超时')), 10000);
+    });
+    const pkmerDocsPromise = api.getPkmerDocs();
+    const pkmerDocs = await Promise.race([pkmerDocsPromise, timeoutPromise]) as Awaited<ReturnType<PkmerApi['getPkmerDocs']>>;
+
+    if (isUserLogin.value) {
         try {
             AllThemeList.value = await api.getThemeList()
             AllThemeList.value = AllThemeList.value.sort(
@@ -138,8 +156,10 @@ const cancelModal = () => {
     showModal.value = false
 }
 
-const handleUpdateActiveCategory = (value: string) => {
+const handleUpdateActiveCategory = async (value: string) => {
     activeCategory.value = value
+    // 确保数据已加载
+    await loadDataIfNeeded();
 }
 const fetchThemeVersions = async (themeName: string) => {
  
@@ -231,7 +251,6 @@ const pkmerSize = ref()
 
 onMounted(async () => {
     extractCategoryFromHash() // 初始化时提取分类名称
-    await loadAllThemes()
     sortBy.value = "pkmerDownloadCount"
     sortOrder.value = "asc"
     // ele.value = document.querySelector(
@@ -241,13 +260,28 @@ onMounted(async () => {
     //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf.view.leaf.width
 
-    if (isUserLogin) downloadCount.value = await api.getDownloadCount()
+    // 检查登录状态（不阻塞）
+    try {
+        isUserLogin.value = await api.isUserLogin();
+        if (isUserLogin.value) {
+            downloadCount.value = await api.getDownloadCount().catch(() => 0);
+        }
+    } catch (error) {
+        console.warn('检查登录状态失败:', error);
+        isUserLogin.value = false;
+    }
 
     if (props.tab) {
         const parsedData = JSON.parse(props.tab)
-        if (parsedData.type == "tupdated") sortByUpdated()
-        if (parsedData.type == "tupdated") sortByInstalled()
+        if (parsedData.type == "tupdated") {
+            // 标记需要加载数据
+            needsLoad.value = true;
+        }
+        if (parsedData.type == "tupdated") {
+            needsLoad.value = true;
+        }
     }
+    // 不再自动加载数据，等待用户主动触发
 })
 const handleWindowResize = () => {
     //@ts-ignore
@@ -727,6 +761,23 @@ const readMore = () => {
 								>
 									<ThemeCard :plugin-info="ThemeInfo"> </ThemeCard>
 								</div> -->
+
+                                <!-- 空状态：未加载且无数据时显示加载按钮 -->
+                                <div
+                                    v-if="needsLoad && (!displayedThemes || displayedThemes.length === 0)"
+                                    class="w-full flex items-center justify-center p-12">
+                                    <button
+                                        @click="loadAllThemes"
+                                        class="inline-flex items-center justify-center gap-2 font-sans font-semibold bg-primary-500 text-white relative px-6 py-3 rounded-lg tw-accessibility hover:bg-primary-600 transition-all duration-300">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw">
+                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                            <path d="M21 3v5h-5"/>
+                                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                            <path d="M3 21v-5h5"/>
+                                        </svg>
+                                        <span>点击加载主题列表</span>
+                                    </button>
+                                </div>
 
                                 <div
                                     v-for="theme in displayedThemes"
