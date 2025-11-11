@@ -84,7 +84,7 @@ export default class ThemeProcessor {
                 method: 'GET'
             })
 
-            const themeTargetFolderPath = normalizePath(app.vault.configDir + "/themes/" + themeName) + "/";
+            const themeTargetFolderPath = normalizePath(this.app.vault.configDir + "/themes/" + themeName) + "/";
             const adapter = this.app.vault.adapter
             const zip = await JSZip.loadAsync(response.arrayBuffer);
 
@@ -135,7 +135,7 @@ export default class ThemeProcessor {
         }
 
         try {
-            const themeTargetFolderPath = normalizePath(app.vault.configDir + "/themes/" + themeName) + "/";
+            const themeTargetFolderPath = normalizePath(this.app.vault.configDir + "/themes/" + themeName) + "/";
             const adapter = this.app.vault.adapter
 
             if (await adapter.exists(themeTargetFolderPath) === false && !(await adapter.exists(themeTargetFolderPath + "manifest.json"))) {

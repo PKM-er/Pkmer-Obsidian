@@ -71,7 +71,7 @@ export class PkmerSettingTab extends PluginSettingTab {
                     .setClass("px-5")
                     .setCta()
                     .onClick(() => {
-                        app.setting.close();
+                        this.app.setting.close();
                         setTimeout(() => {
 
                             this.plugin.openView("");

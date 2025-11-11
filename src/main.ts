@@ -75,16 +75,16 @@ export default class PkmerPlugin extends Plugin {
                 if (!pkmerToken) {
                     new Notice("请先登录获取token", 5000)
                     //@ts-ignore
-                    app.setting.open()
+                    this.app.setting.open()
                     //@ts-ignore
-                    app.setting.openTabById("PKMer")
+                    this.app.setting.openTabById("PKMer")
                     return
                 }
                 if (pluginId) {
                     try {
                         new Notice("正在下载插件，请稍后...", 3000)
                         const pluginProcessor = new PluginProcessor(
-                            app,
+                            this.app,
                             this.settings
                         )
                         await pluginProcessor.downloadPluginToPluginFolder(
@@ -99,7 +99,7 @@ export default class PkmerPlugin extends Plugin {
                     try {
                         new Notice("正在安装主题，请稍后...", 3000)
                         const themeProcessor = new ThemeProcessor(
-                            app,
+                            this.app,
                             this.settings
                         )
                         await themeProcessor.downloadThemeToThemeFolder(
@@ -146,8 +146,8 @@ export default class PkmerPlugin extends Plugin {
     }
 
     private async updateStatusBar(event: string) {
-        const pluginStatistics = new PluginStatistics(app, this.settings)
-        const themeStatistics = new ThemeStatistics(app, this.settings)
+        const pluginStatistics = new PluginStatistics(this.app, this.settings)
+        const themeStatistics = new ThemeStatistics(this.app, this.settings)
         // 使用 Promise.all() 并行获取插件数量
         const { installedCount, updatedCount } = await pluginStatistics.getPluginStatus();
         const { tinstalledCount, tupdatedCount } = await themeStatistics.getThemeStatus();
@@ -187,7 +187,7 @@ export default class PkmerPlugin extends Plugin {
     openView(state: string) {
         let pkmerDownloaderFound = false;
 
-        app.workspace.iterateAllLeaves((leaf) => {
+        this.app.workspace.iterateAllLeaves((leaf: any) => {
             try {
 
                 if (leaf.getViewState().type === "pkmer-downloader") {

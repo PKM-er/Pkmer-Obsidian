@@ -81,7 +81,7 @@ export default class PluginProcessor {
                 method: 'GET'
             })
 
-            const pluginTargetFolderPath = normalizePath(app.vault.configDir + "/plugins/" + pluginId) + "/";
+            const pluginTargetFolderPath = normalizePath(this.app.vault.configDir + "/plugins/" + pluginId) + "/";
             const adapter = this.app.vault.adapter
             const zip = await JSZip.loadAsync(response.arrayBuffer);
 
@@ -151,10 +151,10 @@ export default class PluginProcessor {
 
         try {
 
-            let pluginTargetFolderPath = normalizePath(app.vault.configDir + "/plugins/" + pluginId) + "/";
+            let pluginTargetFolderPath = normalizePath(this.app.vault.configDir + "/plugins/" + pluginId) + "/";
             //pkmer压缩包本身已经有目录
             if (pluginId == 'obsidian-pkmer')
-                pluginTargetFolderPath = normalizePath(app.vault.configDir + "/plugins/") + "/";
+                pluginTargetFolderPath = normalizePath(this.app.vault.configDir + "/plugins/") + "/";
             const adapter = this.app.vault.adapter
 
             if (await adapter.exists(pluginTargetFolderPath) === false && !(await adapter.exists(pluginTargetFolderPath + "manifest.json"))) {

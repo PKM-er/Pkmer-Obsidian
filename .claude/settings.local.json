@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git diff --no-pager .github/workflows/release.yml)",
+      "Bash(npx vue-tsc --noEmit)",
+      "Bash(npm run build)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

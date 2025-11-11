@@ -118,7 +118,7 @@ const enablePlugin = async (id: string) => {
 }
 //@ts-ignore
 if (
-    Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) != -1 &&
+    Array.from(prop.app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) != -1 &&
     prop.pluginInfo.isInstalled
 ) {
     PluginStatus.value = "已启用"
@@ -126,7 +126,7 @@ if (
 }
 //@ts-ignore
 if (
-    Array.from(app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) == -1 &&
+    Array.from(prop.app.plugins.enabledPlugins).indexOf(prop.pluginInfo.id) == -1 &&
     prop.pluginInfo.isInstalled
 ) {
     PluginStatus.value = "未启用"

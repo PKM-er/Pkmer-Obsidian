@@ -263,7 +263,10 @@ const handleUpdateActiveCategory = async (value: string) => {
     // 确保数据已加载
     await loadDataIfNeeded();
 
-    if (value === "all") {
+    // 如果有搜索条件，保持搜索并应用新分类；否则根据分类加载
+    if (searchTextRef.value.trim()) {
+        await handleSearch();
+    } else if (value === "all") {
         // 所有分类使用API加载
         await loadAllPlugins();
     } else {
@@ -379,7 +382,7 @@ onMounted(async () => {
     
     if (props.currentTab) currentTab.value = props.currentTab;
 
-    app.workspace.on("resize", handleWindowResize);
+    props.app.workspace.on("resize", handleWindowResize);
     //@ts-ignore
     pkmerSize.value = props.app.workspace.activeLeaf?.view?.leaf?.width || 0;
 
@@ -462,22 +465,31 @@ const computedTotalPages = computed(() => {
 
 
 
+// 统一处理排序逻辑
+const handleSort = async () => {
+    // 确保数据已加载
+    await loadDataIfNeeded();
+
+    // 如果有搜索条件，保持搜索并应用新排序；否则加载所有插件
+    if (searchTextRef.value.trim()) {
+        await handleSearch();
+    } else {
+        await loadAllPlugins();
+    }
+};
+
 async function sortByPkmerDownloadCount() {
     sortBy.value = "pkmerDownloadCount";
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
-    // 确保数据已加载
-    await loadDataIfNeeded();
-    loadAllPlugins(); // 使用新的排序重新加载数据
+    await handleSort();
 }
 
 async function sortByDownloadCount() {
     sortBy.value = "downloadCount";
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
-    // 确保数据已加载
-    await loadDataIfNeeded();
-    loadAllPlugins(); // 使用新的排序重新加载数据
+    await handleSort();
 }
 
 // 点击按更新时间排序按钮
@@ -485,18 +497,14 @@ async function sortByUpdateTime() {
     sortBy.value = "pluginUpdatedTime"; // 修改为与后端API对应的字段名
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
-    // 确保数据已加载
-    await loadDataIfNeeded();
-    loadAllPlugins(); // 使用新的排序重新加载数据
+    await handleSort();
 }
 
 async function sortByFilename() {
     sortBy.value = "name"; // 确保与后端API对应的字段名一致
     sortOrder.value = sortOrder.value === "desc" ? "asc" : "desc";
     currentPage.value = 1; // 重置到第一页
-    // 确保数据已加载
-    await loadDataIfNeeded();
-    loadAllPlugins(); // 使用新的排序重新加载数据
+    await handleSort();
 }
 
 // 修改已安装插件筛选函数
@@ -649,7 +657,12 @@ const handlePageChange = async (page: number) => {
     currentPage.value = page;
     // 确保数据已加载
     await loadDataIfNeeded();
-    await loadAllPlugins();
+    // 如果有搜索条件，保持搜索；否则加载所有插件
+    if (searchTextRef.value.trim()) {
+        await handleSearch();
+    } else {
+        await loadAllPlugins();
+    }
 }
 
 // 修改搜索功能
