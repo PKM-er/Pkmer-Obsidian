@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite build -w",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "zip:jszip": "node scripts/create-zip-jszip.js",
+    "build:zip:jszip": "npm run build && npm run zip:jszip"
   },
   "dependencies": {
     "@iconify/vue": "^4.1.1",

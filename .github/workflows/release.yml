@@ -28,10 +28,9 @@ jobs:
                 run: |
                     pnpm install
                     pnpm run build
-                    mkdir ${{ env.PLUGIN_NAME }}
-                    cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
-                    zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
-                    mkdir tmp && chmod +w tmp && cp ${{ env.PLUGIN_NAME }}.zip  tmp
+                    # 使用 JSZip 打包（跨库兼容，解决更新问题）
+                    pnpm run build:zip:jszip
+                    mkdir tmp && chmod +w tmp && cp ${{ env.PLUGIN_NAME }}.zip tmp
                     cp manifest.json tmp
                     ls
                     echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
