@@ -1,15 +1,16 @@
 import { App, Notice, normalizePath, requestUrl } from 'obsidian';
 import * as JSZip from 'jszip';
+import type PKMerAuthService from '@/auth/PKMerAuthService';
 import { PkmerApi } from '../api/api';
 import { PkmerSettings } from '../main';
 export default class ThemeProcessor {
     settings: PkmerSettings
     app: App
     api: PkmerApi
-    constructor(app: App, settings: PkmerSettings) {
+    constructor(app: App, settings: PkmerSettings, authService?: PKMerAuthService) {
         this.app = app
         this.settings = settings
-        this.api = new PkmerApi(settings.token)
+        this.api = new PkmerApi(authService ? () => authService.getAccessToken() : () => settings.token)
     }
 
 

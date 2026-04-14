@@ -7,14 +7,15 @@
  */
 import { PkmerSettings } from "@/main";
 import { App } from "obsidian";
+import type PKMerAuthService from "@/auth/PKMerAuthService";
 import { PkmerApi } from "@/api/api";
 
 export default class PluginStatistics {
     private api: PkmerApi;
     private isUserLogin: boolean;
 
-    constructor(private app: App, private settings: PkmerSettings) {
-        this.api = new PkmerApi(this.settings.token)
+    constructor(private app: App, private settings: PkmerSettings, authService?: PKMerAuthService) {
+        this.api = new PkmerApi(authService ? () => authService.getAccessToken() : () => this.settings.token)
         this.isUserLogin = false;
     }
 

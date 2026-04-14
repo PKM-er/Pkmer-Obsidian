@@ -7,6 +7,7 @@
  */
 import { PkmerSettings } from "@/main";
 import { App } from "obsidian";
+import type PKMerAuthService from "@/auth/PKMerAuthService";
 import { PkmerApi } from "@/api/api";
 
 interface ThemeInfo {
@@ -24,9 +25,9 @@ export default class PluginStatistics {
     private allThemeList: ThemeInfo[];
     private isLoaded: boolean;
 
-    constructor(private app: App, private settings: PkmerSettings) {
+    constructor(private app: App, private settings: PkmerSettings, authService?: PKMerAuthService) {
 
-        this.api = new PkmerApi(this.settings.token)
+        this.api = new PkmerApi(authService ? () => authService.getAccessToken() : () => this.settings.token)
         this.isUserLogin = false;
         this.allThemeList = [];
         this.isLoaded = false;

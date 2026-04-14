@@ -66,19 +66,50 @@ export interface PkmerDocsInfo {
     modified: number;
 }
 
+export type TokenProvider = string | (() => string | Promise<string>);
+
+type PkmerApiError = Error & {
+    statusCode?: number;
+    response?: Response;
+};
+
 export class PkmerApi {
-    token: string
-    constructor(token: string) {
-        this.token = token;
+    tokenProvider: TokenProvider
+    constructor(tokenProvider: TokenProvider) {
+        this.tokenProvider = tokenProvider;
     }
 
-    private fetchWithToken(url: string, options?: RequestInit): Promise<Response> {
-        return fetch(url, {
+    private async resolveToken(): Promise<string> {
+        if (typeof this.tokenProvider === "function") {
+            return (await this.tokenProvider()).trim();
+        }
+
+        return this.tokenProvider.trim();
+    }
+
+    private async fetchWithToken(url: string, options: RequestInit = {}): Promise<Response> {
+        const token = await this.resolveToken();
+        const headers = new Headers(options.headers ?? {});
+
+        if (token) {
+            headers.set("Authorization", `Bearer ${token}`);
+        }
+
+        const response = await fetch(url, {
             ...options,
-            headers: {
-                "Authorization": 'Bearer ' + this.token,
-            }
+            headers,
         })
+
+        if (!response.ok) {
+            const error = new Error(
+                response.status === 401 ? "Unauthorized" : `HTTP error! Status: ${response.status}`,
+            ) as PkmerApiError;
+            error.statusCode = response.status;
+            error.response = response;
+            throw error;
+        }
+
+        return response
     }
 
     // async isUserLogin(): Promise<boolean> {
@@ -92,44 +123,37 @@ export class PkmerApi {
 
    
     async isUserLogin(): Promise<boolean> {
-        const token = this.token;
+        const token = await this.resolveToken();
         if (!token) {
-            // No token present
             return false;
         }
+
         try {
             const parts = token.split(".");
-            // A valid JWT must have 3 parts, but we are interested in the payload (second part)
-            if (parts.length < 2 || !parts[1]) {
-                console.error("Pkmer Token is malformed: does not contain enough parts.");
-                return false; // Not a valid JWT structure
-            }
-            const payloadBase64Url = parts[1];
-            // Replace Base64 URL specific characters
-            const payloadBase64 = payloadBase64Url.replace(/-/g, "+").replace(/_/g, "/");
-            
-            // Pad with '=' if necessary for atob
-            const decodedPayloadJson = window.atob(payloadBase64);
-            if (!decodedPayloadJson) {
-                console.error("Pkmer Token is malformed: payload could not be base64 decoded.");
-                return false;
-            }
-            
-            const decryptedToken = JSON.parse(decodeURIComponent(escape(decodedPayloadJson)));
-            if (this.isTokenExpired(decryptedToken)) {
-                console.log("Pkmer Token has expired. Please log in again to get a new token.");
-                return false;
-            } else {
-                // Token is present, appears structurally valid, and is not expired
-                return true;
+            if (parts.length >= 2 && parts[1]) {
+                const payloadBase64 = parts[1]
+                    .replace(/-/g, "+")
+                    .replace(/_/g, "/")
+                    .padEnd(Math.ceil(parts[1].length / 4) * 4, "=");
+                const decodedPayloadJson = window.atob(payloadBase64);
+
+                if (decodedPayloadJson) {
+                    const decryptedToken = JSON.parse(decodedPayloadJson);
+                    if (!this.isTokenExpired(decryptedToken)) {
+                        return true;
+                    }
+                }
             }
         } catch (error) {
-            // This will catch errors from:
-            // - window.atob if payloadBase64 is not valid base64
-            // - JSON.parse if decodedPayloadJson is not valid JSON
-            // - Other unexpected errors during the process
             console.error("Error processing Pkmer Token (likely malformed or corrupted):", error);
-            return false; // Treat any error during parsing/decoding as not logged in
+        }
+
+        try {
+            await this.fetchWithToken(BASE_API_URL + '/getPluginDownloadCount')
+            return true;
+        } catch (verifyError) {
+            console.error("Fallback auth verification failed:", verifyError);
+            return false;
         }
     }
     async getPkmerDocs(): Promise<({ slug: string, uid: number,authorAvatar:string,description:string,tags:string })[]> {

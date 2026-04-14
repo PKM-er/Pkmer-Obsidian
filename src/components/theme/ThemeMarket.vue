@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from "vue"
 import ThemeCard from "./ThemeCard.vue"
 import ThemeToolbar from "./ThemeToolbar.vue"
 import { PkmerApi } from "@/api/api"
+import type PKMerAuthService from "@/auth/PKMerAuthService"
 import { PkmerSettings } from "@/main"
 import Head from "@/components/common/Head.vue"
 import type { ThemeInfo } from "@/types/theme"
@@ -12,6 +13,7 @@ import { App, Notice, debounce } from "obsidian"
 interface Props {
     settings: PkmerSettings
     app: App
+    authService: PKMerAuthService
     tab: string
 }
 
@@ -25,8 +27,8 @@ let perPageCount = ref(24)
 let currentPage = ref(1)
 const isClose = ref(false)
 const isDownload = ref(true)
-const api = new PkmerApi(props.settings.token)
-const themeProcessor = new ThemeProcessor(props.app, props.settings)
+const api = new PkmerApi(() => props.authService.getAccessToken())
+const themeProcessor = new ThemeProcessor(props.app, props.settings, props.authService)
 
 const isUserLogin = ref(false) // 改为响应式
 const needsLoad = ref(true); // 添加懒加载标志
@@ -496,7 +498,7 @@ const readMore = () => {
 // };
 </script>
 <template>
-    <Head :settings="props.settings" :isLogin="isUserLogin" :app="props.app">
+    <Head :settings="props.settings" :isLogin="isUserLogin" :app="props.app" :auth-service="props.authService">
     </Head>
     <main data-pagefind-body class="w-full">
         <!-- Renders the page body -->

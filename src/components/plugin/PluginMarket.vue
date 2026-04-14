@@ -5,6 +5,7 @@ import Toolbar from "@/components/plugin/Toolbar.vue"
 import PluginCard from "@/components/plugin/PluginCard.vue"
 import ThemeCard from "@/components/theme/ThemeCard.vue"
 import { PkmerApi } from "@/api/api"
+import type PKMerAuthService from "@/auth/PKMerAuthService"
 import { PkmerSettings } from "@/main"
 import Head from "@/components/common/Head.vue"
 import type { PluginInfo } from "@/types/plugin"
@@ -16,6 +17,7 @@ import { App, Notice, debounce } from "obsidian"
 interface Props {
     settings: PkmerSettings
     app: App
+    authService: PKMerAuthService
     tab: string
     currentTab?: string  // 添加当前标签参数
 }
@@ -31,8 +33,8 @@ let perPageCount = ref(24)
 let currentPage = ref(1)
 const isDownload = ref(true)
 const filterDeviceOption = ref("default")
-const api = new PkmerApi(props.settings.token)
-const pluginProcessor = new PluginProcessor(props.app, props.settings)
+const api = new PkmerApi(() => props.authService.getAccessToken())
+const pluginProcessor = new PluginProcessor(props.app, props.settings, props.authService)
 const isClose = ref(false)
  
 const isUserLogin = ref(false) // Reactive login status
@@ -354,11 +356,11 @@ onMounted(async () => {
     apiError.value = null; // Clear any global error on mount
     try {
         isUserLogin.value = await api.isUserLogin();
-        if (!isUserLogin.value && props.settings.token) { // Has token but API says not logged in
+        if (!isUserLogin.value && props.authService.hasToken) {
             const msg = "PKMer 登录验证失败。您的令牌可能无效或过期。请重新登录获取";
             apiError.value = msg; // Display as persistent error
             new Notice(msg, 10000);
-        } else if (!isUserLogin.value && !props.settings.token) { // No token
+        } else if (!isUserLogin.value && !props.authService.hasToken) {
             new Notice("未登录 PKMer，某些功能不可用，请在设置中设置您的Token，以便完全访问。", 7000);
         }
     } catch (err: any) {
@@ -849,7 +851,7 @@ async function loadThemeData() {
 }
 
 // 引入主题下载处理器
-const themeProcessor = new ThemeProcessor(props.app, props.settings)
+const themeProcessor = new ThemeProcessor(props.app, props.settings, props.authService)
 
 // 添加主题模态框处理函数
 const selectThemeName = ref("");
@@ -912,7 +914,7 @@ const handleUpdateTheme = async () => {
 </script>
 
 <template>
-    <Head :settings="props.settings" :isLogin="isUserLogin" :app="props.app">
+    <Head :settings="props.settings" :isLogin="isUserLogin" :app="props.app" :auth-service="props.authService">
     </Head>
     <main data-pagefind-body class="w-full">
         <!--Site search-->
