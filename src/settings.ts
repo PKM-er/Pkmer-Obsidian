@@ -5,7 +5,7 @@
  * @LastEditTime: 2024-04-01 18:17:35
  * @Description:
  */
-import { App, Platform, PluginSettingTab, Setting } from "obsidian"
+import { App, Notice, Platform, PluginSettingTab, Setting } from "obsidian"
 
 import type { PKMerUserInfo } from "@/auth/types"
 import PkmerPlugin from "./main"
@@ -22,14 +22,18 @@ export class PkmerSettingTab extends PluginSettingTab {
         const { containerEl } = this
         const userInfo = this.plugin.settings.auth.userInfo
         const isLoggedIn = this.plugin.authService.hasToken
+        const isTokenExpired = isLoggedIn && !this.plugin.settings.auth.tokenExpiresAt
+            ? false
+            : isLoggedIn && this.plugin.settings.auth.tokenExpiresAt > 0
+                && this.plugin.settings.auth.tokenExpiresAt <= Date.now()
 
         containerEl.empty()
         containerEl.setAttribute("data-type", "pkmer-downloader")
 
         containerEl.createEl("h1", { text: "Obsidian PKMer Market" })
 
-        this.renderAccountSection(containerEl, userInfo, isLoggedIn)
-        this.renderManualTokenSection(containerEl)
+        this.renderAccountSection(containerEl, userInfo, isLoggedIn, isTokenExpired)
+        //this.renderManualTokenSection(containerEl)
         this.renderTips(containerEl)
         this.renderOpenMarketSection(containerEl)
 
@@ -37,17 +41,37 @@ export class PkmerSettingTab extends PluginSettingTab {
         this.renderLinks(containerEl)
     }
 
-    private renderAccountSection(containerEl: HTMLElement, userInfo: PKMerUserInfo | null, isLoggedIn: boolean) {
+    private renderAccountSection(
+        containerEl: HTMLElement,
+        userInfo: PKMerUserInfo | null,
+        isLoggedIn: boolean,
+        isTokenExpired: boolean,
+    ) {
         const accountName = userInfo?.name || userInfo?.email || "未登录"
-        const accountDesc = isLoggedIn
+
+        // Token 过期提示
+        if (isLoggedIn && isTokenExpired) {
+            const expiredBanner = containerEl.createDiv({ cls: "setting-item-description" })
+            expiredBanner.style.padding = "10px 12px"
+            expiredBanner.style.marginBottom = "12px"
+            expiredBanner.style.borderRadius = "8px"
+            expiredBanner.style.background = "var(--background-modifier-error)"
+            expiredBanner.style.color = "var(--text-error)"
+            expiredBanner.style.border = "1px solid var(--background-modifier-error-hover)"
+            expiredBanner.setText("⚠️ PKMer Token 已过期，请重新登录以继续使用插件市场。")
+        }
+
+        const accountDesc = isLoggedIn && !isTokenExpired
             ? `当前已登录账号：${accountName}`
-            : "当前未登录，登录后可访问完整插件与主题市场。"
+            : isTokenExpired
+                ? "Token 已过期，请重新登录。"
+                : "当前未登录，登录后可访问完整插件与主题市场。"
 
         new Setting(containerEl)
             .setName("当前账号")
             .setDesc(accountDesc)
 
-        if (isLoggedIn && userInfo) {
+        if (isLoggedIn && !isTokenExpired && userInfo) {
             const card = containerEl.createDiv({ cls: "pkmer-account-card setting-item-description" })
             card.style.display = "flex"
             card.style.alignItems = "center"
@@ -77,6 +101,17 @@ export class PkmerSettingTab extends PluginSettingTab {
 
             if (userInfo.email) {
                 info.createEl("div", { text: userInfo.email })
+            }
+
+            // 会员状态
+            if (userInfo.supporter !== undefined) {
+                const badge = info.createEl("div", {
+                    text: userInfo.supporter ? "✅ 赞助会员" : "普通用户",
+                })
+                badge.style.fontSize = "12px"
+                badge.style.color = userInfo.supporter
+                    ? "var(--color-green)"
+                    : "var(--text-muted)"
             }
 
             new Setting(containerEl)
@@ -109,24 +144,75 @@ export class PkmerSettingTab extends PluginSettingTab {
             return
         }
 
+        // 未登录或 Token 过期时显示登录按钮
         if (Platform.isDesktopApp) {
             new Setting(containerEl)
-                .setName("登录 PKMer")
-                .setDesc("打开 PKMer 登录页并自动提取市场所需的 PKMer Token，无需 AI Token 权限。")
+                .setName("OAuth 授权登录（推荐）")
+                .setDesc("通过浏览器完成 PKMer 授权，安全获取访问凭证，无需手动复制 Token。")
                 .addButton((button) => {
                     button
-                        .setButtonText("立即登录")
+                        .setButtonText(isTokenExpired ? "重新授权登录" : "立即授权登录")
                         .setCta()
                         .onClick(async () => {
                             button.setDisabled(true)
+                            button.setButtonText("等待浏览器授权...")
 
                             try {
-                                const success = await this.plugin.authService.login()
-                                if (success) {
-                                    //@ts-ignore
-                                    this.app.workspace.activeLeaf?.rebuildView()
-                                }
+                                await this.plugin.authService.loginWithOAuth()
+                                // OAuth 是异步的（等待浏览器回调），这里只是发起请求
+                                // 实际登录完成后会通过 reload-statusbar 事件刷新
+                                new Notice("请在浏览器中完成授权，完成后设置页面将自动更新。", 6000)
+                            } catch (err) {
+                                console.error("OAuth login failed:", err)
                             } finally {
+                                button.setDisabled(false)
+                                button.setButtonText(isTokenExpired ? "重新授权登录" : "立即授权登录")
+                                this.display()
+                            }
+                        })
+                })
+
+            // new Setting(containerEl)
+            //     .setName("内嵌窗口登录（备用）")
+            //     .setDesc("在 Obsidian 内弹出登录窗口，自动提取 PKMer Token。")
+            //     .addButton((button) => {
+            //         button
+            //             .setButtonText("内嵌登录")
+            //             .onClick(async () => {
+            //                 button.setDisabled(true)
+
+            //                 try {
+            //                     const success = await this.plugin.authService.login()
+            //                     if (success) {
+            //                         //@ts-ignore
+            //                         this.app.workspace.activeLeaf?.rebuildView()
+            //                     }
+            //                 } finally {
+            //                     this.display()
+            //                 }
+            //             })
+            //     })
+        }
+
+        if (Platform.isMobileApp) {
+            new Setting(containerEl)
+                .setName("OAuth 授权登录")
+                .setDesc("通过系统浏览器完成 PKMer 授权，完成后自动返回 Obsidian。")
+                .addButton((button) => {
+                    button
+                        .setButtonText(isTokenExpired ? "重新授权登录" : "立即授权登录")
+                        .setCta()
+                        .onClick(async () => {
+                            button.setDisabled(true)
+                            button.setButtonText("等待浏览器授权...")
+
+                            try {
+                                await this.plugin.authService.loginWithOAuth()
+                            } catch (err) {
+                                console.error("OAuth login failed:", err)
+                            } finally {
+                                button.setDisabled(false)
+                                button.setButtonText(isTokenExpired ? "重新授权登录" : "立即授权登录")
                                 this.display()
                             }
                         })
@@ -134,31 +220,31 @@ export class PkmerSettingTab extends PluginSettingTab {
         }
     }
 
-    private renderManualTokenSection(containerEl: HTMLElement) {
-        new Setting(containerEl)
-            .setName("手动 Token[备用]")
-            .setDesc("兼容移动端或特殊场景，可手动粘贴 PKMer 个人 Token。")
-            .addText((text) => {
-                text
-                    .setPlaceholder("输入 PKMer Token")
-                    .setValue(this.plugin.settings.token)
-                    .onChange(async (value) => {
-                        await this.plugin.authService.setLegacyToken(value)
-                    })
-            })
-    }
+    // private renderManualTokenSection(containerEl: HTMLElement) {
+    //     new Setting(containerEl)
+    //         .setName("手动 Token [备用]")
+    //         .setDesc("兼容移动端或特殊场景无法授权等，可手动粘贴 PKMer 个人 Token。")
+    //         .addText((text) => {
+    //             text
+    //                 .setPlaceholder("输入 PKMer Token")
+    //                 .setValue(this.plugin.settings.token)
+    //                 .onChange(async (value) => {
+    //                     await this.plugin.authService.setLegacyToken(value)
+    //                 })
+    //         })
+    // }
 
     private renderTips(containerEl: HTMLElement) {
         if (Platform.isDesktopApp) {
             new Setting(containerEl)
                 .setName("提示")
-                .setDesc("桌面端推荐使用网页登录，插件会自动提取并保存 PKMer Token。")
+                .setDesc("桌面端推荐使用 OAuth 授权登录，点击后会打开系统浏览器完成授权，无需手动复制 Token。")
         }
 
         if (Platform.isMobileApp) {
             new Setting(containerEl)
                 .setName("提示")
-                .setDesc("移动端暂时仅支持手动 Token 方式，请在电脑端登录后复制 Token 到此处。")
+                .setDesc("移动端支持 OAuth 授权登录，点击后会打开系统浏览器，完成授权后会自动跳回 Obsidian。")
         }
     }
 

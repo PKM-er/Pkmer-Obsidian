@@ -3,16 +3,28 @@ export interface PKMerUserInfo {
     name?: string;
     email?: string;
     avatar?: string;
+    supporter?: boolean;
+    thino?: boolean;
+    thinoWebExpir?: string | null;
 }
 
 export interface PKMerAuthSettings {
     tokenExpiresAt: number;
     userInfo: PKMerUserInfo | null;
+    pendingOAuthSession: PKMerPendingOAuthSession | null;
+}
+
+export interface PKMerPendingOAuthSession {
+    state: string;
+    verifier: string;
+    redirectUri: string;
+    createdAt: number;
 }
 
 export const DEFAULT_PKMER_AUTH_SETTINGS: PKMerAuthSettings = {
     tokenExpiresAt: 0,
     userInfo: null,
+    pendingOAuthSession: null,
 };
 
 export const PKMER_SECRET_KEYS = {
@@ -27,6 +39,7 @@ export const PKMER_OAUTH_CONFIG = {
     clientId: "pkmer_3edf34684baca778e8d3ffd900a684e8",
     scopes: "openid profile email",
     desktopRedirectUri: "http://localhost:10892/pkmer-obsidian/callback",
+    mobileRedirectUri: "obsidian://pkmer-oauth-callback",
     callbackPort: 10892,
     callbackPath: "/pkmer-obsidian/callback",
 } as const;

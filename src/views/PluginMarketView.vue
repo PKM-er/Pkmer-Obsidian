@@ -9,12 +9,14 @@
 import { onMounted, onUnmounted, ref } from "vue"
 import PluginMarket from "@/components/plugin/PluginMarket.vue"
 import ThemeMarket from "@/components/theme/ThemeMarket.vue"
+import type PKMerAuthService from "@/auth/PKMerAuthService"
 import type { PkmerSettings } from "@/main"
 import { App } from "obsidian"
 
 interface Props {
     settings: PkmerSettings
     app: App
+    authService: PKMerAuthService
 }
 
 const props = defineProps<Props>()
@@ -171,6 +173,7 @@ onUnmounted(() => {
                             <PluginMarket
                                 :settings="props.settings"
                                 :app="props.app"
+                                :auth-service="props.authService"
                                 :tab="isOpenUpdateTab"
                                 :current-tab="currentTab"></PluginMarket>
                         </div>
@@ -181,6 +184,7 @@ onUnmounted(() => {
                             <ThemeMarket
                                 :settings="props.settings"
                                 :app="props.app"
+                                :auth-service="props.authService"
                                 :tab="isOpenUpdateTab"
                                 :current-tab="currentTab"></ThemeMarket>
                         </div>

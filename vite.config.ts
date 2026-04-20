@@ -33,6 +33,9 @@ export default defineConfig({
             external: [
                 "obsidian",
                 "electron",
+                "crypto",
+                "http",
+                "net",
                 "@codemirror/autocomplete",
                 "@codemirror/collab",
                 "@codemirror/commands",

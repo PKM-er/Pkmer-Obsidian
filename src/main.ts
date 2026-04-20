@@ -55,6 +55,16 @@ export default class PkmerPlugin extends Plugin {
 
         await this.reloadStatusBarHandler()
         addEventListener("reload-statusbar", this.reloadStatusBarHandler)
+        addEventListener("reload-statusbar", this.reloadSettingTabHandler)
+    }
+
+    reloadSettingTabHandler = () => {
+        // OAuth 登录成功后刷新设置页面
+        //@ts-ignore
+        const activeTab = this.app.setting?.activeTab as { id?: string; display?: () => void } | undefined
+        if (activeTab && activeTab.id === "pkmer") {
+            activeTab.display?.()
+        }
     }
 
     reloadStatusBarHandler = async () => {
@@ -64,6 +74,7 @@ export default class PkmerPlugin extends Plugin {
     onunload() {
         this.authService.onunload()
         removeEventListener("reload-statusbar", this.reloadStatusBarHandler)
+        removeEventListener("reload-statusbar", this.reloadSettingTabHandler)
     }
 
     async loadSettings() {
@@ -85,6 +96,14 @@ export default class PkmerPlugin extends Plugin {
     }
 
     private registerCustomURI() {
+        // OAuth 回调处理（移动端 obsidian:// 协议）
+        this.registerObsidianProtocolHandler("pkmer-oauth-callback", async (params) => {
+            const searchParams = new URLSearchParams(
+                Object.entries(params).map(([k, v]) => [k, String(v)])
+            )
+            await this.authService.handleOAuthCallback(searchParams)
+        })
+
         this.registerObsidianProtocolHandler("pkmer-installer", async (params) => {
             const pluginId = params.pluginID
             const themeId = params.themeID

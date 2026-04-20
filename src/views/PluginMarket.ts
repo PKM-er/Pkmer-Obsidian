@@ -47,6 +47,7 @@ export class PkmderDownloaderView extends ItemView {
         const pluginMarketApp = createApp(PluginMarketView, {
             settings: this.settings,
             app: this.app,
+            authService: this.plugin.authService,
         })
 
         pluginMarketApp.mount(contentEl)

@@ -1,11 +1,17 @@
+﻿/*
+ * @Author: cumany cuman@qq.com
+ * @Date: 2023-07-26 16:57:16
+ * @LastEditors: cumany cuman@qq.com
+ * @LastEditTime: 2026-04-15
+ * */
 import { Notice, Platform, requestUrl } from "obsidian"
 
 import type PkmerPlugin from "@/main"
-import { PKMER_SECRET_KEYS, type PKMerUserInfo } from "@/auth/types"
+import { DEFAULT_PKMER_AUTH_SETTINGS, PKMER_SECRET_KEYS, type PKMerUserInfo } from "@/auth/types"
+import { OAuthManager } from "@/auth/OAuthManager"
 
 const VERIFY_ENDPOINT = "https://api.pkmer.cn/api/v1/download/obsidian/getPluginDownloadCount"
 const USER_INFO_ENDPOINT = "https://api.pkmer.cn/api/v1/auth/me"
-const LOGIN_URL = "https://pkmer.cn/products/signIn/"
 const AUTH_CACHE_MS = 5 * 60 * 1000
 const TOKEN_EXPIRY_BUFFER = 30 * 1000
 
@@ -36,9 +42,11 @@ export default class PKMerAuthService {
     private plugin: PkmerPlugin
     private memAccessToken: string | null = null
     private lastVerifiedAt = 0
+    private oauthManager: OAuthManager
 
     constructor(plugin: PkmerPlugin) {
         this.plugin = plugin
+        this.oauthManager = new OAuthManager(plugin)
     }
 
     private get secrets(): SecretStorageLike | undefined {
@@ -69,7 +77,8 @@ export default class PKMerAuthService {
 
         const verified = await this.verify(true)
         if (!verified) {
-            await this.clearAuthorization(false)
+           
+            new Notice("PKMer Token 已过期，请重新登录后继续使用插件市场。", 8000)
             return
         }
 
@@ -80,6 +89,10 @@ export default class PKMerAuthService {
 
     async getAccessToken(): Promise<string> {
         const verified = await this.verify()
+        if (!verified && this.memAccessToken) {
+           
+            new Notice("PKMer Token 已过期，请前往设置页面重新登录。", 6000)
+        }
         return verified ? this.accessToken : ""
     }
 
@@ -143,15 +156,26 @@ export default class PKMerAuthService {
         return true
     }
 
+
+    async loginWithOAuth(): Promise<boolean> {
+        return this.oauthManager.startLogin()
+    }
+
+ 
+    async handleOAuthCallback(params: URLSearchParams): Promise<boolean> {
+        return this.oauthManager.handleObsidianCallback(params)
+    }
+
+
     async login(): Promise<boolean> {
         if (!Platform.isDesktopApp) {
-            new Notice("移动端暂不支持内嵌网页登录，请使用手动 Token 方式。", 6000)
+            new Notice("移动端暂不支持内嵌网页登录，请使用 OAuth 授权登录或手动 Token 方式。", 6000)
             return false
         }
 
         const token = await this.openLoginWindowAndCaptureToken()
         if (!token) {
-            new Notice("未获取到 PKMer Token，请确认已经在弹出的窗口中完成登录。", 6000)
+            new Notice("未获取到 PKMer Token，请确认已在弹出的窗口中完成登录。", 6000)
             return false
         }
 
@@ -160,7 +184,7 @@ export default class PKMerAuthService {
         const verified = await this.verify(true)
         if (!verified) {
             await this.clearAuthorization(false)
-            new Notice("已获取 Token，但当前市场接口不接受该令牌，请重试登录。", 6000)
+            new Notice("已获取到 Token，但当前市场接口不接受该令牌，请重试登录。", 6000)
             return false
         }
 
@@ -229,7 +253,7 @@ export default class PKMerAuthService {
         }
     }
 
-    private async fetchUserInfo(): Promise<PKMerUserInfo | null> {
+    async fetchUserInfo(): Promise<PKMerUserInfo | null> {
         if (!this.memAccessToken) {
             return null
         }
@@ -249,6 +273,9 @@ export default class PKMerAuthService {
                 name: data.nickName || data.name || data.username || undefined,
                 email: data.email || undefined,
                 avatar: data.avatar || data.picture || undefined,
+                supporter: data.supporter || undefined,
+                thino: data.thino || undefined,
+                thinoWebExpir: data.thinoWebExpir || null,
             }
 
             this.plugin.settings.auth = {
@@ -276,11 +303,9 @@ export default class PKMerAuthService {
         this.plugin.settings.token = ""
         this.plugin.settings.refreshToken = ""
         this.plugin.settings.auth = {
-            tokenExpiresAt: 0,
-            userInfo: null,
+            ...DEFAULT_PKMER_AUTH_SETTINGS,
         }
         await this.plugin.saveSettings()
-
         if (showStatusBarRefresh) {
             dispatchEvent(new Event("reload-statusbar"))
         }
@@ -293,7 +318,7 @@ export default class PKMerAuthService {
             }).require
 
             if (!requireFn) {
-                new Notice("当前环境不支持内嵌登录窗口，请使用手动 Token 方式。", 6000)
+                new Notice("当前环境不支持内嵌登录窗口，请使用 OAuth 授权登录或手动 Token 方式。", 6000)
                 return null
             }
 
@@ -301,7 +326,7 @@ export default class PKMerAuthService {
             const remote = electronModule.remote
 
             if (!remote) {
-                new Notice("当前环境不支持内嵌登录窗口，请使用手动 Token 方式。", 6000)
+                new Notice("当前环境不支持内嵌登录窗口，请使用 OAuth 授权登录或手动 Token 方式。", 6000)
                 return null
             }
 
@@ -349,7 +374,7 @@ export default class PKMerAuthService {
                 }
 
                 modal.once("ready-to-show", () => {
-                    modal.setTitle("登录 PKMer")
+                    modal.setTitle("鐧诲綍 PKMer")
                     modal.setMenu(null)
                     modal.show()
                 })
@@ -374,6 +399,7 @@ export default class PKMerAuthService {
                     finalize(null)
                 }, 5 * 60 * 1000)
 
+                const LOGIN_URL = "https://pkmer.cn/products/signIn/"
                 void modal.loadURL(LOGIN_URL).catch((error: unknown) => {
                     console.error("Failed to open PKMer login window:", error)
                     finalize(null)
@@ -426,3 +452,5 @@ export default class PKMerAuthService {
         await Promise.resolve(this.secrets.setSecret(key, value))
     }
 }
+
+
