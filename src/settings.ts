@@ -33,7 +33,7 @@ export class PkmerSettingTab extends PluginSettingTab {
         containerEl.createEl("h1", { text: "Obsidian PKMer Market" })
 
         this.renderAccountSection(containerEl, userInfo, isLoggedIn, isTokenExpired)
-        //this.renderManualTokenSection(containerEl)
+        this.renderManualTokenSection(containerEl)
         this.renderTips(containerEl)
         this.renderOpenMarketSection(containerEl)
 
@@ -220,19 +220,19 @@ export class PkmerSettingTab extends PluginSettingTab {
         }
     }
 
-    // private renderManualTokenSection(containerEl: HTMLElement) {
-    //     new Setting(containerEl)
-    //         .setName("手动 Token [备用]")
-    //         .setDesc("兼容移动端或特殊场景无法授权等，可手动粘贴 PKMer 个人 Token。")
-    //         .addText((text) => {
-    //             text
-    //                 .setPlaceholder("输入 PKMer Token")
-    //                 .setValue(this.plugin.settings.token)
-    //                 .onChange(async (value) => {
-    //                     await this.plugin.authService.setLegacyToken(value)
-    //                 })
-    //         })
-    // }
+    private renderManualTokenSection(containerEl: HTMLElement) {
+        new Setting(containerEl)
+            .setName("手动 Token [备用]")
+            .setDesc("兼容移动端或特殊场景无法授权等，可手动粘贴 PKMer 个人 Token。")
+            .addText((text) => {
+                text
+                    .setPlaceholder("输入 PKMer Token")
+                    .setValue(this.plugin.settings.token)
+                    .onChange(async (value) => {
+                        await this.plugin.authService.setLegacyToken(value)
+                    })
+            })
+    }
 
     private renderTips(containerEl: HTMLElement) {
         if (Platform.isDesktopApp) {
